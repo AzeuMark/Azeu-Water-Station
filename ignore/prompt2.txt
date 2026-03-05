@@ -1,0 +1,2599 @@
+# PROMPT #2 — CUSTOMER ROLE (All Pages, CSS, JS)
+
+You are continuing the build of **"Azeu Water Station"** — a Philippine-based Water Refilling Station management web application. In a previous prompt, the entire foundation was built: config files (`database.php`, `session.php`, `constants.php`, `functions.php`, `AESCrypt.php`, `logger.php`), all shared assets (`global.css`, `auth.css`, `components.css`, `layout.css`, `receipt.css`, `global.js`, `auth.js`, `components.js`, `sidebar.js`, `receipt.js`), all includes (`header.php`, `sidebar.php`, `footer.php`, `auth_check.php`), ALL API endpoints (`api/` folder — auth, orders, accounts, inventory, riders, addresses, appeals, notifications, settings, analytics), public pages (`index.php`, `register.php`, `forgot_password.php`, `reset_password.php`, `receipt.php`, `maintenance.php`), error pages, and the logging system.
+
+**This prompt covers the CUSTOMER role only.** Generate ALL files inside the `customer/` folder.
+
+---
+
+## PROJECT CONTEXT RECAP
+
+Azeu Water Station is a web-based order and delivery management system for a water refilling station in the Philippines. It has 4 roles: Customer, Rider, Staff, Admin (with Super Admin). The tech stack is pure PHP (no frameworks), MySQL on XAMPP, and hand-written HTML/CSS/JS. Database name is `station_azeu`.
+
+**Customers** are the end users who:
+- Register themselves (account starts as `pending`, must be approved by Staff/Admin)
+- Place orders for water and station products
+- Track order status from placement through delivery
+- Receive deliveries from assigned riders or pick up at store
+- Download receipts
+- Manage their profile, addresses, and settings
+- Can reorder from order history
+- Can submit cancellation appeals if their account gets flagged
+
+---
+
+## CUSTOMER FILES TO GENERATE
+
+```
+customer/
+├── dashboard.php
+├── place_order.php
+├── my_orders.php
+├── order_history.php
+├── settings.php
+├── css/
+│   ├── dashboard.css
+│   ├── place_order.css
+│   ├── my_orders.css
+│   ├── order_history.css
+│   └── settings.css
+└── js/
+    ├── dashboard.js
+    ├── place_order.js
+    ├── my_orders.js
+    ├── order_history.js
+    └── settings.js
+```
+
+Generate ALL 15 files above with complete, production-ready code.
+
+---
+
+## SHARED INFRASTRUCTURE ALREADY BUILT (Reference Only — Do NOT Regenerate)
+
+These files already exist and are simply included/referenced by customer pages:
+
+### PHP Includes Available
+
+Every customer page starts with:
+```php
+<?php
+require_once __DIR__ . '/../includes/auth_check.php';
+require_role([ROLE_CUSTOMER]);
+?>
+```
+
+Then uses these includes for layout:
+```php
+<?php include __DIR__ . '/../includes/header.php'; ?>
+<?php include __DIR__ . '/../includes/sidebar.php'; ?>
+<!-- page content -->
+<?php include __DIR__ . '/../includes/footer.php'; ?>
+```
+
+### PHP Functions Available (from `config/functions.php`)
+
+```
+sanitize($input)
+redirect($url)
+format_date($datetime)           → 'Jun 30, 2025 02:30 PM'
+format_currency($amount)         → '₱275.00'
+generate_token($length)
+time_ago($datetime)              → '2 minutes ago'
+get_setting($key)                → fetches from settings table
+get_status_badge_class($status)  → returns CSS class like 'badge-pending'
+get_role_badge_class($role)
+get_status_label($status)        → 'On Delivery', 'Ready for Pickup', etc.
+json_response($data, $code)
+get_user_by_id($id)
+create_notification(...)
+get_client_ip()
+```
+
+### PHP Database Functions Available (from `config/database.php`)
+
+```
+db_query($sql, $params)    → PDOStatement
+db_fetch($sql, $params)    → single row assoc array
+db_fetch_all($sql, $params) → all rows
+db_insert($sql, $params)   → lastInsertId
+db_update($sql, $params)   → affected rows
+db_delete($sql, $params)   → affected rows
+```
+
+### PHP Logger Functions Available (from `config/logger.php`)
+
+```
+logger_trace($msg, $ctx)
+logger_debug($msg, $ctx)
+logger_info($msg, $ctx)
+logger_warning($msg, $ctx)
+logger_error($msg, $ctx)
+logger_critical($msg, $ctx)
+logger_function_entry($params)
+logger_function_exit($result)
+logger_query($sql, $params, $duration)
+logger_exception($exception)
+```
+
+### PHP Constants Available (from `config/constants.php`)
+
+```
+ROLE_CUSTOMER, ROLE_RIDER, ROLE_STAFF, ROLE_ADMIN, ROLE_SUPER_ADMIN
+STATUS_PENDING, STATUS_CONFIRMED, STATUS_ASSIGNED, STATUS_ON_DELIVERY,
+STATUS_DELIVERED, STATUS_ACCEPTED, STATUS_READY_FOR_PICKUP,
+STATUS_PICKED_UP, STATUS_CANCELLED
+ACCOUNT_PENDING, ACCOUNT_ACTIVE, ACCOUNT_FLAGGED, ACCOUNT_DELETED
+PAY_COD, PAY_PICKUP, PAY_ONLINE
+DEL_DELIVERY, DEL_PICKUP
+INV_ACTIVE, INV_INACTIVE, INV_OUT_OF_STOCK
+ITEMS_PER_PAGE (50), ORDER_ITEMS_PER_PAGE (20)
+CSRF_TOKEN_NAME
+ENCRYPTION_KEY
+DEBUG_MODE
+```
+
+### PHP Session Variables Available
+
+After login, these are set in `$_SESSION`:
+```
+$_SESSION['user_id']
+$_SESSION['username']
+$_SESSION['role']
+$_SESSION['full_name']
+$_SESSION['status']           → 'pending', 'active', 'flagged'
+$_SESSION['dark_mode']        → 0 or 1
+$_SESSION['system_settings']  → array of all settings from DB
+$_SESSION[CSRF_TOKEN_NAME]    → CSRF token string
+```
+
+### CSS Classes Available (from `components.css`, `layout.css`, `global.css`)
+
+```
+Layout: .app-wrapper, .sidebar, .sidebar.collapsed, .main-content, .main-header
+Cards: .glass-card, .stat-card, .item-card, .item-card.selected
+Tables: .data-table, .data-table-wrapper
+Badges: .badge, .badge-pending, .badge-confirmed, .badge-assigned, .badge-on-delivery,
+        .badge-delivered, .badge-accepted, .badge-ready-for-pickup, .badge-picked-up,
+        .badge-cancelled, .badge-customer, .badge-rider, .badge-staff, .badge-admin
+Inputs: .float-input-group, .float-input, .float-label
+Buttons: .btn, .btn-primary, .btn-success, .btn-danger, .btn-warning, .btn-info,
+         .btn-outline, .btn-sm, .btn-icon
+Modals: .modal-overlay, .modal, .modal-header, .modal-body, .modal-footer
+Misc: .toggle-switch, .qty-control, .qty-btn, .qty-input, .filter-bar, .filter-btn,
+      .search-bar, .search-input, .pagination, .page-btn, .empty-state, .spinner,
+      .quick-actions, .quick-action-btn, .preview-section, .toast, .notif-bell,
+      .notif-badge, .notif-dropdown, .custom-checkbox, .drag-handle
+```
+
+### JS Functions Available (from `components.js`, `global.js`)
+
+```
+// global.js
+toggleTheme()
+getCsrfToken()
+ajaxPost(url, data)                          → fetch POST with CSRF
+ajaxGet(url, params)                         → fetch GET
+getRoleIcon(role)
+applyAdminColors(settings)
+
+// components.js
+showToast(message, type, duration)           → types: 'success','error','warning','info'
+initPagination(tableId, itemsPerPage)
+initNotificationBell()
+openModal(modalId)
+closeModal(modalId)
+initFilterBar(filterBarId, tableId, filterColumn)
+initSearch(searchInputId, tableId, searchColumns)
+initBulkSelect(tableId)
+getSelectedIds(tableId)
+```
+
+### API Endpoints Available (All return JSON)
+
+```
+POST api/orders/place_order.php        → {items, payment_type, delivery_address, order_notes}
+GET  api/orders/get_orders.php         → ?status=&search=&page=&date_from=&date_to=
+POST api/orders/cancel_order.php       → {order_id, reason}
+POST api/orders/confirm_received.php   → {order_id}
+POST api/orders/reorder.php            → {order_id}
+GET  api/orders/get_receipt.php        → ?token=xxx
+GET  api/inventory/get_items.php       → ?status_filter=active&search=&page=
+GET  api/inventory/check_stock.php     → ?item_ids=1,2,3
+GET  api/addresses/get.php
+POST api/addresses/add.php             → {label, full_address, is_default}
+POST api/addresses/update.php          → {address_id, label, full_address, is_default}
+POST api/addresses/delete.php          → {address_id}
+POST api/appeals/submit.php            → {reason}
+GET  api/appeals/get.php               → ?status_filter=&page=
+GET  api/notifications/get.php         → ?page=&limit=
+POST api/notifications/mark_read.php   → {notification_id} or {all: true}
+GET  api/notifications/count_unread.php
+POST api/settings/update_profile.php   → {full_name, email, phone}
+POST api/settings/change_password.php  → {current_password, new_password, confirm_password}
+POST api/settings/update_preferences.php → {dark_mode}
+GET  api/analytics/get_dashboard_stats.php
+```
+
+---
+
+## DATABASE TABLES REFERENCE (Customer-Relevant Only)
+
+### `users` — Customer's own record
+```
+id, username (unchangeable), password, full_name, email, phone,
+role='customer', status (pending/active/flagged/deleted),
+cancellation_count, cancellation_reset_date, created_at
+```
+
+### `user_preferences`
+```
+id, user_id, dark_mode (0/1)
+```
+
+### `customer_addresses`
+```
+id, customer_id, label, full_address, is_default (0/1)
+```
+
+### `orders`
+```
+id (Order ID), customer_id, rider_id (NULL if unassigned/pickup),
+payment_type (cod/pickup/online), delivery_type (delivery/pickup),
+status (pending/confirmed/assigned/on_delivery/delivered/accepted/ready_for_pickup/picked_up/cancelled),
+delivery_address, order_notes, delivery_fee, subtotal, total_amount,
+expected_delivery_date, cancellation_reason, cancelled_by, staff_comment,
+customer_confirmed (0/1), customer_confirmed_at, receipt_token,
+order_date, delivered_at
+```
+
+### `order_items`
+```
+id, order_id, inventory_id, item_name (snapshot), item_icon (snapshot),
+item_price (snapshot), quantity, subtotal
+```
+
+### `inventory` — Customer sees active items only
+```
+id, item_name, item_icon, stock_count, price, status (active only visible to customers)
+```
+
+### `notifications`
+```
+id, user_id, title, message, type, reference_id, is_read, created_at
+```
+
+### `cancellation_appeals`
+```
+id, customer_id, reason, status (pending/approved/denied),
+reviewed_by, admin_notes, reviewed_at, created_at
+```
+
+---
+
+## ORDER LIFECYCLE (Customer Perspective)
+
+### Delivery Orders (Cash on Delivery)
+```
+Customer places order → PENDING
+Staff/Admin confirms → CONFIRMED (stock decremented here)
+Staff/Admin assigns rider → ASSIGNED
+Rider marks on the way → ON DELIVERY (expected_delivery_date set to today)
+Rider marks arrived → DELIVERED (income counted, delivered_at set)
+Customer optionally clicks Accept → ACCEPTED
+```
+
+### Pickup Orders
+```
+Customer places order → PENDING
+Staff/Admin confirms → CONFIRMED (stock decremented)
+Staff/Admin marks ready → READY FOR PICKUP
+Staff marks collected → PICKED UP (income counted)
+Customer optionally clicks Accept → ACCEPTED
+```
+
+### Customer Cancellation Rules
+- Customer can ONLY cancel orders at `PENDING` status
+- A cancellation reason is REQUIRED (free text)
+- Each cancellation increments `cancellation_count`
+- If `cancellation_count` reaches `max_cancellation` setting (default 5), account status becomes `flagged`
+- Flagged customers CANNOT place new orders
+- Flagged customers can submit an appeal (once at a time) for Staff/Admin to review
+- `cancellation_count` resets to 0 on the first day of each month (but flagged status persists until appeal approved)
+
+### Customer "Accept/Received" Action
+- Only available when order status is `DELIVERED` or `PICKED UP`
+- Optional — customer doesn't have to click it
+- Sets `customer_confirmed = 1`, `customer_confirmed_at = NOW()`, status to `ACCEPTED`
+- This is an acknowledgment, does NOT affect income counting
+
+---
+
+## CUSTOMER SIDEBAR NAVIGATION
+
+```
+Dashboard          → customer/dashboard.php         icon: dashboard
+Place Order        → customer/place_order.php       icon: shopping_cart
+My Orders          → customer/my_orders.php         icon: list_alt
+Order History      → customer/order_history.php     icon: history
+Settings           → customer/settings.php          icon: settings
+```
+
+---
+
+## PAGE-BY-PAGE SPECIFICATIONS
+
+---
+
+### 1. `customer/dashboard.php`
+
+**PHP Logic (top of file):**
+```
+1. Include auth_check.php, require_role([ROLE_CUSTOMER])
+2. Get current user data from session
+3. Check account status:
+   - If status='pending' → set $is_pending = true
+   - If status='flagged' → set $is_flagged = true
+   - If status='active' → set $is_active = true
+4. If active:
+   - Fetch dashboard stats via PHP (or page loads and JS fetches via AJAX):
+     - Total orders count: SELECT COUNT(*) FROM orders WHERE customer_id = user_id
+     - Pending orders count: SELECT COUNT(*) FROM orders WHERE customer_id = user_id AND status = 'pending'
+     - Delivered orders count: SELECT COUNT(*) FROM orders WHERE customer_id = user_id AND status IN ('delivered','accepted','picked_up')
+   - Fetch pending orders preview (max 3):
+     SELECT o.*, GROUP_CONCAT(oi.item_name) as item_names, GROUP_CONCAT(oi.item_icon) as item_icons,
+     u.full_name as rider_name
+     FROM orders o
+     LEFT JOIN order_items oi ON o.id = oi.order_id
+     LEFT JOIN users u ON o.rider_id = u.id
+     WHERE o.customer_id = user_id AND o.status IN ('pending','confirmed','assigned','on_delivery')
+     GROUP BY o.id
+     ORDER BY o.created_at DESC
+     LIMIT 3
+5. Include header.php, sidebar.php
+```
+
+**HTML Structure:**
+```html
+<div class="main-content">
+  <div class="page-header">
+    <h1>Dashboard</h1>
+  </div>
+
+  <!-- IF PENDING ACCOUNT -->
+  <div class="glass-card pending-notice" style="display: {if pending}">
+    <span class="material-icons">hourglass_empty</span>
+    <h2>Account Pending Approval</h2>
+    <p>Your account is currently pending approval by our staff. You'll be able to use all features once your account is approved. Please check back later.</p>
+  </div>
+
+  <!-- IF FLAGGED ACCOUNT -->
+  <div class="glass-card flagged-notice" style="display: {if flagged}">
+    <span class="material-icons">warning</span>
+    <h2>Account Flagged</h2>
+    <p>Your account has been flagged due to excessive order cancellations. You cannot place new orders until your appeal is reviewed.</p>
+    <p>Cancellations this month: {count} / {max}</p>
+    <button class="btn btn-warning" id="submitAppealBtn">Submit Appeal</button>
+    <!-- If already has pending appeal, show "Appeal Pending" instead -->
+  </div>
+
+  <!-- IF ACTIVE ACCOUNT -->
+  <div class="dashboard-content" style="display: {if active}">
+
+    <!-- Greeting -->
+    <div class="greeting">
+      <h2>Welcome back, {Full Name}! 👋</h2>
+      <p class="text-muted">Here's what's happening with your orders.</p>
+    </div>
+
+    <!-- Quick Action Buttons -->
+    <div class="quick-actions">
+      <a href="place_order.php" class="quick-action-btn">
+        <span class="material-icons">shopping_cart</span>
+        <span>Place Order</span>
+      </a>
+      <a href="my_orders.php" class="quick-action-btn">
+        <span class="material-icons">list_alt</span>
+        <span>My Orders</span>
+      </a>
+      <a href="order_history.php" class="quick-action-btn">
+        <span class="material-icons">history</span>
+        <span>Order History</span>
+      </a>
+      <a href="settings.php" class="quick-action-btn">
+        <span class="material-icons">settings</span>
+        <span>Settings</span>
+      </a>
+    </div>
+
+    <!-- Stat Cards -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon" style="background: var(--primary)">
+          <span class="material-icons">receipt_long</span>
+        </div>
+        <div class="stat-info">
+          <span class="stat-number">{total_orders}</span>
+          <span class="stat-label">Total Orders</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background: var(--warning)">
+          <span class="material-icons">pending</span>
+        </div>
+        <div class="stat-info">
+          <span class="stat-number">{pending_orders}</span>
+          <span class="stat-label">Pending Orders</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background: var(--success)">
+          <span class="material-icons">check_circle</span>
+        </div>
+        <div class="stat-info">
+          <span class="stat-number">{delivered_orders}</span>
+          <span class="stat-label">Delivered Orders</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pending Orders Preview -->
+    <div class="preview-section">
+      <div class="preview-header">
+        <h3>Active Orders</h3>
+        <a href="my_orders.php" class="btn btn-outline btn-sm">View All</a>
+      </div>
+
+      <!-- IF NO ACTIVE ORDERS -->
+      <div class="empty-state" style="display: {if no orders}">
+        <span class="material-icons">shopping_cart</span>
+        <p>No active orders yet.</p>
+        <a href="place_order.php" class="btn btn-primary">Place Your First Order</a>
+      </div>
+
+      <!-- IF ORDERS EXIST -->
+      <div class="data-table-wrapper" style="display: {if orders exist}">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Order ID</th>
+              <th>Items</th>
+              <th>Payment</th>
+              <th>Status</th>
+              <th>Quantity</th>
+              <th>Rider</th>
+              <th>Order Date</th>
+              <th>Expected Delivery</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- For each order (max 3): -->
+            <tr>
+              <td>#{order_id}</td>
+              <td>
+                <!-- For each item in this order: -->
+                <span class="item-with-icon">
+                  <img src="{icon_path or default}" class="item-icon-sm">
+                  {item_name}
+                </span>
+                <!-- If multiple items, comma-separated or stacked -->
+              </td>
+              <td>{payment_type label}</td>
+              <td><span class="badge {badge_class}">{status_label}</span></td>
+              <td>{total quantity across all items}</td>
+              <td>{rider_name or 'Unassigned'}</td>
+              <td>{formatted order_date}</td>
+              <td>{formatted expected_delivery_date or '—'}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- .dashboard-content -->
+</div>
+```
+
+**Include footer.php + page-specific CSS and JS.**
+
+Each customer page must load:
+```html
+<link rel="stylesheet" href="css/dashboard.css">
+<!-- ... page content ... -->
+<script src="js/dashboard.js"></script>
+```
+
+Place the page-specific CSS `<link>` tag inside the `<head>` section (either in header.php via a variable, or directly before the content). Place the page-specific `<script>` tag before `</body>` after the footer's global scripts.
+
+One approach: In each page PHP file, define a variable like `$page_css = 'css/dashboard.css'` and `$page_js = 'js/dashboard.js'` before including header.php, and have header.php and footer.php use those variables to include the page-specific files.
+
+### `customer/css/dashboard.css`
+
+Page-specific styles for the customer dashboard:
+
+```
+.pending-notice, .flagged-notice:
+  - Centered content with icon, padding 40px
+  - pending-notice: subtle orange/amber left border or background tint
+  - flagged-notice: subtle red left border or background tint
+  - Max-width 600px, centered on page
+
+.greeting:
+  - Margin bottom for spacing
+  - h2 with primary color or dark text
+
+.stats-grid:
+  - CSS Grid: 3 columns on desktop, 2 on tablet, 1 on mobile
+  - Gap: 20px
+
+.stat-card (extend from components.css if needed):
+  - Additional customer-specific styling
+
+.preview-section:
+  - Glass card wrapper
+  - preview-header: flex, space-between, align-center
+  - preview-table: simplified table styling
+
+.item-with-icon:
+  - Flex row, align center, gap 8px
+  - .item-icon-sm: 24x24px, border-radius 4px, object-fit cover
+
+Responsive:
+  @media (max-width: 768px):
+    - stats-grid becomes 1 column
+    - quick-actions wraps
+    - table horizontally scrolls
+```
+
+### `customer/js/dashboard.js`
+
+```javascript
+document.addEventListener('DOMContentLoaded', function() {
+
+  // If account is flagged, handle appeal submission
+  const appealBtn = document.getElementById('submitAppealBtn');
+  if (appealBtn) {
+    appealBtn.addEventListener('click', function() {
+      // Check if there's already a pending appeal
+      ajaxGet('/api/appeals/get.php', {status_filter: 'pending'})
+        .then(data => {
+          if (data.appeals && data.appeals.length > 0) {
+            Swal.fire({
+              icon: 'info',
+              title: 'Appeal Already Pending',
+              text: 'You already have a pending appeal. Please wait for staff to review it.',
+              confirmButtonColor: 'var(--primary)'
+            });
+          } else {
+            // Show appeal form
+            Swal.fire({
+              title: 'Submit Cancellation Appeal',
+              html: `
+                <p style="margin-bottom: 15px; color: var(--text-secondary);">
+                  Explain why your cancellations were necessary and request to have your account unflagged.
+                </p>
+                <textarea id="appealReason" class="swal2-textarea"
+                  placeholder="Enter your reason for appeal..." rows="5"
+                  style="resize: vertical;"></textarea>
+              `,
+              showCancelButton: true,
+              confirmButtonText: 'Submit Appeal',
+              cancelButtonText: 'Cancel',
+              confirmButtonColor: 'var(--warning)',
+              preConfirm: () => {
+                const reason = document.getElementById('appealReason').value.trim();
+                if (!reason) {
+                  Swal.showValidationMessage('Please enter a reason for your appeal');
+                  return false;
+                }
+                return reason;
+              }
+            }).then(result => {
+              if (result.isConfirmed) {
+                ajaxPost('/api/appeals/submit.php', { reason: result.value })
+                  .then(data => {
+                    if (data.success) {
+                      Swal.fire({
+                        icon: 'success',
+                        title: 'Appeal Submitted',
+                        text: 'Your appeal has been submitted for review.',
+                        confirmButtonColor: 'var(--primary)'
+                      }).then(() => location.reload());
+                    } else {
+                      showToast(data.message || 'Failed to submit appeal', 'error');
+                    }
+                  });
+              }
+            });
+          }
+        });
+    });
+  }
+
+  // Dashboard stats could be loaded via AJAX if preferred
+  // For now, they're rendered server-side by PHP
+
+});
+```
+
+---
+
+### 2. `customer/place_order.php`
+
+**PHP Logic (top of file):**
+```
+1. Include auth_check.php, require_role([ROLE_CUSTOMER])
+2. Check account status — if pending or flagged, redirect to dashboard.php
+3. Get customer addresses from DB for the address dropdown
+4. Get delivery_fee from settings
+5. Check if this is a reorder request: if $_GET['reorder'] is set,
+   fetch the original order's items for pre-selection
+6. Include header.php, sidebar.php
+```
+
+**HTML Structure:**
+```html
+<div class="main-content">
+  <div class="page-header">
+    <h1>Place Order</h1>
+    <p class="text-muted">Select items and place your order.</p>
+  </div>
+
+  <!-- Items Grid -->
+  <div class="items-section">
+    <!-- Search bar for items -->
+    <div class="items-toolbar">
+      <div class="search-bar">
+        <span class="material-icons search-icon">search</span>
+        <input type="text" id="itemSearch" class="search-input" placeholder="Search items...">
+      </div>
+    </div>
+
+    <!-- Items Grid Container (loaded via AJAX) -->
+    <div class="items-grid" id="itemsGrid">
+      <!-- Item cards rendered here by JS -->
+      <!-- Loading spinner shown initially -->
+      <div class="spinner-overlay" id="itemsLoading">
+        <div class="spinner"></div>
+      </div>
+    </div>
+
+    <!-- Pagination for items (20 per page) -->
+    <div class="pagination" id="itemsPagination">
+      <!-- Rendered by JS -->
+    </div>
+  </div>
+
+  <!-- Checkout Button (fixed bottom or below items) -->
+  <div class="checkout-bar" id="checkoutBar" style="display: none;">
+    <div class="checkout-summary">
+      <span id="selectedCount">0</span> item(s) selected
+    </div>
+    <button class="btn btn-primary btn-lg" id="checkoutBtn">
+      <span class="material-icons">shopping_cart_checkout</span>
+      Checkout
+    </button>
+  </div>
+
+  <!-- Checkout Modal (hidden by default) -->
+  <div class="modal-overlay" id="checkoutModal" style="display: none;">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Checkout</h2>
+        <button class="btn-icon" onclick="closeModal('checkoutModal')">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <!-- Selected Items List -->
+        <div class="checkout-items" id="checkoutItems">
+          <!-- Rendered by JS: each item with icon, name, qty, unit price, subtotal, remove button -->
+        </div>
+
+        <!-- Delivery Address -->
+        <div class="checkout-section">
+          <h3>Delivery Address</h3>
+          <div class="address-selection">
+            <select id="addressSelect" class="float-input">
+              <!-- Options populated by PHP from customer_addresses -->
+              <!-- PHP foreach customer addresses: -->
+              <option value="{address_id}" {if default: selected}>{label} — {full_address}</option>
+              <!-- End foreach -->
+              <option value="custom">Use a different address</option>
+            </select>
+            <div id="customAddressWrap" style="display: none;">
+              <div class="float-input-group">
+                <input type="text" id="customAddress" class="float-input" placeholder=" ">
+                <label class="float-label">Enter delivery address</label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Order Notes -->
+        <div class="checkout-section">
+          <h3>Special Instructions (Optional)</h3>
+          <div class="float-input-group">
+            <textarea id="orderNotes" class="float-input" placeholder=" " rows="3"></textarea>
+            <label class="float-label">e.g., Leave at the gate, call upon arrival...</label>
+          </div>
+        </div>
+
+        <!-- Payment Method -->
+        <div class="checkout-section">
+          <h3>Payment Method</h3>
+          <div class="payment-options">
+            <label class="payment-option">
+              <input type="radio" name="paymentType" value="cod" checked>
+              <div class="payment-card">
+                <span class="material-icons">local_shipping</span>
+                <span>Cash on Delivery</span>
+              </div>
+            </label>
+            <label class="payment-option">
+              <input type="radio" name="paymentType" value="pickup">
+              <div class="payment-card">
+                <span class="material-icons">store</span>
+                <span>Pickup at Store</span>
+              </div>
+            </label>
+            <label class="payment-option disabled">
+              <input type="radio" name="paymentType" value="online" disabled>
+              <div class="payment-card disabled-card">
+                <span class="material-icons">credit_card</span>
+                <span>Online Payment</span>
+                <small class="coming-soon">Coming Soon</small>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Order Summary -->
+        <div class="checkout-section order-summary">
+          <div class="summary-row">
+            <span>Total Items:</span>
+            <span id="summaryItemCount">0</span>
+          </div>
+          <div class="summary-row">
+            <span>Subtotal:</span>
+            <span id="summarySubtotal">₱0.00</span>
+          </div>
+          <div class="summary-row" id="deliveryFeeRow">
+            <span>Delivery Fee:</span>
+            <span id="summaryDeliveryFee">₱{delivery_fee from PHP}</span>
+          </div>
+          <div class="summary-row summary-total">
+            <span>Total:</span>
+            <span id="summaryTotal">₱0.00</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('checkoutModal')">Cancel</button>
+        <button class="btn btn-primary" id="placeOrderBtn">
+          <span class="material-icons">check</span>
+          Place Order
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+```
+
+### `customer/css/place_order.css`
+
+```
+.items-toolbar:
+  - Flex row, margin bottom 20px
+  - Search bar styling with icon
+
+.items-grid:
+  - CSS Grid: 4 columns on desktop, 3 on tablet, 2 on mobile, 1 on small mobile
+  - Gap: 16px
+  - Relative positioning for loading overlay
+
+.item-card:
+  - Glass card effect
+  - Padding 16px
+  - Border: 2px solid transparent
+  - Transition on border-color
+  - Cursor pointer
+  - Position relative (for out-of-stock overlay)
+
+.item-card.selected:
+  - Border: 2px solid var(--success)
+  - Box-shadow with green tint
+  - Show a check icon badge in the top-right corner (position absolute)
+  - .item-card.selected::after or a check element shown/hidden
+
+.item-card.out-of-stock:
+  - Opacity 0.5
+  - Pointer-events none
+  - "Out of Stock" overlay text centered
+
+.item-card-icon:
+  - Centered, 64x64px, border-radius 8px, object-fit cover
+  - Background: light grey placeholder
+
+.item-card-name:
+  - Font-weight 600, margin top 12px, text center
+
+.item-card-price:
+  - Color: var(--primary), font-weight 700, font-size 1.1em
+
+.item-card-stock:
+  - Small text, color: var(--text-muted)
+  - If low stock (calculated by JS or PHP): color: var(--warning)
+
+.qty-control (within item card):
+  - Flex row, align center, justify center, margin top 12px
+  - Buttons (- and +): 32x32px, border-radius 50%, themed
+  - Input: 50px wide, text center, no spinner arrows
+
+.checkout-bar:
+  - Fixed bottom of viewport (or sticky at bottom of items section)
+  - Glass card effect, padding 12px 24px
+  - Flex row, space-between, align center
+  - Z-index above content
+  - Slide-up animation when items selected
+  - Hide when no items selected
+
+.checkout-items:
+  - Max-height 300px, overflow-y auto
+  - Each item row: flex, align center, gap
+  - Item icon: 40x40
+  - Item name, qty, price, subtotal
+  - Remove button (X icon, red): float right
+
+.payment-options:
+  - Flex row, gap 12px, wrap on mobile
+  - .payment-option: flex 1, min-width 150px
+  - .payment-card: glass card, padding 16px, text center, cursor pointer
+    Border: 2px solid transparent
+    When radio checked: border-color var(--primary), background tint
+  - .disabled-card: opacity 0.5, cursor not-allowed
+  - .coming-soon: small text, color var(--text-muted), italic
+
+.order-summary:
+  - Border-top: 1px solid var(--border)
+  - Padding-top 16px
+  - .summary-row: flex, space-between, padding 4px 0
+  - .summary-total: font-weight 700, font-size 1.2em, color var(--primary)
+
+.address-selection:
+  - Select dropdown styled to match theme (custom select styling)
+  - Custom address text input appears with slide-down animation when "custom" selected
+
+Responsive:
+  @media (max-width: 768px):
+    - items-grid: 2 columns
+    - payment-options: stack vertically
+    - checkout-bar: full width, smaller padding
+    - Modal: nearly full screen
+  @media (max-width: 480px):
+    - items-grid: 1 column
+```
+
+### `customer/js/place_order.js`
+
+This is the most complex customer JS file. Full implementation required.
+
+```javascript
+document.addEventListener('DOMContentLoaded', function() {
+
+  // State
+  let allItems = [];        // All inventory items loaded
+  let selectedItems = {};   // { inventory_id: { ...itemData, quantity: X } }
+  let currentPage = 1;
+  const itemsPerPage = 20;  // ORDER_ITEMS_PER_PAGE
+  const deliveryFee = parseFloat('{PHP_DELIVERY_FEE}'); // Injected by PHP
+  let reorderItems = null;  // Pre-selected items from reorder (injected by PHP if applicable)
+
+  // Load items on page load
+  loadItems();
+
+  // Check for reorder data (PHP can output a JS variable)
+  // e.g., const reorderData = <?php echo json_encode($reorder_items ?? null); ?>;
+  // If reorderData exists, pre-select those items after loading
+
+  function loadItems(search = '') {
+    showLoading();
+    const params = { status_filter: 'active', page: currentPage, search: search };
+    ajaxGet('/api/inventory/get_items.php', params)
+      .then(data => {
+        allItems = data.items;
+        renderItems(data.items);
+        renderPagination(data.total, data.page, data.per_page);
+        hideLoading();
+
+        // If reorder, pre-select matching items
+        if (reorderData && currentPage === 1) {
+          preselectReorderItems(reorderData);
+          reorderData = null; // Only do this once
+        }
+      })
+      .catch(err => {
+        showToast('Failed to load items', 'error');
+        hideLoading();
+      });
+  }
+
+  function renderItems(items) {
+    const grid = document.getElementById('itemsGrid');
+    // Clear existing items (keep spinner)
+    grid.querySelectorAll('.item-card').forEach(c => c.remove());
+
+    items.forEach(item => {
+      const isSelected = selectedItems[item.id] !== undefined;
+      const isOutOfStock = item.stock_count <= 0 || item.status === 'out_of_stock';
+      const quantity = isSelected ? selectedItems[item.id].quantity : 1;
+
+      const card = document.createElement('div');
+      card.className = `item-card ${isSelected ? 'selected' : ''} ${isOutOfStock ? 'out-of-stock' : ''}`;
+      card.dataset.itemId = item.id;
+      card.innerHTML = `
+        <div class="item-card-check"><span class="material-icons">check_circle</span></div>
+        ${isOutOfStock ? '<div class="out-of-stock-overlay">Out of Stock</div>' : ''}
+        <img src="${item.item_icon || '/assets/images/default-item.png'}" class="item-card-icon" alt="${item.item_name}">
+        <div class="item-card-name">${item.item_name}</div>
+        <div class="item-card-price">₱${parseFloat(item.price).toFixed(2)}</div>
+        <div class="item-card-stock ${item.stock_count <= 10 ? 'low-stock' : ''}">
+          ${item.stock_count} in stock
+        </div>
+        <div class="qty-control">
+          <button class="qty-btn qty-minus" data-item-id="${item.id}" ${quantity <= 1 ? 'disabled' : ''}>
+            <span class="material-icons">remove</span>
+          </button>
+          <input type="number" class="qty-input" data-item-id="${item.id}"
+                 value="${quantity}" min="1" max="${item.stock_count}" step="1">
+          <button class="qty-btn qty-plus" data-item-id="${item.id}" ${quantity >= item.stock_count ? 'disabled' : ''}>
+            <span class="material-icons">add</span>
+          </button>
+        </div>
+      `;
+
+      // Click card to select/deselect (not on qty controls)
+      card.addEventListener('click', function(e) {
+        if (e.target.closest('.qty-control')) return; // Don't toggle on qty click
+        if (isOutOfStock) return;
+        toggleItemSelection(item, card);
+      });
+
+      grid.appendChild(card);
+    });
+
+    // Attach qty control event listeners
+    attachQtyListeners();
+  }
+
+  function toggleItemSelection(item, cardElement) {
+    if (selectedItems[item.id]) {
+      // Deselect
+      delete selectedItems[item.id];
+      cardElement.classList.remove('selected');
+    } else {
+      // Select
+      const qtyInput = cardElement.querySelector('.qty-input');
+      const quantity = parseInt(qtyInput.value) || 1;
+      selectedItems[item.id] = {
+        inventory_id: item.id,
+        item_name: item.item_name,
+        item_icon: item.item_icon,
+        price: parseFloat(item.price),
+        stock_count: item.stock_count,
+        quantity: quantity
+      };
+      cardElement.classList.add('selected');
+    }
+    updateCheckoutBar();
+  }
+
+  function attachQtyListeners() {
+    // Minus buttons
+    document.querySelectorAll('.qty-minus').forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const itemId = this.dataset.itemId;
+        const input = document.querySelector(`.qty-input[data-item-id="${itemId}"]`);
+        let val = parseInt(input.value) - 1;
+        if (val < 1) val = 1;
+        input.value = val;
+        updateSelectedQuantity(itemId, val);
+      });
+    });
+
+    // Plus buttons
+    document.querySelectorAll('.qty-plus').forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const itemId = this.dataset.itemId;
+        const input = document.querySelector(`.qty-input[data-item-id="${itemId}"]`);
+        const max = parseInt(input.max);
+        let val = parseInt(input.value) + 1;
+        if (val > max) val = max;
+        input.value = val;
+        updateSelectedQuantity(itemId, val);
+      });
+    });
+
+    // Direct input change
+    document.querySelectorAll('.qty-input').forEach(input => {
+      input.addEventListener('change', function(e) {
+        e.stopPropagation();
+        const itemId = this.dataset.itemId;
+        let val = parseInt(this.value);
+        const max = parseInt(this.max);
+        if (isNaN(val) || val < 1) val = 1;
+        if (val > max) val = max;
+        this.value = val;
+        updateSelectedQuantity(itemId, val);
+      });
+
+      // Prevent card click when clicking input
+      input.addEventListener('click', function(e) { e.stopPropagation(); });
+    });
+  }
+
+  function updateSelectedQuantity(itemId, quantity) {
+    if (selectedItems[itemId]) {
+      selectedItems[itemId].quantity = quantity;
+      updateCheckoutBar();
+    }
+  }
+
+  function updateCheckoutBar() {
+    const count = Object.keys(selectedItems).length;
+    const bar = document.getElementById('checkoutBar');
+    document.getElementById('selectedCount').textContent = count;
+    bar.style.display = count > 0 ? 'flex' : 'none';
+  }
+
+  // Search
+  let searchTimeout;
+  document.getElementById('itemSearch').addEventListener('input', function() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+      currentPage = 1;
+      loadItems(this.value.trim());
+    }, 300);
+  });
+
+  // Pagination functions (render page buttons, handle clicks)
+  function renderPagination(total, page, perPage) {
+    const totalPages = Math.ceil(total / perPage);
+    const container = document.getElementById('itemsPagination');
+    container.innerHTML = '';
+
+    if (totalPages <= 1) return;
+
+    // Previous button
+    const prevBtn = createPageBtn('Previous', page > 1, () => { currentPage--; loadItems(); });
+    container.appendChild(prevBtn);
+
+    // Page numbers (show max 5 around current)
+    for (let i = Math.max(1, page-2); i <= Math.min(totalPages, page+2); i++) {
+      const pageBtn = createPageBtn(i, true, () => { currentPage = i; loadItems(); });
+      if (i === page) pageBtn.classList.add('active');
+      container.appendChild(pageBtn);
+    }
+
+    // Next button
+    const nextBtn = createPageBtn('Next', page < totalPages, () => { currentPage++; loadItems(); });
+    container.appendChild(nextBtn);
+
+    // Items count
+    const info = document.createElement('span');
+    info.className = 'pagination-info';
+    info.textContent = `Showing ${(page-1)*perPage + 1}–${Math.min(page*perPage, total)} of ${total} items`;
+    container.appendChild(info);
+  }
+
+  function createPageBtn(text, enabled, onClick) {
+    const btn = document.createElement('button');
+    btn.className = 'page-btn';
+    btn.textContent = text;
+    btn.disabled = !enabled;
+    if (enabled) btn.addEventListener('click', onClick);
+    return btn;
+  }
+
+  // Checkout button opens modal
+  document.getElementById('checkoutBtn').addEventListener('click', function() {
+    if (Object.keys(selectedItems).length === 0) {
+      showToast('Please select at least one item', 'warning');
+      return;
+    }
+    renderCheckoutModal();
+    openModal('checkoutModal');
+  });
+
+  function renderCheckoutModal() {
+    const container = document.getElementById('checkoutItems');
+    container.innerHTML = '';
+
+    let totalQty = 0;
+    let subtotal = 0;
+
+    Object.values(selectedItems).forEach(item => {
+      const itemSubtotal = item.price * item.quantity;
+      totalQty += item.quantity;
+      subtotal += itemSubtotal;
+
+      const row = document.createElement('div');
+      row.className = 'checkout-item-row';
+      row.innerHTML = `
+        <img src="${item.item_icon || '/assets/images/default-item.png'}" class="checkout-item-icon">
+        <div class="checkout-item-details">
+          <span class="checkout-item-name">${item.item_name}</span>
+          <span class="checkout-item-qty">Qty: ${item.quantity} × ₱${item.price.toFixed(2)}</span>
+        </div>
+        <span class="checkout-item-subtotal">₱${itemSubtotal.toFixed(2)}</span>
+        <button class="btn-icon btn-danger btn-sm checkout-item-remove" data-item-id="${item.inventory_id}">
+          <span class="material-icons">close</span>
+        </button>
+      `;
+      container.appendChild(row);
+    });
+
+    // Remove item from checkout
+    container.querySelectorAll('.checkout-item-remove').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const itemId = this.dataset.itemId;
+        delete selectedItems[itemId];
+        // Also deselect the card visually
+        const card = document.querySelector(`.item-card[data-item-id="${itemId}"]`);
+        if (card) card.classList.remove('selected');
+        updateCheckoutBar();
+        if (Object.keys(selectedItems).length === 0) {
+          closeModal('checkoutModal');
+          return;
+        }
+        renderCheckoutModal(); // Re-render
+      });
+    });
+
+    // Update summary
+    document.getElementById('summaryItemCount').textContent = totalQty;
+    document.getElementById('summarySubtotal').textContent = '₱' + subtotal.toFixed(2);
+    updateTotalWithPayment();
+  }
+
+  // Payment type change affects delivery fee display
+  document.querySelectorAll('input[name="paymentType"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+      updateTotalWithPayment();
+      // Show/hide address section based on payment type
+      const addressSection = document.getElementById('addressSelect').closest('.checkout-section');
+      const deliveryFeeRow = document.getElementById('deliveryFeeRow');
+      if (this.value === 'pickup') {
+        addressSection.style.display = 'none';
+        deliveryFeeRow.style.display = 'none';
+      } else {
+        addressSection.style.display = 'block';
+        deliveryFeeRow.style.display = 'flex';
+      }
+    });
+  });
+
+  function updateTotalWithPayment() {
+    const paymentType = document.querySelector('input[name="paymentType"]:checked').value;
+    const subtotalText = document.getElementById('summarySubtotal').textContent;
+    const subtotal = parseFloat(subtotalText.replace('₱', '').replace(',', ''));
+    const fee = paymentType === 'pickup' ? 0 : deliveryFee;
+    document.getElementById('summaryDeliveryFee').textContent = '₱' + fee.toFixed(2);
+    document.getElementById('summaryTotal').textContent = '₱' + (subtotal + fee).toFixed(2);
+  }
+
+  // Address dropdown: show custom input when "custom" selected
+  document.getElementById('addressSelect').addEventListener('change', function() {
+    const customWrap = document.getElementById('customAddressWrap');
+    customWrap.style.display = this.value === 'custom' ? 'block' : 'none';
+  });
+
+  // Place Order button
+  document.getElementById('placeOrderBtn').addEventListener('click', function() {
+    const items = Object.values(selectedItems).map(item => ({
+      inventory_id: item.inventory_id,
+      quantity: item.quantity
+    }));
+
+    const paymentType = document.querySelector('input[name="paymentType"]:checked').value;
+
+    // Determine delivery address
+    let deliveryAddress = null;
+    if (paymentType !== 'pickup') {
+      const addressSelect = document.getElementById('addressSelect');
+      if (addressSelect.value === 'custom') {
+        deliveryAddress = document.getElementById('customAddress').value.trim();
+        if (!deliveryAddress) {
+          showToast('Please enter a delivery address', 'warning');
+          return;
+        }
+      } else {
+        // Send the address_id — server will look up the full address
+        deliveryAddress = addressSelect.value; // This is the address_id
+      }
+    }
+
+    const orderNotes = document.getElementById('orderNotes').value.trim();
+
+    // Disable button, show loading
+    this.disabled = true;
+    this.innerHTML = '<div class="spinner" style="width:20px;height:20px;"></div> Placing Order...';
+
+    // First: real-time stock validation
+    const itemIds = items.map(i => i.inventory_id).join(',');
+    ajaxGet('/api/inventory/check_stock.php', { item_ids: itemIds })
+      .then(stockData => {
+        // Check for out-of-stock items
+        const unavailable = [];
+        stockData.items.forEach(stockItem => {
+          const selected = selectedItems[stockItem.id];
+          if (!selected) return;
+          if (stockItem.status !== 'active' || stockItem.stock < selected.quantity) {
+            unavailable.push(selected.item_name);
+            delete selectedItems[stockItem.id];
+          }
+        });
+
+        if (unavailable.length > 0) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Items Unavailable',
+            html: `The following items are no longer available and have been removed from your order:<br><br><strong>${unavailable.join('<br>')}</strong>`,
+            confirmButtonColor: 'var(--primary)'
+          });
+          renderCheckoutModal();
+          updateCheckoutBar();
+          resetPlaceOrderBtn();
+          if (Object.keys(selectedItems).length === 0) {
+            closeModal('checkoutModal');
+          }
+          return;
+        }
+
+        // All items valid — place the order
+        return ajaxPost('/api/orders/place_order.php', {
+          items: JSON.stringify(items),
+          payment_type: paymentType,
+          delivery_address: deliveryAddress,
+          order_notes: orderNotes
+        });
+      })
+      .then(data => {
+        if (!data) return; // Stock validation failed, already handled
+        if (data.success) {
+          closeModal('checkoutModal');
+          Swal.fire({
+            icon: 'success',
+            title: 'Order Placed Successfully!',
+            html: `Your order <strong>#${data.order_id}</strong> has been sent to staff for confirmation.`,
+            showCancelButton: true,
+            confirmButtonText: 'View Receipt',
+            cancelButtonText: 'Go to My Orders',
+            confirmButtonColor: 'var(--primary)'
+          }).then(result => {
+            if (result.isConfirmed) {
+              window.open('/receipt.php?token=' + data.receipt_token, '_blank');
+              window.location.href = 'my_orders.php';
+            } else {
+              window.location.href = 'my_orders.php';
+            }
+          });
+        } else {
+          showToast(data.message || 'Failed to place order', 'error');
+          resetPlaceOrderBtn();
+        }
+      })
+      .catch(err => {
+        showToast('An error occurred. Please try again.', 'error');
+        resetPlaceOrderBtn();
+      });
+  });
+
+  function resetPlaceOrderBtn() {
+    const btn = document.getElementById('placeOrderBtn');
+    btn.disabled = false;
+    btn.innerHTML = '<span class="material-icons">check</span> Place Order';
+  }
+
+  function preselectReorderItems(reorderItems) {
+    reorderItems.forEach(item => {
+      const card = document.querySelector(`.item-card[data-item-id="${item.inventory_id}"]`);
+      if (card && !card.classList.contains('out-of-stock')) {
+        const qtyInput = card.querySelector('.qty-input');
+        qtyInput.value = Math.min(item.quantity, parseInt(qtyInput.max));
+        selectedItems[item.inventory_id] = {
+          inventory_id: item.inventory_id,
+          item_name: item.item_name,
+          item_icon: item.item_icon,
+          price: item.price,
+          stock_count: parseInt(qtyInput.max),
+          quantity: parseInt(qtyInput.value)
+        };
+        card.classList.add('selected');
+      }
+    });
+    updateCheckoutBar();
+  }
+
+  function showLoading() {
+    document.getElementById('itemsLoading').style.display = 'flex';
+  }
+  function hideLoading() {
+    document.getElementById('itemsLoading').style.display = 'none';
+  }
+
+});
+```
+
+---
+
+### 3. `customer/my_orders.php`
+
+**PHP Logic (top of file):**
+```
+1. Include auth_check, require_role([ROLE_CUSTOMER])
+2. Account status check — pending accounts can see this but it will be empty.
+   Flagged accounts can view orders but cannot cancel anymore (well, they can cancel pending ones but
+   each cancel risks further flagging — the API handles the logic, the UI just shows the buttons).
+3. Include header, sidebar
+```
+
+**HTML Structure:**
+```html
+<div class="main-content">
+  <div class="page-header">
+    <h1>My Orders</h1>
+    <p class="text-muted">Track and manage your current orders.</p>
+  </div>
+
+  <!-- Filter Bar -->
+  <div class="filter-bar" id="orderFilters">
+    <button class="filter-btn active" data-filter="all">All</button>
+    <button class="filter-btn" data-filter="pending">Pending</button>
+    <button class="filter-btn" data-filter="confirmed">Confirmed</button>
+    <button class="filter-btn" data-filter="assigned">Assigned</button>
+    <button class="filter-btn" data-filter="on_delivery">On Delivery</button>
+    <button class="filter-btn" data-filter="ready_for_pickup">Ready for Pickup</button>
+  </div>
+
+  <!-- Bulk Actions Bar (shown when checkboxes selected) -->
+  <div class="bulk-actions-bar" id="bulkActions" style="display: none;">
+    <span id="bulkSelectedCount">0</span> order(s) selected
+    <button class="btn btn-danger btn-sm" id="bulkCancelBtn">Cancel Selected</button>
+  </div>
+
+  <!-- Orders Table -->
+  <div class="data-table-wrapper">
+    <table class="data-table" id="ordersTable">
+      <thead>
+        <tr>
+          <th><input type="checkbox" class="custom-checkbox" id="selectAllOrders"></th>
+          <th>Order ID</th>
+          <th>Items</th>
+          <th>Payment</th>
+          <th>Status</th>
+          <th>Quantity</th>
+          <th>Rider</th>
+          <th>Order Date</th>
+          <th>Expected Delivery</th>
+          <th>Staff Note</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="ordersBody">
+        <!-- Loaded by JS via AJAX -->
+        <tr class="loading-row">
+          <td colspan="11"><div class="spinner"></div></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination" id="ordersPagination"></div>
+
+  <!-- Empty State (shown when no orders) -->
+  <div class="empty-state" id="emptyOrders" style="display: none;">
+    <span class="material-icons">inbox</span>
+    <p>No orders found.</p>
+    <a href="place_order.php" class="btn btn-primary">Place an Order</a>
+  </div>
+</div>
+```
+
+### `customer/css/my_orders.css`
+
+```
+.filter-bar:
+  - Horizontal scrollable on mobile (overflow-x auto)
+  - Gap between filter buttons
+  - .filter-btn: pill shape, border, cursor pointer
+  - .filter-btn.active: matches the status color of the filter
+    (e.g., Pending filter active = orange background)
+
+.bulk-actions-bar:
+  - Glass card, flex row, align center, gap
+  - Padding 12px 20px
+  - Margin bottom 16px
+  - Slide-down animation when shown
+
+.data-table:
+  - Full width, border-collapse
+  - th: background slightly darker surface, sticky top
+  - td: padding 12px 16px
+  - Alternating row colors
+  - Hover row highlight
+  - .item-with-icon within td: flex inline, align center
+
+Actions column:
+  - .btn-icon: 32x32px buttons with centered Material icon
+  - Green check icon (accept/received)
+  - Red X icon (cancel)
+  - Gap between action buttons
+
+Responsive:
+  - Table wrapper has horizontal scroll
+  - Actions column minimum width to prevent button wrapping
+```
+
+### `customer/js/my_orders.js`
+
+```javascript
+document.addEventListener('DOMContentLoaded', function() {
+
+  let currentFilter = 'all';
+  let currentPage = 1;
+  const perPage = 50; // ITEMS_PER_PAGE
+
+  // Load orders on page load
+  loadOrders();
+
+  // Filter buttons
+  document.querySelectorAll('#orderFilters .filter-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('#orderFilters .filter-btn').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      currentFilter = this.dataset.filter;
+      currentPage = 1;
+      loadOrders();
+    });
+  });
+
+  function loadOrders() {
+    const params = {
+      status: currentFilter === 'all' ? '' : currentFilter,
+      page: currentPage
+    };
+
+    // Show loading
+    document.getElementById('ordersBody').innerHTML =
+      '<tr class="loading-row"><td colspan="11"><div class="spinner"></div></td></tr>';
+    document.getElementById('emptyOrders').style.display = 'none';
+
+    ajaxGet('/api/orders/get_orders.php', params)
+      .then(data => {
+        if (data.orders.length === 0) {
+          document.getElementById('ordersBody').innerHTML = '';
+          document.getElementById('emptyOrders').style.display = 'flex';
+          document.getElementById('ordersPagination').innerHTML = '';
+          return;
+        }
+
+        document.getElementById('emptyOrders').style.display = 'none';
+        renderOrders(data.orders);
+        renderOrdersPagination(data.total, data.page, data.per_page);
+      })
+      .catch(err => {
+        showToast('Failed to load orders', 'error');
+      });
+  }
+
+  function renderOrders(orders) {
+    const tbody = document.getElementById('ordersBody');
+    tbody.innerHTML = '';
+
+    orders.forEach(order => {
+      const tr = document.createElement('tr');
+
+      // Determine which actions are available
+      const canCancel = (order.status === 'pending'); // Customer can only cancel pending
+      const canAccept = (order.status === 'delivered' || order.status === 'picked_up')
+                        && !order.customer_confirmed;
+
+      // Items display: combine all order_items into one cell
+      const itemsHtml = order.items.map(item => `
+        <span class="item-with-icon">
+          <img src="${item.item_icon || '/assets/images/default-item.png'}" class="item-icon-sm">
+          ${item.item_name}
+        </span>
+      `).join(', ');
+
+      // Total quantity across all items in this order
+      const totalQty = order.items.reduce((sum, item) => sum + parseInt(item.quantity), 0);
+
+      // Payment label
+      const paymentLabels = { cod: 'Cash on Delivery', pickup: 'Pickup at Store', online: 'Online' };
+
+      tr.innerHTML = `
+        <td>
+          ${canCancel ? `<input type="checkbox" class="custom-checkbox order-checkbox" data-order-id="${order.id}">` : ''}
+        </td>
+        <td><strong>#${order.id}</strong></td>
+        <td>${itemsHtml}</td>
+        <td>${paymentLabels[order.payment_type] || order.payment_type}</td>
+        <td><span class="badge badge-${order.status.replace(/_/g, '-')}">${formatStatus(order.status)}</span></td>
+        <td>${totalQty}</td>
+        <td>${order.rider_name || '<span class="text-muted">Unassigned</span>'}</td>
+        <td>${formatDate(order.order_date)}</td>
+        <td>${order.expected_delivery_date ? formatDate(order.expected_delivery_date) : '<span class="text-muted">—</span>'}</td>
+        <td>${order.staff_comment || '<span class="text-muted">—</span>'}</td>
+        <td class="actions-cell">
+          ${canAccept ? `
+            <button class="btn-icon btn-success" title="Mark as Received" onclick="acceptOrder(${order.id})">
+              <span class="material-icons">check_circle</span>
+            </button>
+          ` : ''}
+          ${canCancel ? `
+            <button class="btn-icon btn-danger" title="Cancel Order" onclick="cancelOrder(${order.id})">
+              <span class="material-icons">cancel</span>
+            </button>
+          ` : ''}
+          ${order.status === 'cancelled' || order.status === 'delivered' || order.status === 'accepted' || order.status === 'picked_up' ? `
+            <button class="btn-icon btn-info" title="Reorder" onclick="reorder(${order.id})">
+              <span class="material-icons">replay</span>
+            </button>
+          ` : ''}
+          <button class="btn-icon btn-outline" title="View Receipt" onclick="viewReceipt('${order.receipt_token}')">
+            <span class="material-icons">receipt</span>
+          </button>
+        </td>
+      `;
+
+      tbody.appendChild(tr);
+    });
+
+    // Init bulk select
+    initBulkSelect('ordersTable');
+  }
+
+  // Cancel Order
+  window.cancelOrder = function(orderId) {
+    Swal.fire({
+      title: 'Cancel Order #' + orderId + '?',
+      html: `
+        <p style="margin-bottom: 12px; color: var(--text-secondary);">
+          This action cannot be undone. Please provide a reason for cancellation.
+        </p>
+        <textarea id="cancelReason" class="swal2-textarea"
+          placeholder="Reason for cancellation (required)" rows="3"></textarea>
+      `,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, Cancel Order',
+      cancelButtonText: 'No, Keep It',
+      confirmButtonColor: '#EF5350',
+      preConfirm: () => {
+        const reason = document.getElementById('cancelReason').value.trim();
+        if (!reason) {
+          Swal.showValidationMessage('Please provide a cancellation reason');
+          return false;
+        }
+        return reason;
+      }
+    }).then(result => {
+      if (result.isConfirmed) {
+        ajaxPost('/api/orders/cancel_order.php', {
+          order_id: orderId,
+          reason: result.value
+        }).then(data => {
+          if (data.success) {
+            showToast('Order cancelled successfully', 'success');
+            loadOrders(); // Refresh table
+            // Check if account was flagged
+            if (data.account_flagged) {
+              Swal.fire({
+                icon: 'warning',
+                title: 'Account Flagged',
+                text: 'You have reached the maximum number of cancellations. Your ordering privileges have been suspended. You can submit an appeal from the Dashboard.',
+                confirmButtonColor: 'var(--warning)'
+              });
+            }
+          } else {
+            showToast(data.message || 'Failed to cancel order', 'error');
+          }
+        });
+      }
+    });
+  };
+
+  // Accept/Received
+  window.acceptOrder = function(orderId) {
+    Swal.fire({
+      title: 'Confirm Receipt',
+      text: 'Mark this order as received/accepted? This is optional and just confirms you got your items.',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, I Received It',
+      cancelButtonText: 'Not Yet',
+      confirmButtonColor: 'var(--success)'
+    }).then(result => {
+      if (result.isConfirmed) {
+        ajaxPost('/api/orders/confirm_received.php', { order_id: orderId })
+          .then(data => {
+            if (data.success) {
+              showToast('Order marked as received!', 'success');
+              loadOrders();
+            } else {
+              showToast(data.message || 'Failed to confirm receipt', 'error');
+            }
+          });
+      }
+    });
+  };
+
+  // Reorder
+  window.reorder = function(orderId) {
+    Swal.fire({
+      title: 'Reorder',
+      text: 'Would you like to place a new order with the same items?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, Reorder',
+      confirmButtonColor: 'var(--primary)'
+    }).then(result => {
+      if (result.isConfirmed) {
+        window.location.href = 'place_order.php?reorder=' + orderId;
+      }
+    });
+  };
+
+  // View Receipt
+  window.viewReceipt = function(token) {
+    window.open('/receipt.php?token=' + token, '_blank');
+  };
+
+  // Bulk cancel
+  document.getElementById('bulkCancelBtn').addEventListener('click', function() {
+    const selectedIds = getSelectedIds('ordersTable');
+    if (selectedIds.length === 0) {
+      showToast('No orders selected', 'warning');
+      return;
+    }
+
+    Swal.fire({
+      title: `Cancel ${selectedIds.length} Order(s)?`,
+      html: `<textarea id="bulkCancelReason" class="swal2-textarea"
+              placeholder="Reason for cancellation (required)" rows="3"></textarea>`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Cancel All Selected',
+      confirmButtonColor: '#EF5350',
+      preConfirm: () => {
+        const reason = document.getElementById('bulkCancelReason').value.trim();
+        if (!reason) {
+          Swal.showValidationMessage('Please provide a reason');
+          return false;
+        }
+        return reason;
+      }
+    }).then(result => {
+      if (result.isConfirmed) {
+        ajaxPost('/api/orders/bulk_update.php', {
+          order_ids: JSON.stringify(selectedIds),
+          action: 'cancel',
+          reason: result.value
+        }).then(data => {
+          if (data.success !== undefined) {
+            showToast(`${data.success} order(s) cancelled`, 'success');
+            loadOrders();
+          }
+        });
+      }
+    });
+  });
+
+  // Select all checkbox handler
+  document.getElementById('selectAllOrders').addEventListener('change', function() {
+    const checkboxes = document.querySelectorAll('.order-checkbox');
+    checkboxes.forEach(cb => { cb.checked = this.checked; });
+    updateBulkBar();
+  });
+
+  // Delegate individual checkbox changes
+  document.getElementById('ordersBody').addEventListener('change', function(e) {
+    if (e.target.classList.contains('order-checkbox')) {
+      updateBulkBar();
+    }
+  });
+
+  function updateBulkBar() {
+    const checked = document.querySelectorAll('.order-checkbox:checked').length;
+    const bar = document.getElementById('bulkActions');
+    bar.style.display = checked > 0 ? 'flex' : 'none';
+    document.getElementById('bulkSelectedCount').textContent = checked;
+  }
+
+  // Helper functions
+  function formatStatus(status) {
+    const labels = {
+      pending: 'Pending',
+      confirmed: 'Confirmed',
+      assigned: 'Assigned',
+      on_delivery: 'On Delivery',
+      delivered: 'Delivered',
+      accepted: 'Accepted',
+      ready_for_pickup: 'Ready for Pickup',
+      picked_up: 'Picked Up',
+      cancelled: 'Cancelled'
+    };
+    return labels[status] || status;
+  }
+
+  function formatDate(dateStr) {
+    if (!dateStr) return '—';
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      + ' ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  function renderOrdersPagination(total, page, perPage) {
+    // Same pagination rendering logic as place_order.js
+    const totalPages = Math.ceil(total / perPage);
+    const container = document.getElementById('ordersPagination');
+    container.innerHTML = '';
+    if (totalPages <= 1) return;
+
+    const prevBtn = document.createElement('button');
+    prevBtn.className = 'page-btn';
+    prevBtn.textContent = 'Previous';
+    prevBtn.disabled = page <= 1;
+    prevBtn.addEventListener('click', () => { currentPage--; loadOrders(); });
+    container.appendChild(prevBtn);
+
+    for (let i = Math.max(1, page-2); i <= Math.min(totalPages, page+2); i++) {
+      const pb = document.createElement('button');
+      pb.className = `page-btn ${i === page ? 'active' : ''}`;
+      pb.textContent = i;
+      pb.addEventListener('click', () => { currentPage = i; loadOrders(); });
+      container.appendChild(pb);
+    }
+
+    const nextBtn = document.createElement('button');
+    nextBtn.className = 'page-btn';
+    nextBtn.textContent = 'Next';
+    nextBtn.disabled = page >= totalPages;
+    nextBtn.addEventListener('click', () => { currentPage++; loadOrders(); });
+    container.appendChild(nextBtn);
+
+    const info = document.createElement('span');
+    info.className = 'pagination-info';
+    info.textContent = `Showing ${(page-1)*perPage + 1}–${Math.min(page*perPage, total)} of ${total} orders`;
+    container.appendChild(info);
+  }
+
+});
+```
+
+---
+
+### 4. `customer/order_history.php`
+
+**PHP Logic:**
+```
+1. Include auth_check, require_role([ROLE_CUSTOMER])
+2. Include header, sidebar
+```
+
+**HTML Structure:**
+```html
+<div class="main-content">
+  <div class="page-header">
+    <h1>Order History</h1>
+    <p class="text-muted">View all your past orders and their details.</p>
+  </div>
+
+  <!-- Toolbar: Filters + Search + Date Range -->
+  <div class="toolbar">
+    <div class="filter-bar" id="historyFilters">
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="delivered">Delivered</button>
+      <button class="filter-btn" data-filter="accepted">Accepted</button>
+      <button class="filter-btn" data-filter="picked_up">Picked Up</button>
+      <button class="filter-btn" data-filter="cancelled">Cancelled</button>
+    </div>
+    <div class="toolbar-right">
+      <div class="search-bar">
+        <span class="material-icons search-icon">search</span>
+        <input type="text" id="historySearch" class="search-input" placeholder="Search by Order ID or item...">
+      </div>
+      <div class="date-range">
+        <input type="date" id="dateFrom" class="float-input" title="From Date">
+        <span class="text-muted">to</span>
+        <input type="date" id="dateTo" class="float-input" title="To Date">
+      </div>
+    </div>
+  </div>
+
+  <!-- History Table -->
+  <div class="data-table-wrapper">
+    <table class="data-table" id="historyTable">
+      <thead>
+        <tr>
+          <th>Order ID</th>
+          <th>Items</th>
+          <th>Payment</th>
+          <th>Delivery Type</th>
+          <th>Status</th>
+          <th>Total Qty</th>
+          <th>Total Amount</th>
+          <th>Rider</th>
+          <th>Order Date</th>
+          <th>Delivered Date</th>
+          <th>Cancellation Reason</th>
+          <th>Cancelled By</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="historyBody">
+        <tr class="loading-row"><td colspan="13"><div class="spinner"></div></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pagination" id="historyPagination"></div>
+
+  <div class="empty-state" id="emptyHistory" style="display: none;">
+    <span class="material-icons">history</span>
+    <p>No order history found.</p>
+  </div>
+</div>
+```
+
+### `customer/css/order_history.css`
+
+```
+.toolbar:
+  - Flex column on mobile, row on desktop
+  - Gap between filter bar and right side
+  - .toolbar-right: flex row, gap, align center
+
+.date-range:
+  - Flex row, gap 8px, align center
+  - Input type date styled to match theme
+
+Table specific:
+  - Cancellation reason column: max-width 200px, text truncated with ellipsis, hover tooltip shows full text
+  - Cancelled By column: show role badge + name
+  - Total Amount column: font-weight bold, primary color
+
+Responsive: same table horizontal scroll pattern
+```
+
+### `customer/js/order_history.js`
+
+```javascript
+document.addEventListener('DOMContentLoaded', function() {
+
+  let currentFilter = 'all';
+  let currentPage = 1;
+  let searchText = '';
+  let dateFrom = '';
+  let dateTo = '';
+
+  loadHistory();
+
+  // Filter buttons
+  document.querySelectorAll('#historyFilters .filter-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('#historyFilters .filter-btn').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      currentFilter = this.dataset.filter;
+      currentPage = 1;
+      loadHistory();
+    });
+  });
+
+  // Search (debounced)
+  let searchTimeout;
+  document.getElementById('historySearch').addEventListener('input', function() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+      searchText = this.value.trim();
+      currentPage = 1;
+      loadHistory();
+    }, 300);
+  });
+
+  // Date range
+  document.getElementById('dateFrom').addEventListener('change', function() {
+    dateFrom = this.value;
+    currentPage = 1;
+    loadHistory();
+  });
+  document.getElementById('dateTo').addEventListener('change', function() {
+    dateTo = this.value;
+    currentPage = 1;
+    loadHistory();
+  });
+
+  function loadHistory() {
+    const params = {
+      status: currentFilter === 'all' ? '' : currentFilter,
+      search: searchText,
+      page: currentPage,
+      date_from: dateFrom,
+      date_to: dateTo,
+      scope: 'history' // Tell the API to include completed/cancelled orders
+    };
+
+    document.getElementById('historyBody').innerHTML =
+      '<tr class="loading-row"><td colspan="13"><div class="spinner"></div></td></tr>';
+    document.getElementById('emptyHistory').style.display = 'none';
+
+    ajaxGet('/api/orders/get_orders.php', params)
+      .then(data => {
+        if (data.orders.length === 0) {
+          document.getElementById('historyBody').innerHTML = '';
+          document.getElementById('emptyHistory').style.display = 'flex';
+          document.getElementById('historyPagination').innerHTML = '';
+          return;
+        }
+
+        document.getElementById('emptyHistory').style.display = 'none';
+        renderHistory(data.orders);
+        renderPagination(data.total, data.page, data.per_page, 'historyPagination', loadHistory);
+      })
+      .catch(() => showToast('Failed to load order history', 'error'));
+  }
+
+  function renderHistory(orders) {
+    const tbody = document.getElementById('historyBody');
+    tbody.innerHTML = '';
+
+    orders.forEach(order => {
+      const itemsHtml = order.items.map(item =>
+        `<span class="item-with-icon"><img src="${item.item_icon || '/assets/images/default-item.png'}" class="item-icon-sm">${item.item_name}</span>`
+      ).join(', ');
+
+      const totalQty = order.items.reduce((sum, i) => sum + parseInt(i.quantity), 0);
+      const paymentLabels = { cod: 'Cash on Delivery', pickup: 'Pickup at Store', online: 'Online' };
+      const deliveryLabels = { delivery: 'Delivery', pickup: 'Pickup' };
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><strong>#${order.id}</strong></td>
+        <td>${itemsHtml}</td>
+        <td>${paymentLabels[order.payment_type] || order.payment_type}</td>
+        <td>${deliveryLabels[order.delivery_type] || order.delivery_type}</td>
+        <td><span class="badge badge-${order.status.replace(/_/g, '-')}">${formatStatus(order.status)}</span></td>
+        <td>${totalQty}</td>
+        <td><strong>${formatCurrency(order.total_amount)}</strong></td>
+        <td>${order.rider_name || '<span class="text-muted">N/A</span>'}</td>
+        <td>${formatDate(order.order_date)}</td>
+        <td>${order.delivered_at ? formatDate(order.delivered_at) : '<span class="text-muted">—</span>'}</td>
+        <td class="truncate-cell" title="${order.cancellation_reason || ''}">${order.cancellation_reason || '<span class="text-muted">—</span>'}</td>
+        <td>${order.cancelled_by_name ? order.cancelled_by_name : '<span class="text-muted">—</span>'}</td>
+        <td class="actions-cell">
+          <button class="btn-icon btn-info" title="Reorder" onclick="reorder(${order.id})">
+            <span class="material-icons">replay</span>
+          </button>
+          <button class="btn-icon btn-outline" title="View Receipt" onclick="viewReceipt('${order.receipt_token}')">
+            <span class="material-icons">receipt</span>
+          </button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  // Reorder and receipt functions (same as my_orders.js)
+  window.reorder = function(orderId) {
+    Swal.fire({
+      title: 'Reorder',
+      text: 'Place a new order with the same items?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, Reorder',
+      confirmButtonColor: 'var(--primary)'
+    }).then(result => {
+      if (result.isConfirmed) {
+        window.location.href = 'place_order.php?reorder=' + orderId;
+      }
+    });
+  };
+
+  window.viewReceipt = function(token) {
+    window.open('/receipt.php?token=' + token, '_blank');
+  };
+
+  // Shared helpers
+  function formatStatus(s) {
+    const labels = { pending:'Pending', confirmed:'Confirmed', assigned:'Assigned', on_delivery:'On Delivery', delivered:'Delivered', accepted:'Accepted', ready_for_pickup:'Ready for Pickup', picked_up:'Picked Up', cancelled:'Cancelled' };
+    return labels[s] || s;
+  }
+  function formatDate(d) {
+    if (!d) return '—';
+    return new Date(d).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }) + ' ' + new Date(d).toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' });
+  }
+  function formatCurrency(a) { return '₱' + parseFloat(a).toFixed(2); }
+
+  function renderPagination(total, page, perPage, containerId, loadFunc) {
+    const totalPages = Math.ceil(total / perPage);
+    const container = document.getElementById(containerId);
+    container.innerHTML = '';
+    if (totalPages <= 1) return;
+
+    const prev = document.createElement('button');
+    prev.className = 'page-btn'; prev.textContent = 'Previous'; prev.disabled = page <= 1;
+    prev.addEventListener('click', () => { currentPage--; loadFunc(); });
+    container.appendChild(prev);
+
+    for (let i = Math.max(1,page-2); i <= Math.min(totalPages,page+2); i++) {
+      const pb = document.createElement('button');
+      pb.className = `page-btn ${i===page?'active':''}`;
+      pb.textContent = i;
+      pb.addEventListener('click', () => { currentPage = i; loadFunc(); });
+      container.appendChild(pb);
+    }
+
+    const next = document.createElement('button');
+    next.className = 'page-btn'; next.textContent = 'Next'; next.disabled = page >= totalPages;
+    next.addEventListener('click', () => { currentPage++; loadFunc(); });
+    container.appendChild(next);
+
+    const info = document.createElement('span');
+    info.className = 'pagination-info';
+    info.textContent = `Showing ${(page-1)*perPage+1}–${Math.min(page*perPage,total)} of ${total}`;
+    container.appendChild(info);
+  }
+
+});
+```
+
+---
+
+### 5. `customer/settings.php`
+
+**PHP Logic (top of file):**
+```
+1. Include auth_check, require_role([ROLE_CUSTOMER])
+2. Fetch current user data from DB (fresh, not just session — in case it was updated elsewhere)
+3. Fetch customer addresses from DB
+4. Fetch user preferences from DB
+5. If status is flagged: fetch appeal history
+6. Include header, sidebar
+```
+
+**HTML Structure:**
+```html
+<div class="main-content">
+  <div class="page-header">
+    <h1>Settings</h1>
+    <p class="text-muted">Manage your profile, addresses, and preferences.</p>
+  </div>
+
+  <!-- Profile Section -->
+  <div class="settings-section glass-card">
+    <h2><span class="material-icons">person</span> Profile Information</h2>
+    <form id="profileForm">
+      <div class="form-grid">
+        <div class="float-input-group">
+          <input type="text" id="profileUsername" class="float-input" value="{username}" disabled
+                 style="opacity: 0.6; cursor: not-allowed;">
+          <label class="float-label">Username (cannot be changed)</label>
+        </div>
+        <div class="float-input-group">
+          <input type="text" id="profileFullName" class="float-input" value="{full_name}" placeholder=" " required>
+          <label class="float-label">Full Name</label>
+        </div>
+        <div class="float-input-group">
+          <input type="email" id="profileEmail" class="float-input" value="{email}" placeholder=" " required>
+          <label class="float-label">Email</label>
+        </div>
+        <div class="float-input-group">
+          <input type="tel" id="profilePhone" class="float-input" value="{phone}" placeholder=" " required>
+          <label class="float-label">Phone Number</label>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary">
+        <span class="material-icons">save</span> Save Changes
+      </button>
+    </form>
+  </div>
+
+  <!-- Password Section -->
+  <div class="settings-section glass-card">
+    <h2><span class="material-icons">lock</span> Change Password</h2>
+    <form id="passwordForm">
+      <div class="form-grid">
+        <div class="float-input-group">
+          <input type="password" id="currentPassword" class="float-input" placeholder=" " required>
+          <label class="float-label">Current Password</label>
+        </div>
+        <div class="float-input-group">
+          <input type="password" id="newPassword" class="float-input" placeholder=" " required>
+          <label class="float-label">New Password (min. 6 characters)</label>
+        </div>
+        <div class="float-input-group">
+          <input type="password" id="confirmPassword" class="float-input" placeholder=" " required>
+          <label class="float-label">Confirm New Password</label>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-warning">
+        <span class="material-icons">lock_reset</span> Change Password
+      </button>
+    </form>
+  </div>
+
+  <!-- Addresses Section -->
+  <div class="settings-section glass-card">
+    <h2><span class="material-icons">location_on</span> Delivery Addresses</h2>
+
+    <div class="addresses-list" id="addressesList">
+      <!-- Rendered by PHP or JS -->
+      <!-- For each address: -->
+      <div class="address-card" data-address-id="{id}">
+        <div class="address-info">
+          <span class="address-label">{label}</span>
+          {if is_default: <span class="badge badge-confirmed">Default</span>}
+          <p class="address-text">{full_address}</p>
+        </div>
+        <div class="address-actions">
+          {if not default: <button class="btn btn-sm btn-outline set-default-btn" data-id="{id}">Set Default</button>}
+          <button class="btn btn-sm btn-info edit-address-btn" data-id="{id}">
+            <span class="material-icons">edit</span>
+          </button>
+          <button class="btn btn-sm btn-danger delete-address-btn" data-id="{id}">
+            <span class="material-icons">delete</span>
+          </button>
+        </div>
+      </div>
+      <!-- End foreach -->
+    </div>
+
+    <button class="btn btn-outline" id="addAddressBtn">
+      <span class="material-icons">add</span> Add Address
+    </button>
+  </div>
+
+  <!-- Appeal Section (only if flagged) -->
+  <?php if ($user['status'] === 'flagged'): ?>
+  <div class="settings-section glass-card flagged-section">
+    <h2><span class="material-icons">gavel</span> Cancellation Appeals</h2>
+    <p>Your account is flagged due to excessive cancellations (<strong><?= $user['cancellation_count'] ?></strong> this month, max: <strong><?= get_setting('max_cancellation') ?></strong>).</p>
+
+    <div class="appeals-history" id="appealsHistory">
+      <!-- Table of past appeals -->
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Reason</th>
+            <th>Status</th>
+            <th>Admin Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- PHP foreach appeals: -->
+          <tr>
+            <td>{formatted created_at}</td>
+            <td>{reason}</td>
+            <td><span class="badge badge-{status}">{status}</span></td>
+            <td>{admin_notes or '—'}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Show submit button only if no pending appeal -->
+    <?php if (!$has_pending_appeal): ?>
+    <button class="btn btn-warning" id="settingsAppealBtn">
+      <span class="material-icons">send</span> Submit New Appeal
+    </button>
+    <?php else: ?>
+    <p class="text-muted"><span class="material-icons" style="vertical-align:middle;">hourglass_top</span> You have a pending appeal awaiting review.</p>
+    <?php endif; ?>
+  </div>
+  <?php endif; ?>
+</div>
+```
+
+### `customer/css/settings.css`
+
+```
+.settings-section:
+  - Margin bottom 24px
+  - Padding 24px
+  - h2: flex row, align center, gap 8px, margin-bottom 20px, font-size 1.2em
+
+.form-grid:
+  - CSS Grid: 2 columns on desktop, 1 on mobile
+  - Gap: 16px
+  - Margin bottom 20px
+
+.addresses-list:
+  - Flex column, gap 12px, margin bottom 16px
+
+.address-card:
+  - Flex row (row on desktop, column on mobile), space-between, align center
+  - Padding 16px
+  - Border: 1px solid var(--border)
+  - Border-radius: var(--radius-sm)
+  - Background: subtle surface variant
+
+.address-info:
+  - .address-label: font-weight 600, margin-right 8px
+  - .address-text: color var(--text-secondary), margin-top 4px
+
+.address-actions:
+  - Flex row, gap 8px
+
+.flagged-section:
+  - Border-left: 4px solid var(--danger)
+  - .appeals-history: margin 16px 0
+
+Responsive:
+  - form-grid single column on mobile
+  - address-card stacks on mobile
+  - Buttons full width on mobile
+```
+
+### `customer/js/settings.js`
+
+```javascript
+document.addEventListener('DOMContentLoaded', function() {
+
+  // ===== PROFILE FORM =====
+  document.getElementById('profileForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const data = {
+      full_name: document.getElementById('profileFullName').value.trim(),
+      email: document.getElementById('profileEmail').value.trim(),
+      phone: document.getElementById('profilePhone').value.trim()
+    };
+
+    if (!data.full_name || !data.email || !data.phone) {
+      showToast('All fields are required', 'warning');
+      return;
+    }
+
+    ajaxPost('/api/settings/update_profile.php', data)
+      .then(res => {
+        if (res.success) {
+          showToast('Profile updated successfully', 'success');
+        } else {
+          showToast(res.message || 'Failed to update profile', 'error');
+        }
+      });
+  });
+
+  // ===== PASSWORD FORM =====
+  document.getElementById('passwordForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const current = document.getElementById('currentPassword').value;
+    const newPass = document.getElementById('newPassword').value;
+    const confirm = document.getElementById('confirmPassword').value;
+
+    if (!current || !newPass || !confirm) {
+      showToast('All password fields are required', 'warning');
+      return;
+    }
+    if (newPass.length < 6) {
+      showToast('New password must be at least 6 characters', 'warning');
+      return;
+    }
+    if (newPass !== confirm) {
+      showToast('New passwords do not match', 'warning');
+      return;
+    }
+
+    ajaxPost('/api/settings/change_password.php', {
+      current_password: current,
+      new_password: newPass,
+      confirm_password: confirm
+    }).then(res => {
+      if (res.success) {
+        showToast('Password changed successfully', 'success');
+        document.getElementById('passwordForm').reset();
+      } else {
+        showToast(res.message || 'Failed to change password', 'error');
+      }
+    });
+  });
+
+  // ===== ADDRESSES =====
+
+  // Add Address
+  document.getElementById('addAddressBtn').addEventListener('click', function() {
+    Swal.fire({
+      title: 'Add New Address',
+      html: `
+        <div class="float-input-group" style="margin-bottom:12px;">
+          <input type="text" id="newAddrLabel" class="swal2-input" placeholder="Label (e.g., Home, Office)">
+        </div>
+        <div class="float-input-group">
+          <textarea id="newAddrFull" class="swal2-textarea" placeholder="Full address" rows="3"></textarea>
+        </div>
+        <label style="display:flex;align-items:center;gap:8px;margin-top:12px;">
+          <input type="checkbox" id="newAddrDefault"> Set as default address
+        </label>
+      `,
+      showCancelButton: true,
+      confirmButtonText: 'Add Address',
+      confirmButtonColor: 'var(--primary)',
+      preConfirm: () => {
+        const label = document.getElementById('newAddrLabel').value.trim();
+        const address = document.getElementById('newAddrFull').value.trim();
+        if (!label || !address) {
+          Swal.showValidationMessage('Label and address are required');
+          return false;
+        }
+        return {
+          label: label,
+          full_address: address,
+          is_default: document.getElementById('newAddrDefault').checked ? 1 : 0
+        };
+      }
+    }).then(result => {
+      if (result.isConfirmed) {
+        ajaxPost('/api/addresses/add.php', result.value)
+          .then(res => {
+            if (res.success) {
+              showToast('Address added', 'success');
+              location.reload();
+            } else {
+              showToast(res.message || 'Failed to add address', 'error');
+            }
+          });
+      }
+    });
+  });
+
+  // Edit Address (delegated)
+  document.querySelectorAll('.edit-address-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const card = this.closest('.address-card');
+      const id = this.dataset.id;
+      const label = card.querySelector('.address-label').textContent;
+      const address = card.querySelector('.address-text').textContent;
+
+      Swal.fire({
+        title: 'Edit Address',
+        html: `
+          <input type="text" id="editAddrLabel" class="swal2-input" value="${label}" placeholder="Label">
+          <textarea id="editAddrFull" class="swal2-textarea" rows="3" placeholder="Full address">${address}</textarea>
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'Save',
+        confirmButtonColor: 'var(--primary)',
+        preConfirm: () => {
+          const newLabel = document.getElementById('editAddrLabel').value.trim();
+          const newAddr = document.getElementById('editAddrFull').value.trim();
+          if (!newLabel || !newAddr) {
+            Swal.showValidationMessage('Both fields are required');
+            return false;
+          }
+          return { address_id: id, label: newLabel, full_address: newAddr };
+        }
+      }).then(result => {
+        if (result.isConfirmed) {
+          ajaxPost('/api/addresses/update.php', result.value)
+            .then(res => {
+              if (res.success) {
+                showToast('Address updated', 'success');
+                location.reload();
+              } else {
+                showToast(res.message || 'Failed to update', 'error');
+              }
+            });
+        }
+      });
+    });
+  });
+
+  // Delete Address (delegated)
+  document.querySelectorAll('.delete-address-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const id = this.dataset.id;
+      Swal.fire({
+        title: 'Delete Address?',
+        text: 'This address will be permanently removed.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Delete',
+        confirmButtonColor: '#EF5350'
+      }).then(result => {
+        if (result.isConfirmed) {
+          ajaxPost('/api/addresses/delete.php', { address_id: id })
+            .then(res => {
+              if (res.success) {
+                showToast('Address deleted', 'success');
+                location.reload();
+              } else {
+                showToast(res.message || 'Cannot delete address', 'error');
+              }
+            });
+        }
+      });
+    });
+  });
+
+  // Set Default (delegated)
+  document.querySelectorAll('.set-default-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const id = this.dataset.id;
+      ajaxPost('/api/addresses/update.php', { address_id: id, is_default: 1 })
+        .then(res => {
+          if (res.success) {
+            showToast('Default address updated', 'success');
+            location.reload();
+          } else {
+            showToast(res.message || 'Failed', 'error');
+          }
+        });
+    });
+  });
+
+  // ===== APPEAL (if flagged) =====
+  const appealBtn = document.getElementById('settingsAppealBtn');
+  if (appealBtn) {
+    appealBtn.addEventListener('click', function() {
+      Swal.fire({
+        title: 'Submit Cancellation Appeal',
+        html: `
+          <p style="margin-bottom:12px;color:var(--text-secondary);">
+            Explain why your cancellations were necessary.
+          </p>
+          <textarea id="appealReason" class="swal2-textarea" placeholder="Your reason..." rows="5"></textarea>
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'Submit Appeal',
+        confirmButtonColor: 'var(--warning)',
+        preConfirm: () => {
+          const reason = document.getElementById('appealReason').value.trim();
+          if (!reason) {
+            Swal.showValidationMessage('Reason is required');
+            return false;
+          }
+          return reason;
+        }
+      }).then(result => {
+        if (result.isConfirmed) {
+          ajaxPost('/api/appeals/submit.php', { reason: result.value })
+            .then(res => {
+              if (res.success) {
+                showToast('Appeal submitted', 'success');
+                location.reload();
+              } else {
+                showToast(res.message || 'Failed', 'error');
+              }
+            });
+        }
+      });
+    });
+  }
+
+});
+```
+
+---
+
+## HTML PAGE TEMPLATE PATTERN
+
+Every customer PHP page must follow this exact pattern:
+
+```php
+<?php
+// Page-specific variables
+$page_title = 'Dashboard'; // Changes per page
+$page_css = 'css/dashboard.css'; // Changes per page
+$page_js = 'js/dashboard.js'; // Changes per page
+
+// Auth
+require_once __DIR__ . '/../includes/auth_check.php';
+require_role([ROLE_CUSTOMER]);
+
+// Page-specific PHP logic (DB queries, data preparation)
+// ...
+
+// Logger
+logger_function_entry(['page' => 'customer/dashboard']);
+?>
+<!DOCTYPE html>
+<html lang="en" data-theme="<?= $_SESSION['dark_mode'] ? 'dark' : 'light' ?>"
+  style="--primary: <?= get_setting('primary_color') ?>; --secondary: <?= get_setting('secondary_color') ?>; --accent: <?= get_setting('accent_color') ?>; --surface: <?= ($_SESSION['dark_mode'] ? '#1A1A2E' : get_setting('surface_color')) ?>;">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><?= $page_title ?> — <?= get_setting('station_name') ?></title>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Material Icons -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <!-- SweetAlert2 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+
+  <!-- Global CSS -->
+  <link rel="stylesheet" href="/assets/css/global.css">
+  <link rel="stylesheet" href="/assets/css/layout.css">
+  <link rel="stylesheet" href="/assets/css/components.css">
+
+  <!-- Page-specific CSS -->
+  <link rel="stylesheet" href="<?= $page_css ?>">
+
+  <!-- CSRF Token Meta -->
+  <meta name="csrf-token" content="<?= $_SESSION[CSRF_TOKEN_NAME] ?>">
+</head>
+<body>
+
+  <?php include __DIR__ . '/../includes/header.php'; ?>
+
+  <div class="app-wrapper">
+    <?php include __DIR__ . '/../includes/sidebar.php'; ?>
+
+    <div class="main-content">
+      <!-- PAGE CONTENT GOES HERE -->
+    </div>
+  </div>
+
+  <!-- Global JS -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="/assets/js/global.js"></script>
+  <script src="/assets/js/components.js"></script>
+  <script src="/assets/js/sidebar.js"></script>
+
+  <!-- Page-specific JS -->
+  <script src="<?= $page_js ?>"></script>
+
+  <?php
+  logger_function_exit(['page' => 'customer/dashboard']);
+  ?>
+</body>
+</html>
+```
+
+**Apply this pattern to ALL 5 customer PHP pages.** Adjust `$page_title`, `$page_css`, `$page_js`, the `require_role()`, the PHP logic section, and the HTML content section accordingly.
+
+---
+
+## IMPORTANT IMPLEMENTATION NOTES FOR CUSTOMER PAGES
+
+1. **Account Status Handling on Every Page:**
+   - If `$_SESSION['status'] === 'pending'`: Show the "Account Pending Approval" notice. Hide or disable all functional content. Only Settings page should be partially accessible (profile viewing).
+   - If `$_SESSION['status'] === 'flagged'`: Show the "Account Flagged" warning on dashboard. Allow viewing orders and history. Block "Place Order" page (redirect to dashboard with toast message). Allow Settings access including appeal submission.
+   - If `$_SESSION['status'] === 'active'`: Full access to everything.
+
+2. **Every page must use the shared `ajaxPost()` and `ajaxGet()` helper functions** from `global.js` which automatically attach the CSRF token.
+
+3. **Every table must implement pagination** showing max 50 items per page with Previous/Next buttons and a "Showing X-Y of Z items" counter.
+
+4. **All date/time values** displayed to the user must be formatted in Philippines Manila timezone using the helper functions.
+
+5. **Item icons** in tables and cards: If the item has an `item_icon` path, show that image. If NULL/empty, show `/assets/images/default-item.png`.
+
+6. **Status badges** must use the corresponding CSS class: `badge-pending`, `badge-confirmed`, etc. Use the `get_status_badge_class()` PHP function server-side or the JS `formatStatus()` function client-side.
+
+7. **The "Reorder" feature** works by redirecting to `place_order.php?reorder={order_id}`. On that page, PHP fetches the original order's items via `api/orders/reorder.php` and passes them to JS as a JSON variable. JS then pre-selects those items in the grid after items load.
+
+8. **The "View Receipt" button** opens `receipt.php?token={receipt_token}` in a new tab. This is a public page that was built in Prompt #1.
+
+9. **Dark mode** is already handled by the global CSS variables and the `data-theme` attribute on `<html>`. No additional dark mode code is needed in page-specific CSS — just use CSS variables (`var(--text-primary)`, `var(--surface)`, etc.) for all colors.
+
+10. **The sidebar active state** is handled by `sidebar.js` which matches the current URL path to sidebar link hrefs. Each sidebar link should point to the correct relative path (e.g., `dashboard.php`, `place_order.php`, etc.).
+
+11. **Floating label animation** for inputs: The `float-input-group` component has CSS that moves the label up when the input is focused or has a value. Use `placeholder=" "` (a space) on inputs to trigger the `:not(:placeholder-shown)` CSS selector for the filled state.
+
+12. **Glass card effect** should be used sparingly — primarily for main content cards like settings sections, stat cards, and the dashboard pending/flagged notices. Not on every element.
+
+13. **All customer-facing tables** should show human-readable values: "Cash on Delivery" instead of "cod", "On Delivery" instead of "on_delivery", etc. Use mapping objects in JS.
+
+14. **Each page-specific JS file** must be wrapped in `document.addEventListener('DOMContentLoaded', function() { ... })` to ensure DOM is ready.
+
+15. **Error handling**: Every AJAX call must have `.catch()` that shows a toast with a generic error message. Never leave failed requests silently unhandled.
+
+---
+
+**Now generate ALL 15 files for the customer role (`customer/` folder) with complete, production-ready code. Every PHP file must include proper auth checks, logging, and the HTML template pattern. Every CSS file must include all styles described including responsive breakpoints and dark mode support via CSS variables. Every JS file must include all interactivity, AJAX calls, SweetAlert2 dialogs, and error handling as described. Do not use placeholders or TODO comments.**

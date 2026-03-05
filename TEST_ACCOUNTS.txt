@@ -1,0 +1,254 @@
+═══════════════════════════════════════════════════════════
+    AZEU WATER STATION - TEST ACCOUNT CREDENTIALS
+═══════════════════════════════════════════════════════════
+
+Quick Reference Guide for Testing All Roles
+
+═══════════════════════════════════════════════════════════
+🔴 SUPER ADMIN
+═══════════════════════════════════════════════════════════
+Username: admin
+Password: admin
+
+Access:
+✓ Full system control
+✓ Create/delete admins
+✓ Cannot be deleted
+✓ All admin features + admin management
+
+═══════════════════════════════════════════════════════════
+🔴 ADMIN
+═══════════════════════════════════════════════════════════
+Username: admin2
+Password: admin123
+
+Access:
+✓ Analytics & Reports
+✓ Inventory Management (CRUD)
+✓ Order Management
+✓ Account Management (except super admin)
+✓ System Settings
+✓ Session Logs
+✓ Rider Statistics
+✓ Appeals Management
+✗ Cannot create other admins
+✗ Cannot delete super admin
+
+═══════════════════════════════════════════════════════════
+🟡 STAFF
+═══════════════════════════════════════════════════════════
+Username: staff1
+Password: staff123
+
+Access:
+✓ Approve pending accounts (Customer & Rider only)
+✓ Confirm orders
+✓ Assign riders to deliveries
+✓ View inventory (read-only)
+✓ View rider statistics
+✓ Review appeals
+✗ Cannot manage inventory (add/edit/delete)
+✗ Cannot view analytics
+✗ Cannot view session logs
+✗ Cannot change system settings
+
+═══════════════════════════════════════════════════════════
+🟢 RIDER 1
+═══════════════════════════════════════════════════════════
+Username: rider1
+Password: rider123
+
+Status: Active, Available
+Assigned Orders: 2 (Order #3 - assigned, Order #4 - on delivery)
+
+Access:
+✓ View assigned deliveries
+✓ Organize delivery priority (drag-and-drop)
+✓ Mark orders "On Delivery"
+✓ Mark orders "Delivered"
+✓ Toggle availability (Available/Unavailable)
+✓ View delivery history
+✓ View statistics (completed, pending, success rate)
+
+═══════════════════════════════════════════════════════════
+🟢 RIDER 2
+═══════════════════════════════════════════════════════════
+Username: rider2
+Password: rider123
+
+Status: Active, Available
+Completed Orders: 1 (Order #5)
+
+Access:
+✓ Same as Rider 1
+✓ View delivery history
+✓ View statistics
+
+═══════════════════════════════════════════════════════════
+🔵 CUSTOMER 1 (ACTIVE)
+═══════════════════════════════════════════════════════════
+Username: customer1
+Password: customer123
+
+Status: Active ✓
+Orders: 5 orders (all statuses represented)
+Addresses: 3 saved addresses
+
+Access:
+✓ Place new orders (delivery or pickup)
+✓ View order history
+✓ Track active deliveries
+✓ Cancel pending orders
+✓ Mark delivered orders as "Received"
+✓ Manage delivery addresses
+✓ View notifications
+✓ Submit appeals (if flagged)
+
+Orders:
+- Order #1: Pending
+- Order #2: Confirmed
+- Order #3: Assigned to rider1
+- Order #4: On Delivery (rider1)
+- Order #5: Delivered (rider2)
+
+═══════════════════════════════════════════════════════════
+🔵 CUSTOMER 2 (PENDING APPROVAL) ⏳
+═══════════════════════════════════════════════════════════
+Username: customer2
+Password: customer123
+
+Status: Pending (Awaiting staff/admin approval)
+
+Access:
+✗ CANNOT LOGIN until approved
+✓ Can be approved by staff/admin in "Pending Accounts"
+
+Test Scenario:
+1. Login as staff1 or admin
+2. Go to "Pending Accounts"
+3. Approve "Jose Customer" (customer2)
+4. Logout and login as customer2
+5. Now can access system!
+
+═══════════════════════════════════════════════════════════
+🔵 CUSTOMER 3 (FLAGGED) ⚠️
+═══════════════════════════════════════════════════════════
+Username: customer3
+Password: customer123
+
+Status: Flagged (Exceeded cancellation limit - 5 cancellations)
+Orders: 2 (1 ready for pickup, 1 cancelled)
+Appeals: 1 pending appeal
+
+Access:
+✓ Can login
+✓ View existing orders
+✗ CANNOT place new orders (flagged status)
+✓ Can submit appeal (already has pending appeal)
+✓ View order #6 (ready for pickup)
+✓ View cancelled order #7
+
+Test Scenario:
+1. Login as staff1 or admin
+2. Go to "Appeals"
+3. Review customer3's appeal
+4. Approve the appeal
+5. Logout and login as customer3
+6. Now can place orders again!
+
+═══════════════════════════════════════════════════════════
+📦 SAMPLE DATA OVERVIEW
+═══════════════════════════════════════════════════════════
+
+INVENTORY: 13 items
+- Most items in stock
+- 1 item OUT OF STOCK (Alkaline Water 1L)
+- Price range: ₱12 - ₱2,500
+
+ORDERS: 7 orders with different statuses
+#1 - Pending (customer1)
+#2 - Confirmed (customer1)
+#3 - Assigned to rider1 (customer1)
+#4 - On Delivery by rider1 (customer1)
+#5 - Delivered by rider2 (customer1)
+#6 - Ready for Pickup (customer3)
+#7 - Cancelled (customer3)
+
+ADDRESSES: 4 customer addresses
+- customer1: 3 addresses (Home, Office, Parents House)
+- customer3: 1 address (Home)
+
+NOTIFICATIONS: 15 notifications across all users
+- Order updates
+- Account status changes
+- Low stock alerts
+- System notices
+
+═══════════════════════════════════════════════════════════
+🎯 TESTING WORKFLOWS
+═══════════════════════════════════════════════════════════
+
+1. APPROVE PENDING ACCOUNT
+   → Login: staff1 / staff123
+   → Go to: Pending Accounts
+   → Approve: customer2
+
+2. CONFIRM & ASSIGN ORDER
+   → Login: staff1 / staff123
+   → Go to: Orders
+   → Confirm: Order #1
+   → Assign: rider1 or rider2
+
+3. DELIVER ORDER
+   → Login: rider1 / rider123
+   → Go to: Assigned Deliveries
+   → Mark Order #3: On Delivery
+   → Mark Order #3: Delivered
+
+4. CUSTOMER RECEIVES ORDER
+   → Login: customer1 / customer123
+   → Go to: My Orders
+   → Mark Order #5: Accepted/Received
+
+5. APPROVE APPEAL
+   → Login: admin / admin
+   → Go to: Appeals
+   → Review customer3's appeal
+   → Approve with notes
+
+6. MANAGE INVENTORY
+   → Login: admin / admin
+   → Go to: Inventory
+   → Restock: Alkaline Water 1L
+   → Edit prices
+   → Add new items
+
+7. VIEW ANALYTICS
+   → Login: admin / admin
+   → Go to: Analytics
+   → View revenue charts
+   → See order statistics
+
+═══════════════════════════════════════════════════════════
+🔧 RESET DATABASE
+═══════════════════════════════════════════════════════════
+
+To reset and reload all test data:
+Browser: http://localhost/Station_A/reset_database.php
+
+OR
+
+Command Line:
+cd "D:\Others\Azeu Codes\Station_A"
+C:\xampp\php\php.exe reset_database.php
+
+═══════════════════════════════════════════════════════════
+📍 QUICK LOGIN URLs
+═══════════════════════════════════════════════════════════
+
+Main Login: http://localhost/Station_A/
+Reset DB:   http://localhost/Station_A/reset_database.php
+
+═══════════════════════════════════════════════════════════
+
+Last Updated: 2026-03-04

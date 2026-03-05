@@ -1,0 +1,176 @@
+/**
+ * ============================================================================
+ * AZEU WATER STATION - STAFF/ADMIN MAIN STYLES
+ * ============================================================================
+ * 
+ * Purpose: Shared styles for staff and admin pages
+ * 
+ * Status: ✅ IMPLEMENTED
+ * ============================================================================
+ */
+
+/* Reuse customer/rider dashboard styles */
+.stat-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+}
+
+.stat-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.quick-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 16px;
+}
+
+.quick-action-btn {
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    transition: var(--transition);
+    cursor: pointer;
+}
+
+.quick-action-btn:hover {
+    border-color: var(--primary);
+    background: rgba(21, 101, 192, 0.05);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+}
+
+.quick-action-btn .material-icons {
+    font-size: 36px;
+    color: var(--primary);
+}
+
+.quick-action-btn span:last-child {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    text-align: center;
+}
+
+.form-select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-family: var(--font);
+    transition: var(--transition);
+}
+
+.form-select:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+/* Badge Styles */
+.badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 0.813rem;
+    font-weight: 500;
+    text-transform: capitalize;
+    white-space: nowrap;
+    text-align: center;
+}
+
+/* Stock Count Badges */
+.badge-danger {
+    background: rgba(220, 53, 69, 0.15);
+    color: #dc3545;
+    border: 1px solid rgba(220, 53, 69, 0.4);
+}
+
+.badge-warning {
+    background: rgba(255, 193, 7, 0.2);
+    color: #f39c12;
+    border: 1px solid rgba(255, 193, 7, 0.5);
+}
+
+.badge-success {
+    background: rgba(40, 167, 69, 0.15);
+    color: #28a745;
+    border: 1px solid rgba(40, 167, 69, 0.4);
+}
+
+/* Status Badges */
+.badge-active {
+    background: #28a745 !important;
+    color: #ffffff !important;
+    border: none !important;
+}
+
+.badge-inactive {
+    background: #6c757d !important;
+    color: #ffffff !important;
+    border: none !important;
+}
+
+.badge-out_of_stock {
+    background: #dc3545 !important;
+    color: #ffffff !important;
+    border: none !important;
+}
+
+.badge-low_stock {
+    background: #ffc107 !important;
+    color: #212529 !important;
+    border: none !important;
+}
+
+.badge-pending {
+    background: rgba(255, 193, 7, 0.1);
+    color: #f39c12;
+    border: 1px solid rgba(255, 193, 7, 0.3);
+}
+
+.badge-confirmed,
+.badge-assigned,
+.badge-on_delivery,
+.badge-ready_for_pickup {
+    background: rgba(0, 123, 255, 0.1);
+    color: #007bff;
+    border: 1px solid rgba(0, 123, 255, 0.3);
+}
+
+.badge-delivered,
+.badge-accepted,
+.badge-picked_up {
+    background: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+    border: 1px solid rgba(40, 167, 69, 0.3);
+}
+
+.badge-cancelled,
+.badge-flagged {
+    background: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+    border: 1px solid rgba(220, 53, 69, 0.3);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .quick-actions {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}

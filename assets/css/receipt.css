@@ -1,0 +1,297 @@
+/**
+ * Azeu Water Station - Receipt Page Styles
+ * Public receipt view and print styles
+ */
+
+.receipt-page {
+  min-height: 100vh;
+  background: var(--background);
+  padding: 40px 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.receipt-container {
+  background: white;
+  max-width: 600px;
+  width: 100%;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+
+.receipt-header {
+  background: var(--primary);
+  color: white;
+  padding: 32px 24px;
+  text-align: center;
+}
+
+.receipt-logo {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.receipt-logo img {
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
+}
+
+.receipt-logo .material-icons {
+  font-size: 48px;
+  color: var(--primary);
+}
+
+.receipt-station-name {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.receipt-station-address {
+  font-size: 0.95rem;
+  opacity: 0.9;
+}
+
+.receipt-body {
+  padding: 32px 24px;
+}
+
+.receipt-section {
+  margin-bottom: 28px;
+}
+
+.receipt-section-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+  letter-spacing: 0.5px;
+}
+
+.receipt-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.receipt-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.receipt-info-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.receipt-info-value {
+  font-size: 1rem;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.receipt-status {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.receipt-items-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+}
+
+.receipt-items-table thead {
+  background: var(--surface);
+}
+
+.receipt-items-table th {
+  padding: 12px;
+  text-align: left;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  border-bottom: 2px solid var(--border);
+}
+
+.receipt-items-table td {
+  padding: 12px;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border);
+}
+
+.receipt-items-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.item-image {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  background: var(--surface);
+}
+
+.receipt-summary {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 2px solid var(--border);
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  font-size: 0.95rem;
+}
+
+.summary-row.total {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--primary);
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  margin-top: 8px;
+}
+
+.receipt-qr {
+  text-align: center;
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px dashed var(--border);
+}
+
+.receipt-qr canvas {
+  margin: 16px auto;
+  border-radius: var(--radius-sm);
+}
+
+.receipt-qr-label {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-top: 12px;
+}
+
+.receipt-actions {
+  padding: 20px 24px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.receipt-actions .btn {
+  flex: 1;
+  min-width: 140px;
+}
+
+.receipt-footer {
+  text-align: center;
+  padding: 20px 24px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  background: var(--surface);
+}
+
+/* Print Styles */
+@media print {
+  body {
+    background: white;
+  }
+  
+  .receipt-page {
+    padding: 0;
+    background: white;
+  }
+  
+  .receipt-container {
+    box-shadow: none;
+    max-width: 100%;
+  }
+  
+  .receipt-actions {
+    display: none;
+  }
+  
+  .receipt-qr {
+    page-break-inside: avoid;
+  }
+}
+
+/* Dark Mode Adjustments */
+[data-theme="dark"] .receipt-container {
+  background: var(--surface-card);
+}
+
+[data-theme="dark"] .receipt-items-table th,
+[data-theme="dark"] .receipt-items-table td {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .receipt-summary {
+  border-top-color: var(--border);
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .receipt-page {
+    padding: 20px 12px;
+  }
+  
+  .receipt-header {
+    padding: 24px 16px;
+  }
+  
+  .receipt-body {
+    padding: 20px 16px;
+  }
+  
+  .receipt-info-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .receipt-items-table {
+    font-size: 0.85rem;
+  }
+  
+  .receipt-items-table th,
+  .receipt-items-table td {
+    padding: 8px;
+  }
+  
+  .item-image {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .receipt-actions {
+    flex-direction: column;
+  }
+  
+  .receipt-actions .btn {
+    width: 100%;
+  }
+}

@@ -1,0 +1,101 @@
+/**
+ * ============================================================================
+ * AZEU WATER STATION - RIDER DELIVERIES STYLES
+ * ============================================================================
+ * 
+ * Purpose: Styles for rider delivery pages
+ * 
+ * Status: ✅ IMPLEMENTED
+ * ============================================================================
+ */
+
+.delivery-card {
+    background: var(--surface-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 16px;
+    transition: var(--transition);
+    display: flex;
+    gap: 16px;
+    align-items: center;
+}
+
+.delivery-card:hover {
+    box-shadow: var(--shadow);
+    transform: translateY(-2px);
+}
+
+.delivery-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.delivery-header h4 {
+    margin: 0 0 4px 0;
+    font-size: 1.1rem;
+}
+
+.delivery-body {
+    padding: 16px 0;
+}
+
+.delivery-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+}
+
+.info-item {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.info-item .material-icons {
+    color: var(--primary);
+    font-size: 24px;
+}
+
+.delivery-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+}
+
+/* Sortable items */
+.sortable-item {
+    cursor: move;
+}
+
+.sortable-item.sortable-ghost {
+    opacity: 0.4;
+}
+
+.sortable-item.sortable-drag {
+    opacity: 1;
+    box-shadow: var(--shadow-lg);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .delivery-card {
+        flex-direction: column;
+    }
+    
+    .delivery-info {
+        grid-template-columns: 1fr;
+    }
+    
+    .delivery-footer {
+        flex-direction: column;
+    }
+    
+    .delivery-footer .btn {
+        width: 100%;
+    }
+}

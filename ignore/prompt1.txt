@@ -1,0 +1,2072 @@
+# PROMPT #1 — GENERAL FOUNDATION, SYSTEM CORE, SHARED ASSETS, ALL APIs & PUBLIC PAGES
+
+You are building a complete web application called **"Azeu Water Station"** — a Philippine-based Water Refilling Station management system. This is a school project. You will generate ALL code files for the foundation, shared assets, configuration, all API endpoints, authentication system, public pages, and the logging/debugging system. Role-specific frontend pages (customer/, rider/, staff/, admin/ folders) will be provided in separate follow-up prompts — do NOT create those folders or their contents now.
+
+---
+
+## PROJECT OVERVIEW
+
+Azeu Water Station is a web-based order and delivery management system for a water refilling station. Customers register, place orders for water and other station products, and have them delivered by riders or pick them up at the store. Staff and Admin manage accounts, confirm orders, assign riders, and monitor operations.
+
+**4 Roles exist:**
+- **Customer** — Registers, places orders, tracks delivery, receives items
+- **Rider** — Receives delivery assignments, manages delivery priority, marks deliveries
+- **Staff** — Approves accounts, confirms orders, assigns riders, views inventory (read-only), views rider statistics
+- **Admin** — Everything Staff can do + inventory CRUD, analytics, session logs, full system settings. A **Super Admin** is a special Admin seeded into the database that cannot be deleted and is the only one who can create other Admin accounts or modify itself.
+
+---
+
+## TECH STACK & CONSTRAINTS (STRICT)
+
+- **PHP** — No frameworks (no Laravel, no CodeIgniter, nothing). Pure PHP only.
+- **MySQL** via **XAMPP** — Database name: `station_azeu`
+- **HTML / CSS / JavaScript** — No CSS frameworks (no Bootstrap, no Tailwind). All CSS is hand-written.
+- **Session-based authentication** — PHP `$_SESSION`. No JWT, no token-based auth.
+- **If a database table does not exist, it MUST be automatically created** by `config/database.php` on connection. Never throw an error for missing tables.
+- **All role code is separated into different folders** (`customer/`, `rider/`, `staff/`, `admin/`). Code is duplicated per role, not shared via includes for role pages.
+- Every page-specific **CSS** goes in a separate CSS file inside that role's `css/` folder.
+- Every page-specific **JS** goes in a separate JS file inside that role's `js/` folder.
+- **Do NOT use `echo` to output large HTML blocks in PHP.** Use PHP for logic and embedded `<?php ?>` tags within HTML structure.
+
+---
+
+## EXTERNAL LIBRARIES (CDN Only — No npm, No Composer except PHPMailer)
+
+| Library | Purpose | Load Via |
+|---------|---------|----------|
+| **Material Icons** | All icons throughout the UI | Google CDN `<link>` |
+| **Inter** (Google Font) | Clean modern typography for all text | Google Fonts CDN |
+| **Chart.js** | Analytics charts (admin only, but load globally for simplicity) | CDN `<script>` |
+| **html2pdf.js** | Receipt download as PDF | CDN `<script>` |
+| **html2canvas** | Receipt download as image | CDN `<script>` |
+| **qrcode.js** (davidshimjs/QRCode) | QR code generation on receipts | CDN `<script>` |
+| **SweetAlert2** | Confirmation dialogs, alerts, form popups | CDN `<script>` + `<link>` |
+| **PHPMailer** | Forgot password email sending | Downloaded manually into `vendor/PHPMailer/` |
+| **Sortable.js** (SortableJS) | Drag-and-drop delivery priority reordering for riders | CDN `<script>` |
+
+---
+
+## COMPLETE FILE STRUCTURE
+
+Generate ONLY the files marked with ✅. Files marked with ⏳ will be created in follow-up prompts (role-specific pages).
+
+```
+azeu-water-station/
+│
+├── ✅ index.php                          ← Login page
+├── ✅ register.php                       ← Customer registration
+├── ✅ forgot_password.php                ← Email input for password reset
+├── ✅ reset_password.php                 ← New password form (?token=xxx)
+├── ✅ receipt.php                        ← Public receipt page (?token=xxx)
+├── ✅ maintenance.php                    ← Maintenance mode blocking page
+│
+├── config/
+│   ├── ✅ database.php                   ← DB connection + auto-create ALL tables + seed data
+│   ├── ✅ session.php                    ← Session start, auth guards, role checks, maintenance check, cleanup tasks
+│   ├── ✅ constants.php                  ← All enums, status arrays, role arrays, debug/log constants
+│   ├── ✅ functions.php                  ← Shared utility/helper functions
+│   ├── ✅ AESCrypt.php                   ← encrypt($text, $key) / decrypt($text, $key)
+│   └── ✅ logger.php                     ← Full logging engine with error/exception handlers
+│
+├── vendor/
+│   └── PHPMailer/                        ← (User will download manually — just reference it in code)
+│       ├── PHPMailer.php
+│       ├── SMTP.php
+│       └── Exception.php
+│
+├── assets/
+│   ├── css/
+│   │   ├── ✅ global.css                 ← CSS variables, reset, typography, dark/light theme, transitions
+│   │   ├── ✅ auth.css                   ← Login, register, forgot/reset password page styles
+│   │   ├── ✅ components.css             ← All reusable components (cards, tables, dialogs, badges, inputs, buttons)
+│   │   ├── ✅ layout.css                 ← Header, sidebar, main content area, responsive breakpoints
+│   │   └── ✅ receipt.css                ← Receipt page styling
+│   ├── js/
+│   │   ├── ✅ global.js                  ← Theme toggle, Manila time clock, CSRF helper, role icon mapping
+│   │   ├── ✅ auth.js                    ← Login/register/forgot/reset form validation and AJAX submission
+│   │   ├── ✅ components.js              ← Dialog system, toast notifications, table pagination, notification dropdown
+│   │   ├── ✅ sidebar.js                 ← Collapse/expand, hamburger toggle, active page highlight
+│   │   └── ✅ receipt.js                 ← QR code generation, PDF download, image download
+│   ├── images/
+│   │   ├── ✅ logo.png                   ← (Create a placeholder reference — user provides actual file)
+│   │   └── ✅ default-item.png           ← (Create a placeholder reference — user provides actual file)
+│   └── uploads/
+│       └── items/                        ← Directory for uploaded item icons (auto-created by PHP if missing)
+│
+├── includes/
+│   ├── ✅ header.php                     ← Navigation header (dynamic: station name, time, user info, notification bell, theme toggle)
+│   ├── ✅ sidebar.php                    ← Sidebar navigation (dynamic per role, collapsible)
+│   ├── ✅ footer.php                     ← Close HTML wrappers, load global JS files
+│   └── ✅ auth_check.php                 ← Include guard for every protected page
+│
+├── api/
+│   ├── auth/
+│   │   ├── ✅ login.php
+│   │   ├── ✅ logout.php
+│   │   ├── ✅ register.php
+│   │   ├── ✅ forgot_password.php
+│   │   └── ✅ reset_password.php
+│   ├── orders/
+│   │   ├── ✅ place_order.php
+│   │   ├── ✅ update_status.php
+│   │   ├── ✅ cancel_order.php
+│   │   ├── ✅ assign_rider.php
+│   │   ├── ✅ bulk_update.php
+│   │   ├── ✅ confirm_received.php
+│   │   ├── ✅ get_orders.php
+│   │   ├── ✅ get_receipt.php
+│   │   └── ✅ reorder.php
+│   ├── accounts/
+│   │   ├── ✅ approve.php
+│   │   ├── ✅ create.php
+│   │   ├── ✅ update.php
+│   │   ├── ✅ delete.php
+│   │   └── ✅ get_accounts.php
+│   ├── inventory/
+│   │   ├── ✅ add_item.php
+│   │   ├── ✅ update_item.php
+│   │   ├── ✅ restock.php
+│   │   ├── ✅ delete_item.php
+│   │   ├── ✅ get_items.php
+│   │   ├── ✅ check_stock.php
+│   │   └── ✅ upload_icon.php
+│   ├── riders/
+│   │   ├── ✅ toggle_availability.php
+│   │   ├── ✅ update_priority.php
+│   │   ├── ✅ get_statistics.php
+│   │   └── ✅ get_available.php
+│   ├── addresses/
+│   │   ├── ✅ add.php
+│   │   ├── ✅ update.php
+│   │   ├── ✅ delete.php
+│   │   └── ✅ get.php
+│   ├── appeals/
+│   │   ├── ✅ submit.php
+│   │   ├── ✅ review.php
+│   │   └── ✅ get.php
+│   ├── notifications/
+│   │   ├── ✅ get.php
+│   │   ├── ✅ mark_read.php
+│   │   └── ✅ count_unread.php
+│   ├── settings/
+│   │   ├── ✅ update_profile.php
+│   │   ├── ✅ change_password.php
+│   │   ├── ✅ update_system.php
+│   │   ├── ✅ update_preferences.php
+│   │   ├── ✅ manage_default_items.php
+│   │   └── ✅ get_settings.php
+│   └── analytics/
+│       ├── ✅ get_dashboard_stats.php
+│       ├── ✅ get_sales.php
+│       ├── ✅ get_order_stats.php
+│       └── ✅ export_report.php
+│
+├── logs/
+│   ├── ✅ .htaccess                      ← "Deny from all"
+│   └── (log.txt and error.txt auto-created by logger.php)
+│
+├── errors/
+│   ├── ✅ 404.php
+│   └── ✅ 403.php
+│
+├── ⏳ customer/                           ← Created in Prompt #2
+├── ⏳ rider/                              ← Created in Prompt #3
+├── ⏳ staff/                              ← Created in Prompt #4
+└── ⏳ admin/                              ← Created in Prompt #5
+```
+
+---
+
+## COMPLETE DATABASE SCHEMA
+
+Database name: **`station_azeu`**
+
+All tables must be auto-created by `config/database.php` if they don't exist. Use `CREATE TABLE IF NOT EXISTS` for every table.
+
+### Table 1: `users`
+
+| Column | Type | Constraints | Notes |
+|--------|------|-------------|-------|
+| `id` | INT(11) | PRIMARY KEY, AUTO_INCREMENT | |
+| `username` | VARCHAR(50) | UNIQUE, NOT NULL | Cannot be changed after creation |
+| `password` | TEXT | NOT NULL | AES encrypted or plain text depending on system setting `encrypt_passwords` |
+| `full_name` | VARCHAR(100) | NOT NULL | |
+| `email` | VARCHAR(100) | NOT NULL | |
+| `phone` | VARCHAR(20) | NOT NULL | |
+| `role` | ENUM('customer','rider','staff','admin','super_admin') | NOT NULL | |
+| `status` | ENUM('pending','active','flagged','deleted') | NOT NULL, DEFAULT 'pending' | `flagged` = hit max cancellation limit |
+| `is_available` | TINYINT(1) | NOT NULL, DEFAULT 1 | Only relevant for riders — self-set availability |
+| `cancellation_count` | INT(11) | NOT NULL, DEFAULT 0 | Current month's cancellation count for customers |
+| `cancellation_reset_date` | DATE | NULL | Date when monthly reset happens next |
+| `login_attempts` | INT(11) | NOT NULL, DEFAULT 0 | Failed login attempts counter, resets on success |
+| `login_locked_until` | DATETIME | NULL | If locked, when the lock expires |
+| `created_at` | DATETIME | NOT NULL, DEFAULT CURRENT_TIMESTAMP | |
+| `updated_at` | DATETIME | NULL ON UPDATE CURRENT_TIMESTAMP | |
+| `deleted_at` | DATETIME | NULL | Soft-delete timestamp for accounts with order history |
+
+### Table 2: `user_preferences`
+
+| Column | Type | Constraints | Notes |
+|--------|------|-------------|-------|
+| `id` | INT(11) | PRIMARY KEY, AUTO_INCREMENT | |
+| `user_id` | INT(11) | FOREIGN KEY → `users.id`, UNIQUE | One row per user |
+| `dark_mode` | TINYINT(1) | NOT NULL, DEFAULT 0 | 0=light, 1=dark |
+| `created_at` | DATETIME | NOT NULL, DEFAULT CURRENT_TIMESTAMP | |
+| `updated_at` | DATETIME | NULL ON UPDATE CURRENT_TIMESTAMP | |
+
+### Table 3: `customer_addresses`
+
+| Column | Type | Constraints | Notes |
+|--------|------|-------------|-------|
+| `id` | INT(11) | PRIMARY KEY, AUTO_INCREMENT | |
+| `customer_id` | INT(11) | FOREIGN KEY → `users.id` | |
+| `label` | VARCHAR(50) | NOT NULL, DEFAULT 'Home' | Label like "Home", "Office", custom text |
+| `full_address` | TEXT | NOT NULL | |
+| `is_default` | TINYINT(1) | NOT NULL, DEFAULT 0 | Only one address per customer should be default |
+| `created_at` | DATETIME | NOT NULL, DEFAULT CURRENT_TIMESTAMP | |
+| `updated_at` | DATETIME | NULL ON UPDATE CURRENT_TIMESTAMP | |
+
+### Table 4: `inventory`
+
+| Column | Type | Constraints | Notes |
+|--------|------|-------------|-------|
+| `id` | INT(11) | PRIMARY KEY, AUTO_INCREMENT | |
+| `item_name` | VARCHAR(100) | NOT NULL | |
+| `item_icon` | VARCHAR(255) | NULL, DEFAULT NULL | File path relative to `assets/uploads/items/` or NULL for default icon |
+| `stock_count` | INT(11) | NOT NULL, DEFAULT 0 | |
+| `price` | DECIMAL(10,2) | NOT NULL | |
+| `status` | ENUM('active','inactive','out_of_stock') | NOT NULL, DEFAULT 'active' | `inactive` = hidden from customers; `out_of_stock` = visible but unorderable |
+| `last_restocked_at` | DATETIME | NULL | |
+| `created_at` | DATETIME | NOT NULL, DEFAULT CURRENT_TIMESTAMP | |
+| `updated_at` | DATETIME | NULL ON UPDATE CURRENT_TIMESTAMP | |
+
+### Table 5: `orders`
+
+| Column | Type | Constraints | Notes |
+|--------|------|-------------|-------|
+| `id` | INT(11) | PRIMARY KEY, AUTO_INCREMENT | This is the Order ID displayed to users |
+| `customer_id` | INT(11) | FOREIGN KEY → `users.id` | |
+| `rider_id` | INT(11) | NULL, FOREIGN KEY → `users.id` | NULL for pickup orders and unassigned delivery orders |
+| `payment_type` | ENUM('cod','pickup','online') | NOT NULL | `online` is disabled for now |
+| `delivery_type` | ENUM('delivery','pickup') | NOT NULL | `delivery` if `payment_type=cod`, `pickup` if `payment_type=pickup` |
+| `status` | ENUM('pending','confirmed','assigned','on_delivery','delivered','accepted','ready_for_pickup','picked_up','cancelled') | NOT NULL, DEFAULT 'pending' | |
+| `delivery_address` | TEXT | NULL | NULL for pickup orders |
+| `order_notes` | TEXT | NULL | Customer special instructions like "Leave at gate" |
+| `delivery_fee` | DECIMAL(10,2) | NOT NULL, DEFAULT 0.00 | 0 for pickup orders, flat rate from settings for delivery |
+| `subtotal` | DECIMAL(10,2) | NOT NULL | Sum of all order_items subtotals |
+| `total_amount` | DECIMAL(10,2) | NOT NULL | subtotal + delivery_fee |
+| `expected_delivery_date` | DATE | NULL | Auto-set to TODAY when rider marks `On Delivery` |
+| `cancellation_reason` | TEXT | NULL | Required when cancelled |
+| `cancelled_by` | INT(11) | NULL, FOREIGN KEY → `users.id` | Who cancelled (user ID) |
+| `staff_comment` | TEXT | NULL | Visible to customer, e.g., "Waiting for available rider" |
+| `customer_confirmed` | TINYINT(1) | NOT NULL, DEFAULT 0 | 1 = customer marked as "Accepted/Received" |
+| `customer_confirmed_at` | DATETIME | NULL | When customer confirmed receipt |
+| `receipt_token` | VARCHAR(64) | UNIQUE, NULL | Random token for public receipt URL |
+| `order_date` | DATETIME | NOT NULL, DEFAULT CURRENT_TIMESTAMP | |
+| `delivered_at` | DATETIME | NULL | When rider marked as delivered |
+| `created_at` | DATETIME | NOT NULL, DEFAULT CURRENT_TIMESTAMP | |
+| `updated_at` | DATETIME | NULL ON UPDATE CURRENT_TIMESTAMP | |
+
+### Table 6: `order_items`
+
+| Column | Type | Constraints | Notes |
+|--------|------|-------------|-------|
+| `id` | INT(11) | PRIMARY KEY, AUTO_INCREMENT | |
+| `order_id` | INT(11) | FOREIGN KEY → `orders.id` ON DELETE CASCADE | |
+| `inventory_id` | INT(11) | FOREIGN KEY → `inventory.id` | Reference to inventory item |
+| `item_name` | VARCHAR(100) | NOT NULL | **Snapshot** of item name at order time (doesn't change if inventory item renamed) |
+| `item_icon` | VARCHAR(255) | NULL | **Snapshot** of item icon path at order time |
+| `item_price` | DECIMAL(10,2) | NOT NULL | **Snapshot** of price at order time |
+| `quantity` | INT(11) | NOT NULL | |
+| `subtotal` | DECIMAL(10,2) | NOT NULL | `item_price × quantity` |
+| `created_at` | DATETIME | NOT NULL, DEFAULT CURRENT_TIMESTAMP | |
+
+### Table 7: `notifications`
+
+| Column | Type | Constraints | Notes |
+|--------|------|-------------|-------|
+| `id` | INT(11) | PRIMARY KEY, AUTO_INCREMENT | |
+| `user_id` | INT(11) | FOREIGN KEY → `users.id` ON DELETE CASCADE | Recipient |
+| `title` | VARCHAR(150) | NOT NULL | Short notification title |
+| `message` | TEXT | NOT NULL | Full notification message |
+| `type` | VARCHAR(50) | NOT NULL | See notification types list below |
+| `reference_id` | INT(11) | NULL | Related order ID, user ID, or appeal ID depending on type |
+| `is_read` | TINYINT(1) | NOT NULL, DEFAULT 0 | |
+| `created_at` | DATETIME | NOT NULL, DEFAULT CURRENT_TIMESTAMP | |
+
+**Notification types:** `order_placed`, `order_confirmed`, `order_assigned`, `order_on_delivery`, `order_delivered`, `order_cancelled`, `account_approved`, `account_flagged`, `appeal_approved`, `appeal_denied`, `low_stock`, `ready_for_pickup`, `rider_reassigned`, `system`
+
+### Table 8: `session_logs`
+
+| Column | Type | Constraints | Notes |
+|--------|------|-------------|-------|
+| `id` | INT(11) | PRIMARY KEY, AUTO_INCREMENT | |
+| `user_id` | INT(11) | NULL | FK → `users.id` ON DELETE SET NULL (persists log even if user deleted) |
+| `username` | VARCHAR(50) | NOT NULL | **Snapshot** — persists after account deletion |
+| `role` | VARCHAR(20) | NOT NULL | **Snapshot** |
+| `action` | ENUM('login','logout','failed_login') | NOT NULL | |
+| `ip_address` | VARCHAR(45) | NOT NULL | Supports IPv4 and IPv6 |
+| `created_at` | DATETIME | NOT NULL, DEFAULT CURRENT_TIMESTAMP | |
+
+### Table 9: `settings`
+
+| Column | Type | Constraints | Notes |
+|--------|------|-------------|-------|
+| `id` | INT(11) | PRIMARY KEY, AUTO_INCREMENT | |
+| `setting_key` | VARCHAR(100) | UNIQUE, NOT NULL | |
+| `setting_value` | TEXT | NOT NULL | |
+| `updated_at` | DATETIME | NULL ON UPDATE CURRENT_TIMESTAMP | |
+
+### Table 10: `default_items`
+
+| Column | Type | Constraints | Notes |
+|--------|------|-------------|-------|
+| `id` | INT(11) | PRIMARY KEY, AUTO_INCREMENT | |
+| `item_name` | VARCHAR(100) | NOT NULL | Pre-defined item name options for inventory dropdown |
+| `created_at` | DATETIME | NOT NULL, DEFAULT CURRENT_TIMESTAMP | |
+
+### Table 11: `cancellation_appeals`
+
+| Column | Type | Constraints | Notes |
+|--------|------|-------------|-------|
+| `id` | INT(11) | PRIMARY KEY, AUTO_INCREMENT | |
+| `customer_id` | INT(11) | FOREIGN KEY → `users.id` | |
+| `reason` | TEXT | NOT NULL | Customer's appeal message |
+| `status` | ENUM('pending','approved','denied') | NOT NULL, DEFAULT 'pending' | |
+| `reviewed_by` | INT(11) | NULL, FOREIGN KEY → `users.id` | Staff/Admin who reviewed |
+| `admin_notes` | TEXT | NULL | Reviewer's notes |
+| `reviewed_at` | DATETIME | NULL | |
+| `created_at` | DATETIME | NOT NULL, DEFAULT CURRENT_TIMESTAMP | |
+
+### Table 12: `password_resets`
+
+| Column | Type | Constraints | Notes |
+|--------|------|-------------|-------|
+| `id` | INT(11) | PRIMARY KEY, AUTO_INCREMENT | |
+| `email` | VARCHAR(100) | NOT NULL | |
+| `token` | VARCHAR(64) | NOT NULL | Random secure token |
+| `expires_at` | DATETIME | NOT NULL | Typically +1 hour from creation |
+| `used` | TINYINT(1) | NOT NULL, DEFAULT 0 | Prevent token reuse |
+| `created_at` | DATETIME | NOT NULL, DEFAULT CURRENT_TIMESTAMP | |
+
+### Table 13: `delivery_priority`
+
+| Column | Type | Constraints | Notes |
+|--------|------|-------------|-------|
+| `id` | INT(11) | PRIMARY KEY, AUTO_INCREMENT | |
+| `rider_id` | INT(11) | FOREIGN KEY → `users.id` | |
+| `order_id` | INT(11) | FOREIGN KEY → `orders.id` | |
+| `priority_order` | INT(11) | NOT NULL, DEFAULT 0 | Lower number = higher priority (deliver first) |
+| `updated_at` | DATETIME | NULL ON UPDATE CURRENT_TIMESTAMP | |
+
+---
+
+## SEED DATA (Auto-inserted by `database.php` if tables are empty)
+
+### Default Settings
+
+```
+station_name          = "Azeu Water Station"
+station_address       = ""
+max_cancellation      = 5
+pending_expiry_days   = 7
+low_stock_threshold   = 10
+maintenance_mode      = 0
+encrypt_passwords     = 1
+auto_assign_orders    = 0
+timezone              = "Asia/Manila"
+force_dark_mode       = 0
+primary_color         = "#1565C0"
+secondary_color       = "#1E88E5"
+accent_color          = "#42A5F5"
+surface_color         = "#F5F7FA"
+max_login_attempts    = 10
+delivery_fee          = 50.00
+login_lockout_minutes = 15
+```
+
+### Super Admin Account (Seed if no super_admin exists)
+
+```
+username    = "admin"
+password    = encrypt("admin", KEY)  ← Use AESCrypt, or plain "admin" if encrypt_passwords is OFF
+full_name   = "System Administrator"
+email       = "admin@azeu.com"
+phone       = "0000000000"
+role        = "super_admin"
+status      = "active"
+```
+
+Also create the `user_preferences` row for the super admin with `dark_mode = 0`.
+
+### Default Item Names (Seed if `default_items` table is empty)
+
+```
+"30L Water Refill"
+"20L Water Refill"
+"10L Water Refill"
+"5L Water Refill"
+"1L Bottled Water"
+"500ml Bottled Water"
+"Bleach 1L"
+"Water Dispenser"
+"Water Container 30L"
+"Water Container 20L"
+```
+
+---
+
+## ORDER LIFECYCLE — STATUS STATE MACHINES
+
+### Delivery Orders (Cash on Delivery)
+
+```
+PENDING ──► CONFIRMED ──► ASSIGNED ──► ON DELIVERY ──► DELIVERED ──► ACCEPTED (optional)
+   │             │             │              │
+   │             │             │              └── Cancelled (by Staff/Admin with reason)
+   │             │             └── Cancelled (by Rider → reverts to Confirmed; or Staff/Admin)
+   │             └── Cancelled (by Staff/Admin with reason)
+   └── Cancelled (by Customer with reason; or Staff/Admin)
+```
+
+**Key rules:**
+- **Customer** can only cancel at `Pending` status. Cancellation increments their `cancellation_count`. If count reaches `max_cancellation` setting, account status becomes `flagged` and customer cannot place new orders until they submit an appeal and it's approved.
+- **Rider** can cancel at `Assigned` or `On Delivery`. When rider cancels, order reverts to `Confirmed` (unassigned) so Staff can reassign.
+- **Staff/Admin** can cancel at ANY status with a mandatory reason.
+- **Stock is decremented** only when order moves from `Pending` → `Confirmed`.
+- **Stock is restored** when any confirmed/assigned/on-delivery order is `Cancelled`.
+- **Stock is NOT restored** when a `Pending` order is cancelled (stock was never decremented).
+- **Expected Delivery Date** is automatically set to TODAY when rider marks order as `On Delivery`.
+- **Delivered** → the order's `delivered_at` timestamp is set. Income is counted.
+- **Accepted** is optional — customer can mark as "Accepted/Received" after delivery. Sets `customer_confirmed = 1` and `customer_confirmed_at`. Does NOT affect income counting.
+- **Delivery fee** is the flat rate from the `delivery_fee` setting. Not zero.
+
+### Pickup Orders (Pickup at Store)
+
+```
+PENDING ──► CONFIRMED ──► READY FOR PICKUP ──► PICKED UP ──► ACCEPTED (optional)
+   │             │
+   │             └── Cancelled (by Staff/Admin)
+   └── Cancelled (by Customer or Staff/Admin)
+```
+
+**Key rules:**
+- No rider assigned. `rider_id` stays NULL.
+- Delivery fee = ₱0.00.
+- Staff/Admin moves from `Confirmed` → `Ready for Pickup`.
+- Staff/Admin marks `Picked Up` when customer collects at store. Income is counted.
+- Customer can optionally mark as `Accepted` after `Picked Up`.
+
+### Online Payment
+- This payment type is **disabled**. If selected, show message "To be implemented soon". Do not allow order placement with this type.
+
+---
+
+## ROLE PERMISSION MATRIX
+
+| Action | Customer | Rider | Staff | Admin | Super Admin |
+|--------|----------|-------|-------|-------|-------------|
+| Register self | ✅ (pending) | ❌ | ❌ | ❌ | ❌ |
+| Created by | Self | Staff/Admin | Admin only | Super Admin only | System seed |
+| Place orders | ✅ (active only) | ❌ | ❌ | ❌ | ❌ |
+| Cancel own order (Pending only) | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Mark order Accepted (after Delivered/Picked Up) | ✅ | ❌ | ❌ | ❌ | ❌ |
+| View assigned deliveries | ❌ | ✅ | ❌ | ❌ | ❌ |
+| Mark On Delivery | ❌ | ✅ | ✅ | ✅ | ✅ |
+| Mark Delivered | ❌ | ✅ | ✅ | ✅ | ✅ |
+| Set self available/unavailable | ❌ | ✅ | ❌ | ❌ | ❌ |
+| Organize delivery priority (drag-and-drop) | ❌ | ✅ | ❌ | ❌ | ❌ |
+| Approve pending accounts | ❌ | ❌ | ✅ (C/R) | ✅ (all) | ✅ (all) |
+| Create Customer accounts | ❌ | ❌ | ✅ | ✅ | ✅ |
+| Create Rider accounts | ❌ | ❌ | ✅ | ✅ | ✅ |
+| Create Staff accounts | ❌ | ❌ | ❌ | ✅ | ✅ |
+| Create Admin accounts | ❌ | ❌ | ❌ | ❌ | ✅ only |
+| Edit/Delete accounts | ❌ | ❌ | ✅ (C/R only) | ✅ (not super_admin) | ✅ (all + self) |
+| Confirm orders | ❌ | ❌ | ✅ | ✅ | ✅ |
+| Assign riders | ❌ | ❌ | ✅ | ✅ | ✅ |
+| Cancel any order (any status) | ❌ | ❌ | ✅ | ✅ | ✅ |
+| Edit any order status | ❌ | ❌ | ✅ | ✅ | ✅ |
+| View inventory (read-only) | ❌ | ❌ | ✅ | — | — |
+| Manage inventory (CRUD) | ❌ | ❌ | ❌ | ✅ | ✅ |
+| View analytics | ❌ | ❌ | ❌ | ✅ | ✅ |
+| View session logs | ❌ | ❌ | ❌ | ✅ | ✅ |
+| Change system settings | ❌ | ❌ | ❌ | ✅ | ✅ |
+| Review cancellation appeals | ❌ | ❌ | ✅ | ✅ | ✅ |
+| Forgot password (email) | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Modify super_admin account | ❌ | ❌ | ❌ | ❌ | ✅ (self only) |
+| Delete super_admin | ❌ | ❌ | ❌ | ❌ | ❌ (cannot be deleted) |
+
+---
+
+## NOTIFICATION SYSTEM DESIGN
+
+Two types of notifications exist in this system:
+
+### Type 1: SweetAlert2 Dialogs (Immediate/Blocking)
+Used for: confirmation prompts ("Are you sure?"), success/error messages after actions, form dialogs (edit, cancel reason, rider selection, etc.). Triggered by user actions. These are NOT stored in the database.
+
+### Type 2: Bell Notifications (Persistent/Stored)
+Stored in `notifications` table. Bell icon in the navigation header with an unread count badge. Clicking the bell shows a dropdown listing recent 10 notifications sorted by newest. Each notification shows: icon + title + time ago + clickable to redirect to relevant page. Has a "Mark All Read" button. Refreshed on page load (no AJAX polling — user sees updates when they refresh or navigate).
+
+### Notification Events
+
+| Event | Who Gets Notified | Title Example |
+|-------|-------------------|---------------|
+| New order placed | All active Staff + Admin | "New order #1847 from juan123" |
+| Order confirmed | Customer | "Order #1847 has been confirmed!" |
+| Rider assigned | Rider + Customer | "New delivery assigned: Order #1847" / "A rider has been assigned to Order #1847" |
+| Order On Delivery | Customer | "Order #1847 is on the way!" |
+| Order Delivered | Customer | "Order #1847 has been delivered!" |
+| Order Cancelled | Customer (always) + Rider (if assigned) | "Order #1847 cancelled. Reason: ..." |
+| Account approved | Customer | "Your account has been approved!" |
+| Account flagged | Customer | "Your account has been flagged due to excessive cancellations." |
+| Appeal approved | Customer | "Your cancellation appeal has been approved!" |
+| Appeal denied | Customer | "Your cancellation appeal has been denied." |
+| Low stock detected | All active Admin | "{Item Name} is running low ({X} remaining)" |
+| Ready for Pickup | Customer | "Order #1847 is ready for pickup!" |
+| Rider reassigned | Old Rider + New Rider | "Order #1847 has been reassigned" / "New delivery assigned: Order #1847" |
+
+---
+
+## KEY ALGORITHMS
+
+### 1. Auto-Assign Rider Algorithm
+
+```
+FUNCTION autoAssignRider(order_id):
+    1. Get all riders WHERE role='rider' AND status='active' AND is_available=1 AND deleted_at IS NULL
+    2. For each rider, COUNT their orders WHERE status IN ('assigned','on_delivery') → this is "current_load"
+    3. Sort riders by current_load ASC (least loaded first)
+    4. If tie in load, sort by rider id ASC (first registered gets priority)
+    5. If NO available riders found → return NULL (order stays Confirmed, staff can add comment "Waiting for available rider")
+    6. Select the top rider → UPDATE orders SET rider_id=rider, status='assigned'
+    7. Create notification for the assigned rider
+    8. Create delivery_priority entry for this rider+order
+    RETURN assigned rider_id or NULL
+```
+
+### 2. Monthly Cancellation Reset (Runs on every page load in session.php)
+
+```
+For customers WHERE cancellation_reset_date <= TODAY:
+    SET cancellation_count = 0
+    SET cancellation_reset_date = first day of next month
+    NOTE: Status stays 'flagged' if flagged — requires appeal to unflag
+```
+
+### 3. Pending Account Expiry Cleanup (Runs on every page load in session.php)
+
+```
+DELETE FROM users WHERE status='pending' AND DATEDIFF(NOW(), created_at) > {pending_expiry_days from settings}
+Also delete related user_preferences rows.
+```
+
+### 4. Stock Validation at Checkout
+
+```
+FUNCTION validateStock(cart_items[]):
+    removed_items = []
+    For each item in cart_items:
+        current_stock = SELECT stock_count FROM inventory WHERE id=item.inventory_id AND status='active'
+        If item not found OR status != 'active' → add to removed_items
+        Else if current_stock < item.quantity → add to removed_items (out of stock)
+        Else if current_stock == 0 → add to removed_items
+    RETURN { valid_items, removed_items }
+    Show dialog to customer listing removed items if any exist.
+```
+
+### 5. Password Encryption Toggle Migration
+
+```
+WHEN admin toggles "Encrypt DB Passwords":
+    If turning ON (0 → 1):
+        SELECT all users
+        For each user: UPDATE password = encrypt(current_password, ENCRYPTION_KEY)
+    If turning OFF (1 → 0):
+        SELECT all users
+        For each user: UPDATE password = decrypt(current_password, ENCRYPTION_KEY)
+```
+
+### 6. Login Lockout
+
+```
+ON failed login:
+    INCREMENT login_attempts for that user
+    If login_attempts >= max_login_attempts setting:
+        SET login_locked_until = NOW() + login_lockout_minutes minutes
+        Show: "Account temporarily locked. Try again in X minutes."
+ON successful login:
+    RESET login_attempts = 0
+    SET login_locked_until = NULL
+ON login attempt while locked:
+    If login_locked_until > NOW():
+        Show: "Account is locked. Try again at {time}."
+        Do NOT increment attempts further.
+    Else:
+        Lock expired → reset login_attempts = 0, login_locked_until = NULL, allow login attempt
+```
+
+---
+
+## CONFIG FILES — DETAILED SPECIFICATIONS
+
+### `config/constants.php`
+
+Define these constants:
+
+```php
+// Database
+DB_HOST = 'localhost'
+DB_NAME = 'station_azeu'
+DB_USER = 'root'
+DB_PASS = ''
+
+// Encryption
+ENCRYPTION_KEY = 'azeu_water_station_2025_key'  // Used by AESCrypt
+
+// Debugging & Logging
+DEBUG_MODE = true    // DEFAULT ON — logs everything; set false for production
+LOG_FILE_PATH = __DIR__ . '/../logs/log.txt'
+ERROR_LOG_FILE_PATH = __DIR__ . '/../logs/error.txt'
+LOG_MAX_SIZE = 10485760   // 10MB in bytes
+LOG_DATE_FORMAT = 'Y-m-d H:i:s'
+LOG_TIMEZONE = 'Asia/Manila'
+
+// Log Levels
+LOG_LEVEL_TRACE = 0
+LOG_LEVEL_DEBUG = 1
+LOG_LEVEL_INFO = 2
+LOG_LEVEL_WARNING = 3
+LOG_LEVEL_ERROR = 4
+LOG_LEVEL_CRITICAL = 5
+
+// Roles
+ROLE_CUSTOMER = 'customer'
+ROLE_RIDER = 'rider'
+ROLE_STAFF = 'staff'
+ROLE_ADMIN = 'admin'
+ROLE_SUPER_ADMIN = 'super_admin'
+
+// Order Statuses
+STATUS_PENDING = 'pending'
+STATUS_CONFIRMED = 'confirmed'
+STATUS_ASSIGNED = 'assigned'
+STATUS_ON_DELIVERY = 'on_delivery'
+STATUS_DELIVERED = 'delivered'
+STATUS_ACCEPTED = 'accepted'
+STATUS_READY_FOR_PICKUP = 'ready_for_pickup'
+STATUS_PICKED_UP = 'picked_up'
+STATUS_CANCELLED = 'cancelled'
+
+// Account Statuses
+ACCOUNT_PENDING = 'pending'
+ACCOUNT_ACTIVE = 'active'
+ACCOUNT_FLAGGED = 'flagged'
+ACCOUNT_DELETED = 'deleted'
+
+// Payment Types
+PAY_COD = 'cod'
+PAY_PICKUP = 'pickup'
+PAY_ONLINE = 'online'
+
+// Delivery Types
+DEL_DELIVERY = 'delivery'
+DEL_PICKUP = 'pickup'
+
+// Inventory Statuses
+INV_ACTIVE = 'active'
+INV_INACTIVE = 'inactive'
+INV_OUT_OF_STOCK = 'out_of_stock'
+
+// Items per page for table pagination
+ITEMS_PER_PAGE = 50
+
+// Items per page for place order cards
+ORDER_ITEMS_PER_PAGE = 20
+
+// CSRF Token name
+CSRF_TOKEN_NAME = 'csrf_token'
+```
+
+### `config/AESCrypt.php`
+
+Create a class or two standalone functions:
+- `encrypt($plainText, $key)` — Returns AES-256-CBC encrypted string (base64 encoded with IV prepended).
+- `decrypt($encryptedText, $key)` — Returns decrypted plain text.
+
+Use PHP's `openssl_encrypt` / `openssl_decrypt` with `AES-256-CBC` method. Generate a random IV for each encryption, prepend the IV to the ciphertext, base64 encode the whole thing. On decrypt, extract the IV from the front, then decrypt.
+
+### `config/logger.php`
+
+Build a complete logging engine. Include these functions:
+
+```
+logger_write($level, $message, $context = [])
+  - If DEBUG_MODE is false, only log WARNING, ERROR, CRITICAL levels. Skip TRACE, DEBUG, INFO.
+  - If DEBUG_MODE is true, log ALL levels.
+  - Auto-detect calling file and function using debug_backtrace()
+  - Auto-enrich with session data: user_id, username, role, IP, request URI, method
+  - Format: [TIMESTAMP] [LEVEL] [FILE] [FUNCTION] — MESSAGE | key=value, key=value
+  - Append to LOG_FILE_PATH
+  - If level is ERROR or CRITICAL, also append to ERROR_LOG_FILE_PATH
+  - If log file exceeds LOG_MAX_SIZE, rotate: rename to log_YYYYMMDD_HHMMSS.txt, create new empty log.txt
+
+logger_trace($message, $context = [])      → logger_write(TRACE, ...)
+logger_debug($message, $context = [])      → logger_write(DEBUG, ...)
+logger_info($message, $context = [])       → logger_write(INFO, ...)
+logger_warning($message, $context = [])    → logger_write(WARNING, ...)
+logger_error($message, $context = [])      → logger_write(ERROR, ...)
+logger_critical($message, $context = [])   → logger_write(CRITICAL, ...)
+
+logger_function_entry($params = [])
+  - Auto-detects calling file + function via debug_backtrace()
+  - Logs: [TRACE] ENTERED | params: ...
+
+logger_function_exit($result = null)
+  - Logs: [TRACE] EXITED | result: ...
+
+logger_query($sql, $params = [], $duration_ms = null)
+  - Logs: [DEBUG] SQL QUERY | query=... | params=[...] | duration=Xms
+
+logger_exception($exception)
+  - Logs: [ERROR] EXCEPTION | message=... | file=... | line=... | trace=...
+```
+
+Also register global error handlers:
+```
+set_error_handler()      → converts PHP errors to log entries
+set_exception_handler()  → catches uncaught exceptions, logs them
+register_shutdown_function() → catches fatal errors on shutdown
+```
+
+**SECURITY: NEVER log passwords, tokens, or sensitive data values. Log that operations occurred, not the sensitive values.**
+
+### `config/database.php`
+
+1. Include `constants.php` and `logger.php`.
+2. Create PDO connection to MySQL. Log connection success/failure.
+3. Run `CREATE TABLE IF NOT EXISTS` for ALL 13 tables listed above.
+4. Log each table creation check.
+5. Seed default settings into `settings` table if the table is empty.
+6. Seed super admin into `users` table if no `super_admin` role exists. Check `encrypt_passwords` setting to determine whether to encrypt the default password.
+7. Seed `user_preferences` for super admin.
+8. Seed `default_items` if table is empty.
+9. Provide a helper function `db_query($sql, $params = [])` that:
+   - Prepares and executes the query
+   - Logs the query via `logger_query()`
+   - Returns the PDOStatement
+   - On failure, logs error and returns false
+10. Provide `db_fetch($sql, $params = [])` — returns single row as assoc array.
+11. Provide `db_fetch_all($sql, $params = [])` — returns all rows.
+12. Provide `db_insert($sql, $params = [])` — executes insert, returns `lastInsertId()`.
+13. Provide `db_update($sql, $params = [])` — executes update, returns affected row count.
+14. Provide `db_delete($sql, $params = [])` — executes delete, returns affected row count.
+15. The `$pdo` connection object should be accessible globally (use `global $pdo` or return from a function).
+
+### `config/session.php`
+
+1. Call `session_start()` if not already started.
+2. Include `database.php`, `functions.php`, `logger.php`.
+3. Define helper functions:
+   - `is_logged_in()` — checks if `$_SESSION['user_id']` is set
+   - `get_current_user()` — returns user data from session
+   - `require_login()` — if not logged in, redirect to `index.php`
+   - `require_role($allowed_roles_array)` — if user's role not in array, redirect to `errors/403.php`
+   - `check_maintenance()` — if `maintenance_mode` setting is ON and user role is NOT admin/super_admin, redirect to `maintenance.php`
+   - `generate_csrf_token()` — generates and stores a CSRF token in session
+   - `validate_csrf_token($token)` — validates submitted token against session token
+4. Run **pending account expiry cleanup** (only once per session or once per hour to avoid running on every page load — use a session timestamp check).
+5. Run **cancellation count monthly reset** (same timing).
+6. Load system settings from database and store in `$_SESSION['system_settings']` (or a global variable). Refresh if not present or stale.
+7. Check maintenance mode after login verification.
+
+### `config/functions.php`
+
+Utility functions needed throughout the system:
+
+```
+sanitize($input)              — htmlspecialchars() + trim()
+redirect($url)                — header("Location: $url"); exit;
+format_date($datetime)        — Format to 'M d, Y h:i A' in Manila timezone
+format_currency($amount)      — Returns "₱" + number_format(amount, 2)
+generate_token($length = 64)  — Generates cryptographically secure random hex token
+time_ago($datetime)           — Returns "2 minutes ago", "1 hour ago", "3 days ago", etc.
+get_setting($key)             — Fetches a setting value from the settings table (with caching)
+update_setting($key, $value)  — Updates a setting in the settings table
+get_status_badge_class($status) — Returns CSS class name for status badge
+get_role_badge_class($role)   — Returns CSS class name for role badge
+get_status_label($status)     — Returns human-readable label ("On Delivery", "Ready for Pickup", etc.)
+json_response($data, $code=200) — Sets content-type to JSON, http response code, echoes json_encode, exits
+validate_email($email)        — filter_var email validation
+get_user_by_id($id)           — Fetches user row from DB
+create_notification($user_id, $title, $message, $type, $reference_id = null) — Inserts into notifications table
+get_client_ip()               — Gets client IP from headers (handles proxies)
+```
+
+---
+
+## SHARED ASSETS — CSS SPECIFICATIONS
+
+### `assets/css/global.css`
+
+This is the foundation stylesheet loaded on EVERY page.
+
+**CSS Custom Properties (Variables):**
+```css
+:root {
+  /* Light mode defaults — overridden by dark mode and admin color settings */
+  --primary: #1565C0;
+  --primary-light: #1E88E5;
+  --primary-dark: #0D47A1;
+  --secondary: #1E88E5;
+  --accent: #42A5F5;
+  --surface: #F5F7FA;
+  --surface-card: rgba(255, 255, 255, 0.85);
+  --background: #EEF2F7;
+  --text-primary: #1A1A2E;
+  --text-secondary: #4A4A6A;
+  --text-muted: #8A8AA0;
+  --border: #E0E4EC;
+  --success: #66BB6A;
+  --success-dark: #2E7D32;
+  --warning: #FFA726;
+  --danger: #EF5350;
+  --info: #29B6F6;
+  --purple: #7E57C2;
+  --teal: #26A69A;
+  --shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-lg: 16px;
+  --transition: all 0.3s ease;
+  --font: 'Inter', sans-serif;
+  --sidebar-width: 260px;
+  --sidebar-collapsed: 70px;
+  --header-height: 65px;
+}
+
+[data-theme="dark"] {
+  --surface: #1A1A2E;
+  --surface-card: rgba(30, 30, 50, 0.85);
+  --background: #12121F;
+  --text-primary: #E8E8F0;
+  --text-secondary: #A8A8C0;
+  --text-muted: #6A6A80;
+  --border: #2A2A40;
+  --shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+```
+
+**Include:**
+- CSS Reset (box-sizing, margin/padding reset, etc.)
+- Base typography using Inter font
+- Body background using `--background`
+- Smooth theme transition: `body { transition: background-color 0.4s ease, color 0.4s ease; }` — apply transition to all themed elements
+- Scrollbar styling (thin, themed)
+- Selection highlighting color using `--primary`
+
+### `assets/css/auth.css`
+
+Styles for login, register, forgot password, reset password pages.
+- Centered card layout on the page (vertically and horizontally centered)
+- Glass card effect for the form container: `background: var(--surface-card); backdrop-filter: blur(20px); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);`
+- Station logo and name at the top of the card
+- Floating animated label inputs (label starts inside the input, floats up and shrinks on focus or when input has value)
+- Submit button with primary color, hover effect, loading state
+- Links styled subtly below the form
+- Responsive: card takes full width on mobile with padding
+
+### `assets/css/components.css`
+
+All reusable component styles. Every component listed below must have proper light AND dark mode styling via CSS variables.
+
+**Components to style:**
+
+| Component | CSS Class(es) | Description |
+|-----------|---------------|-------------|
+| Glass Card | `.glass-card` | Frosted glass card with `backdrop-filter: blur()`, themed background, subtle border |
+| Stat Card | `.stat-card` | Dashboard counter cards — icon circle on left, number + label on right. Hover lift effect. |
+| Item Card | `.item-card`, `.item-card.selected` | Place Order cards. Shows icon, name, price, stock, quantity control. Green border + check when selected. |
+| Data Table | `.data-table`, `.data-table-wrapper` | Styled tables with header row, alternating row colors, hover highlight. Horizontal scroll wrapper for mobile. |
+| Status Badge | `.badge`, `.badge-pending`, `.badge-confirmed`, `.badge-assigned`, `.badge-on-delivery`, `.badge-delivered`, `.badge-accepted`, `.badge-ready-for-pickup`, `.badge-picked-up`, `.badge-cancelled` | Small pill-shaped badges with background colors matching status meaning. |
+| Role Badge | `.badge-customer`, `.badge-rider`, `.badge-staff`, `.badge-admin`, `.badge-super-admin` | Similar pill badges for roles. |
+| Float Input | `.float-input-group`, `.float-input`, `.float-label` | Input with animated floating label. Label moves up on focus/filled. Includes focused border color animation. |
+| Toggle Switch | `.toggle-switch`, `.toggle-slider` | ON/OFF toggle switches for settings. Smooth slide animation. |
+| Action Buttons | `.btn`, `.btn-primary`, `.btn-success`, `.btn-danger`, `.btn-warning`, `.btn-info`, `.btn-outline`, `.btn-sm`, `.btn-icon` | Styled buttons. `.btn-icon` is a small square button for table actions. All have hover/active states. |
+| Modal/Dialog | `.modal-overlay`, `.modal`, `.modal-header`, `.modal-body`, `.modal-footer` | Custom modal dialogs. Overlay has dark semi-transparent background. Modal is centered glass card. Fade-in animation. |
+| Sidebar | `.sidebar`, `.sidebar.collapsed`, `.sidebar-nav`, `.sidebar-item`, `.sidebar-item.active` | Full sidebar styles including collapsed state (icons only) and active page highlight. |
+| Header | `.main-header`, `.header-left`, `.header-right`, `.header-time` | Top navigation bar styles. |
+| Notification Bell | `.notif-bell`, `.notif-badge`, `.notif-dropdown`, `.notif-item` | Bell icon with count badge, dropdown list of notifications. |
+| Toast | `.toast`, `.toast-success`, `.toast-error`, `.toast-warning`, `.toast-info` | Auto-dismissing toast notification (appears bottom-right, slides in, auto-fades out after 4 seconds). |
+| Pagination | `.pagination`, `.page-btn`, `.page-btn.active` | Page number buttons + Prev/Next + items count display. |
+| Color Picker | `.color-picker-group` | Settings color picker input with preview swatch. |
+| Quantity Control | `.qty-control`, `.qty-btn`, `.qty-input` | [-] [number input] [+] for item quantity. Buttons are styled. |
+| Checkbox | `.custom-checkbox` | Styled checkbox for table row selection. |
+| Filter Bar | `.filter-bar`, `.filter-btn`, `.filter-btn.active` | Horizontal scrollable row of filter buttons (Pending, Confirmed, etc.). Active state matches status color. |
+| Search Bar | `.search-bar`, `.search-input`, `.search-icon` | Search input with Material icon inside. |
+| Empty State | `.empty-state` | Centered icon + message + action button when table/section has no data. |
+| Loading Spinner | `.spinner`, `.spinner-overlay` | Spinning circle animation for AJAX loading states. |
+| Quick Action Grid | `.quick-actions`, `.quick-action-btn` | Dashboard shortcut button grid. Each button has icon + label. |
+| Preview Section | `.preview-section`, `.preview-header`, `.preview-table` | Dashboard preview tables with title + [View All] link. |
+| Drag Handle | `.drag-handle` | Grab cursor icon for sortable list items (rider delivery priority). |
+| Receipt | `.receipt-container` | Receipt page layout styles. |
+
+**Badge Color Mapping:**
+```css
+.badge-pending        { background: #FFA726; color: #fff; }
+.badge-confirmed      { background: #42A5F5; color: #fff; }
+.badge-assigned       { background: #7E57C2; color: #fff; }
+.badge-on-delivery    { background: #26A69A; color: #fff; }
+.badge-delivered      { background: #66BB6A; color: #fff; }
+.badge-accepted       { background: #2E7D32; color: #fff; }
+.badge-ready-for-pickup { background: #29B6F6; color: #fff; }
+.badge-picked-up      { background: #4CAF50; color: #fff; }
+.badge-cancelled      { background: #EF5350; color: #fff; }
+.badge-customer       { background: #42A5F5; color: #fff; }
+.badge-rider          { background: #26A69A; color: #fff; }
+.badge-staff          { background: #FFA726; color: #fff; }
+.badge-admin          { background: #EF5350; color: #fff; }
+.badge-super-admin    { background: #7E57C2; color: #fff; }
+```
+
+### `assets/css/layout.css`
+
+Structural layout for the main application (header + sidebar + content area).
+
+```
+.app-wrapper {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: var(--sidebar-width);
+  fixed position, full height, left side;
+  transition on width for collapse animation;
+  z-index above content, below header;
+}
+
+.sidebar.collapsed {
+  width: var(--sidebar-collapsed);
+  labels hidden, only icons visible;
+}
+
+.main-content {
+  margin-left: var(--sidebar-width);
+  padding-top: var(--header-height);
+  transition on margin-left matching sidebar collapse;
+  flex: 1;
+  padding: 24px;
+}
+
+.main-header {
+  position fixed;
+  top 0;
+  left: var(--sidebar-width) to right;
+  height: var(--header-height);
+  z-index highest;
+  transition on left matching sidebar collapse;
+}
+```
+
+**Responsive Breakpoints:**
+```
+@media (max-width: 1024px) — sidebar collapses by default
+@media (max-width: 768px) — sidebar becomes off-canvas hamburger menu
+                          — main-content takes full width
+                          — tables get horizontal scroll wrapper
+                          — cards stack vertically
+                          — modal takes more screen width
+@media (max-width: 480px) — further mobile adjustments
+                          — stat cards stack vertically
+                          — header elements compress
+```
+
+### `assets/css/receipt.css`
+
+Minimal, clean receipt page styling. White background (regardless of theme). Centered content, max-width 600px. Station logo centered at top. Clean table for items. QR code centered. Download buttons at bottom.
+
+---
+
+## SHARED ASSETS — JS SPECIFICATIONS
+
+### `assets/js/global.js`
+
+Loaded on every page. Contains:
+
+1. **Theme Management:**
+   - On page load: check `data-theme` attribute on `<html>` element (set by PHP from user preferences + force_dark_mode setting)
+   - `toggleTheme()` function — switches between light/dark, saves preference via AJAX to `api/settings/update_preferences.php`, updates `<html data-theme>` attribute
+   - If `force_dark_mode` is ON, the toggle button is disabled/hidden and theme is always dark
+
+2. **Manila Time Clock:**
+   - Update a clock element in the header every second showing current Philippines/Manila time
+   - Format: `hh:mm:ss AM/PM — MMM DD, YYYY`
+   - Use JavaScript `toLocaleString('en-US', {timeZone: 'Asia/Manila', ...})`
+
+3. **CSRF Token Helper:**
+   - `getCsrfToken()` — reads the CSRF token from a hidden input or meta tag
+   - `ajaxPost(url, data)` — wrapper function that automatically includes CSRF token in POST requests, sets `Content-Type: application/x-www-form-urlencoded` or `application/json`, returns fetch promise
+
+4. **Role Icon Mapping:**
+   - Function that returns the icon letter for header display: C=Customer, R=Rider, S=Staff, A=Admin, SA=Super Admin
+
+5. **Admin Color Theme Application:**
+   - On page load, read CSS custom properties from inline styles set by PHP (from admin color settings) and apply them to `:root`
+
+### `assets/js/auth.js`
+
+Handles login, register, forgot password, reset password forms.
+
+1. **Login form:**
+   - Client-side validation (non-empty username/password)
+   - AJAX POST to `api/auth/login.php`
+   - On success: redirect to appropriate role dashboard
+   - On error: show SweetAlert2 error with message from server
+   - Show loading spinner on submit button during request
+
+2. **Register form:**
+   - Client-side validation: all fields required, email format, password minimum 6 characters, confirm password matches, phone number format
+   - Username uniqueness check via AJAX on blur (debounced) — hit a lightweight endpoint or just validate on submit
+   - AJAX POST to `api/auth/register.php`
+   - On success: SweetAlert2 success "Account created! Awaiting approval." → redirect to login
+   - On error: show field-specific error messages
+
+3. **Forgot password form:**
+   - Validate email format
+   - AJAX POST to `api/auth/forgot_password.php`
+   - Always show: "If this email exists, a reset link has been sent." (prevent email enumeration)
+
+4. **Reset password form:**
+   - Validate: password minimum 6 chars, confirm matches
+   - AJAX POST to `api/auth/reset_password.php`
+   - On success: "Password reset successful!" → redirect to login
+
+### `assets/js/components.js`
+
+Reusable JavaScript component systems:
+
+1. **Toast Notification System:**
+   ```
+   showToast(message, type='info', duration=4000)
+   Types: 'success', 'error', 'warning', 'info'
+   Creates toast element, appends to body, slides in from right, auto-removes after duration.
+   Multiple toasts stack vertically.
+   ```
+
+2. **Table Pagination System:**
+   ```
+   initPagination(tableId, itemsPerPage)
+   Reads total items count from a data attribute or calculates from rows.
+   Shows/hides rows based on current page.
+   Renders pagination controls below table.
+   Updates "Showing X-Y of Z items" text.
+   ```
+
+3. **Notification Bell Dropdown:**
+   ```
+   initNotificationBell()
+   Click bell icon → toggle dropdown visibility.
+   Fetch notifications from api/notifications/get.php on dropdown open.
+   Render notification items with time_ago.
+   Mark All Read button → api/notifications/mark_read.php
+   Update badge count.
+   Close dropdown on outside click.
+   ```
+
+4. **Modal/Dialog System (custom, supplement to SweetAlert2):**
+   ```
+   openModal(modalId) — shows the modal with fade-in animation
+   closeModal(modalId) — hides with fade-out
+   For forms inside modals, handle submit via AJAX.
+   ```
+
+5. **Filter Bar Handler:**
+   ```
+   initFilterBar(filterBarId, tableId, filterColumn)
+   Click filter button → highlight it → filter table rows by status column value.
+   "All" button shows all rows.
+   ```
+
+6. **Search Handler:**
+   ```
+   initSearch(searchInputId, tableId, searchColumns[])
+   On keyup → filter table rows by matching text in specified column indices.
+   Debounced (300ms).
+   ```
+
+7. **Checkbox Bulk Selection:**
+   ```
+   initBulkSelect(tableId)
+   Header checkbox → select/deselect all visible rows.
+   Individual checkboxes → update header checkbox state.
+   getSelectedIds() → returns array of selected row IDs.
+   Show/hide bulk action buttons based on selection count.
+   ```
+
+### `assets/js/sidebar.js`
+
+1. **Collapse/Expand Toggle:**
+   - Toggle button (hamburger or chevron) in the sidebar header
+   - Adds/removes `.collapsed` class on sidebar
+   - Adjusts `.main-content` margin and `.main-header` left position
+   - Saves collapsed state to localStorage
+   - On page load: read from localStorage and apply
+
+2. **Active Page Highlight:**
+   - On page load: compare current URL path with each sidebar link's href
+   - Add `.active` class to matching sidebar item
+
+3. **Mobile Hamburger:**
+   - On mobile (<768px): sidebar is off-canvas (translateX off-screen)
+   - Hamburger icon in header toggles sidebar visibility
+   - Overlay behind sidebar on mobile — clicking overlay closes sidebar
+
+### `assets/js/receipt.js`
+
+1. **QR Code Generation:**
+   - Use `qrcode.js` library
+   - Generate QR code containing the receipt URL: `{base_url}/receipt.php?token={token}`
+   - Render into a designated div element on the page
+
+2. **Download as PDF:**
+   - Use `html2pdf.js`
+   - Select the receipt container element
+   - Generate PDF with options: filename = `Receipt_Order_{id}.pdf`, page size A4, margins
+
+3. **Download as Image:**
+   - Use `html2canvas`
+   - Capture the receipt container as canvas
+   - Convert to PNG blob, trigger download: `Receipt_Order_{id}.png`
+
+---
+
+## INCLUDES — SPECIFICATIONS
+
+### `includes/header.php`
+
+The navigation header bar rendered on every authenticated page.
+
+**Left Side:**
+- Station logo (small, `assets/images/logo.png`) + Station name (from `station_name` setting, fetched from DB/session). Clicking redirects to dashboard.
+- Below station name in small text: Current Manila time (updated live by JS)
+
+**Right Side (left to right):**
+- User's full name displayed as text
+- Dark/Light mode toggle button (sun/moon icon, with smooth icon swap animation). Hidden/disabled if `force_dark_mode` is ON.
+- Notification bell icon with unread count badge (red circle with number). Clicking opens notification dropdown.
+- Role avatar icon — a circle with the role letter: "C" for customer, "R" for rider, "S" for staff, "A" for admin. Background color matches role badge color. Clicking shows a dropdown with "Logout" button.
+
+**The header receives the role and user data from PHP session.**
+
+The header must be wrapped in `<header class="main-header">` and uses semantic HTML.
+
+### `includes/sidebar.php`
+
+Sidebar navigation rendered on every authenticated page. Dynamic based on user role from session.
+
+**Structure:**
+```html
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    [Collapse toggle button]
+  </div>
+  <ul class="sidebar-nav">
+    <!-- Items rendered by PHP based on role -->
+  </ul>
+</nav>
+```
+
+**Sidebar items per role:**
+
+| Role | Sidebar Items (icon + label) |
+|------|------------------------------|
+| Customer | Dashboard, Place Order, My Orders, Order History, Settings |
+| Rider | Dashboard, Assigned Deliveries, Delivery History, Settings |
+| Staff | Dashboard, Account Management, Manage Orders, Order History, Inventory, Rider Statistics, Settings |
+| Admin/Super Admin | Dashboard, Inventory, Account Management, Manage Orders, Order History, Rider Statistics, Analytics, Session Logs, Settings |
+
+Each item is a link to the corresponding PHP page in that role's folder.
+Use Material Icons for each item (e.g., `dashboard`, `shopping_cart`, `list_alt`, `history`, `settings`, `people`, `inventory`, `analytics`, `security`, `local_shipping`, etc.).
+
+When sidebar is collapsed, only icons are shown. Label text is hidden. On hover in collapsed mode, show a tooltip with the label.
+
+On mobile, sidebar is off-canvas and toggled by the hamburger button in the header.
+
+### `includes/footer.php`
+
+Closes the HTML wrapper divs and loads global JavaScript files:
+```html
+    </div><!-- .main-content -->
+  </div><!-- .app-wrapper -->
+
+  <!-- Global JS -->
+  <script src="/assets/js/global.js"></script>
+  <script src="/assets/js/components.js"></script>
+  <script src="/assets/js/sidebar.js"></script>
+
+  <!-- SweetAlert2 CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</body>
+</html>
+```
+
+Also include the CDN links for Material Icons, Inter font, and other libraries in a `<head>` section that's either in header.php or in a separate head include. Make sure all CDN resources are loaded.
+
+### `includes/auth_check.php`
+
+Included at the very top of every protected page (all role pages).
+
+```php
+<?php
+require_once __DIR__ . '/../config/session.php';
+require_login();          // Redirect to login if not authenticated
+check_maintenance();      // Redirect to maintenance if mode is on and not admin
+// Role check is done individually per page:
+// require_role([ROLE_CUSTOMER]); — added in each page file
+?>
+```
+
+---
+
+## PUBLIC PAGES — SPECIFICATIONS
+
+### `index.php` — Login Page
+
+**On Load:**
+- If already logged in (session exists), redirect to `/{role}/dashboard.php`
+- If not logged in, show login form
+
+**UI:**
+- Centered glass card on a gradient/themed background
+- Station logo + "Azeu Water Station" name at top
+- Floating label inputs: Username, Password
+- [Login] button (primary color)
+- Link: "Forgot Password?" → `forgot_password.php`
+- Link: "Create Account" → `register.php`
+- Dark/light mode toggle in corner (optional — not critical on login page)
+
+**On Submit (AJAX → `api/auth/login.php`):**
+- Send username + password + CSRF token
+- Server validates, responds with JSON: `{success: true, role: "customer", redirect: "/customer/dashboard.php"}` or `{success: false, message: "Invalid credentials"}`
+
+### `register.php` — Customer Registration
+
+**On Load:**
+- If logged in, redirect to dashboard
+
+**UI:**
+- Centered glass card, similar to login
+- Logo + "Create Account" heading
+- Floating label inputs: Full Name, Username, Email, Full Address, Phone Number, Password, Confirm Password
+- [Register] button
+- Link: "Already have an account? Login" → `index.php`
+
+**On Submit (AJAX → `api/auth/register.php`):**
+- All fields required
+- Server creates user with `role=customer`, `status=pending`
+- Also creates default address in `customer_addresses` with `is_default=1`
+- Also creates `user_preferences` row
+- Response: success → SweetAlert "Account created! Please wait for staff approval." → redirect to login
+
+### `forgot_password.php`
+
+- Centered card with email input
+- On submit → `api/auth/forgot_password.php`
+- Always shows: "If this email is registered, a reset link has been sent."
+- Only works for `customer` role accounts that are `active`
+
+### `reset_password.php?token=xxx`
+
+- Validates token on page load (PHP side — checks `password_resets` table for valid, unexpired, unused token)
+- If invalid → show error message with link to forgot password page
+- If valid → show New Password + Confirm Password form
+- On submit → `api/auth/reset_password.php` → updates password, marks token as used
+
+### `receipt.php?token=xxx`
+
+- Public page (no authentication required — anyone with the token can view)
+- Queries `orders` table WHERE `receipt_token = :token`
+- If not found → show 404-style message
+- If found → render receipt:
+  - Station name + logo (centered)
+  - Receipt date (when the page is viewed)
+  - Order ID + Order date
+  - Customer name, delivery address, phone number
+  - Table: Item Name | Qty | Unit Price (₱) | Subtotal (₱)
+  - Subtotal
+  - Delivery Fee
+  - **Total Amount** (bold)
+  - Payment type
+  - QR Code (containing this receipt's URL)
+  - Status of the order
+  - Buttons: [Download as PDF] [Download as Image] [Go to Dashboard (if logged in) / Go to Login]
+- Styled with `receipt.css` — clean, white background regardless of theme, print-friendly
+
+### `maintenance.php`
+
+- Shown when `maintenance_mode` setting is ON and user is not admin/super_admin
+- Centered message: Station logo + "System Under Maintenance" + "We'll be back soon. Please try again later."
+- No login form, no navigation
+- Simple, clean design
+
+### `errors/404.php`
+
+- Centered: "404 — Page Not Found" + "The page you're looking for doesn't exist."
+- [Go Home] button → redirects to login or dashboard if logged in
+
+### `errors/403.php`
+
+- Centered: "403 — Access Denied" + "You don't have permission to access this page."
+- [Go Back] button → redirects to their dashboard
+
+---
+
+## ALL API ENDPOINTS — DETAILED SPECIFICATIONS
+
+**Every API endpoint must:**
+1. Include `config/session.php` (which includes database, functions, logger)
+2. Log function entry with `logger_function_entry()`
+3. Validate CSRF token on POST requests
+4. Check authentication (except public endpoints: login, register, forgot_password, reset_password, get_receipt)
+5. Check role permissions
+6. Validate and sanitize all input
+7. Return JSON responses via `json_response()`
+8. Log all significant actions and errors
+9. Log function exit with `logger_function_exit()`
+
+### `api/auth/login.php` (POST)
+
+**Input:** `username`, `password`, `csrf_token`
+
+**Logic:**
+1. Log function entry
+2. Check if maintenance mode ON — if yes and user role (after lookup) is not admin/super_admin → return error "System is under maintenance"
+3. Look up user by username WHERE `status != 'deleted'`
+4. If not found → log warning, return error "Invalid credentials"
+5. Check if account is locked (`login_locked_until > NOW()`) → return error with remaining time
+6. Get `encrypt_passwords` setting → if ON, decrypt stored password with AESCrypt, compare; if OFF, compare plain
+7. If password wrong → increment `login_attempts`, check if it reached `max_login_attempts` → if yes, set `login_locked_until`, log warning, return error "Account locked"
+8. If password correct:
+   - Reset `login_attempts = 0`, `login_locked_until = NULL`
+   - Create session: `$_SESSION['user_id']`, `$_SESSION['username']`, `$_SESSION['role']`, `$_SESSION['full_name']`, `$_SESSION['status']`
+   - Load `user_preferences` → store `dark_mode` in session
+   - Check `force_dark_mode` setting → override if ON
+   - Log to `session_logs` table (action='login', IP, username snapshot, role snapshot)
+   - Log info "User logged in successfully"
+   - Return: `{success: true, role: "...", redirect: "/{role}/dashboard.php"}`
+
+### `api/auth/logout.php` (POST)
+
+**Input:** `csrf_token`
+
+**Logic:**
+1. Log to `session_logs` (action='logout')
+2. Log info "User logged out"
+3. `session_destroy()`
+4. Return: `{success: true, redirect: "/index.php"}`
+
+### `api/auth/register.php` (POST)
+
+**Input:** `full_name`, `username`, `email`, `full_address`, `phone`, `password`, `confirm_password`, `csrf_token`
+
+**Logic:**
+1. Validate all fields (non-empty, email format, username unique, password >= 6 chars, passwords match)
+2. Check `encrypt_passwords` setting → encrypt password if ON
+3. Insert into `users`: role=customer, status=pending, cancellation_reset_date=first_of_next_month
+4. Insert into `customer_addresses`: customer_id, label='Home', full_address, is_default=1
+5. Insert into `user_preferences`: user_id, dark_mode=0
+6. Log info "New customer registered"
+7. Return success
+
+### `api/auth/forgot_password.php` (POST)
+
+**Input:** `email`, `csrf_token`
+
+**Logic:**
+1. Look up user WHERE email AND role='customer' AND status='active'
+2. If found:
+   - Generate random token (64 chars hex)
+   - Insert into `password_resets`: email, token, expires_at=NOW()+1hour
+   - Send email via PHPMailer with reset link: `{base_url}/reset_password.php?token={token}`
+   - Log info "Password reset email sent"
+3. Always return: `{success: true, message: "If this email is registered, a reset link has been sent."}`
+
+### `api/auth/reset_password.php` (POST)
+
+**Input:** `token`, `password`, `confirm_password`, `csrf_token`
+
+**Logic:**
+1. Validate token in `password_resets`: exists, not used, not expired
+2. If invalid → return error
+3. Validate passwords (>= 6 chars, match)
+4. Find user by email from the reset record
+5. Update user password (encrypt if setting ON)
+6. Mark token as used
+7. Log info "Password reset completed"
+8. Return success
+
+### `api/orders/place_order.php` (POST)
+
+**Allowed roles:** customer (active, not flagged)
+
+**Input:** `items` (array of {inventory_id, quantity}), `payment_type` (cod/pickup), `delivery_address` (text or address_id), `order_notes` (optional), `csrf_token`
+
+**Logic:**
+1. Validate customer status is 'active' (not flagged, not pending)
+2. Validate payment_type is 'cod' or 'pickup' (reject 'online' with message "Online payment coming soon")
+3. Determine delivery_type: 'delivery' if cod, 'pickup' if pickup
+4. Validate items array is non-empty
+5. **Real-time stock validation:** For each item, check inventory WHERE id=item.inventory_id AND status='active':
+   - If item not found or inactive or out_of_stock or stock_count < requested_quantity → add to removed_items list
+6. If any items removed → return `{success: false, removed_items: [...], message: "Some items are unavailable"}` (frontend handles showing which items were removed)
+7. If ALL items removed → return error "All items are unavailable"
+8. Determine delivery address: if delivery_type='delivery', require address. If an `address_id` is provided, look it up; if raw text, use that. If pickup, set NULL.
+9. Get `delivery_fee` setting → set to 0 if pickup
+10. Calculate subtotals: for each item, `item_price × quantity`. Sum all for order subtotal.
+11. Calculate total: `subtotal + delivery_fee`
+12. Generate `receipt_token` (random 64 char hex)
+13. **Do NOT decrement stock yet** (stock is decremented only at Confirmation)
+14. Insert into `orders`: all fields
+15. Insert into `order_items`: snapshot each item's current name, icon, price from inventory
+16. Create notification for all active staff + admin: "New order #{id} from {customer_username}"
+17. Log info "Order created"
+18. Return: `{success: true, order_id: X, receipt_token: "xxx"}`
+
+### `api/orders/get_orders.php` (GET)
+
+**Allowed roles:** all authenticated users (scoped by role)
+
+**Input (query params):** `status` (filter), `search` (text), `page` (pagination), `date_from`, `date_to`, `role_scope` (for staff/admin: all orders; for customer: own orders; for rider: assigned orders)
+
+**Logic:**
+1. Based on role:
+   - Customer: only return orders WHERE `customer_id = session.user_id`
+   - Rider: only return orders WHERE `rider_id = session.user_id`
+   - Staff/Admin: return all orders
+2. Apply status filter if provided
+3. Apply search filter (by order ID, customer name, item name)
+4. Apply date range filter
+5. Join with `order_items` to get item names/icons
+6. Join with `users` (customer and rider) to get names
+7. Paginate: LIMIT {ITEMS_PER_PAGE} OFFSET {(page-1)*ITEMS_PER_PAGE}
+8. Return total count + paginated results
+
+### `api/orders/update_status.php` (POST)
+
+**Allowed roles:** rider (own orders: assigned→on_delivery, on_delivery→delivered), staff, admin
+
+**Input:** `order_id`, `new_status`, `comment` (optional staff comment), `csrf_token`
+
+**Logic:**
+1. Fetch order by ID
+2. Validate role permissions for this status transition:
+   - Rider can only: assigned→on_delivery, on_delivery→delivered (for their own orders)
+   - Staff/Admin can: any transition
+3. If `new_status = on_delivery`: set `expected_delivery_date = TODAY`
+4. If `new_status = delivered`: set `delivered_at = NOW()`
+5. If `new_status = ready_for_pickup`: verify order is pickup type
+6. If `new_status = picked_up`: set `delivered_at = NOW()` (income counted)
+7. Update order status
+8. If comment provided, update `staff_comment`
+9. Create notifications for relevant users
+10. Log info
+
+### `api/orders/cancel_order.php` (POST)
+
+**Allowed roles:** customer (own pending orders only), rider (own assigned/on_delivery — reverts to confirmed), staff, admin (any status)
+
+**Input:** `order_id`, `reason` (required), `csrf_token`
+
+**Logic:**
+1. Fetch order
+2. Validate permissions:
+   - Customer: can only cancel their own orders at `pending` status
+   - Rider: can cancel their assigned/on_delivery orders → order reverts to `confirmed`, rider_id set NULL
+   - Staff/Admin: can cancel any order at any status
+3. **Stock restoration:** If order status WAS confirmed/assigned/on_delivery (stock had been decremented), restore stock for each order_item:
+   - For each order_item: UPDATE inventory SET stock_count = stock_count + quantity
+   - If item was `out_of_stock` and now stock > 0, set status to `active`
+4. Update order: status='cancelled', cancellation_reason, cancelled_by=session.user_id
+5. If rider cancelled → set status='confirmed', rider_id=NULL, do NOT set cancelled status (it's a reassignment)
+6. If customer cancelled → increment customer's cancellation_count. Check if count >= max_cancellation → if yes, set customer status='flagged'
+7. Create notifications
+8. Log info
+
+### `api/orders/assign_rider.php` (POST)
+
+**Allowed roles:** staff, admin
+
+**Input:** `order_id`, `rider_id` (specific rider OR 'auto' for auto-assign), `csrf_token`
+
+**Logic:**
+1. Fetch order — must be status 'confirmed' (or 'assigned' for reassignment)
+2. If `rider_id = 'auto'` → run Auto-Assign algorithm (see Key Algorithms section)
+3. If specific rider_id → validate rider exists, is active, is available
+4. If rider found:
+   - Update order: rider_id, status='assigned'
+   - Create `delivery_priority` entry for rider+order
+   - If reassigning → notify old rider "Order reassigned", notify new rider "New delivery assigned"
+   - Else → notify rider "New delivery assigned", notify customer "Rider assigned"
+5. If no rider found (auto-assign failed) → return `{success: false, message: "No available riders. Order stays as Confirmed."}`
+6. Log info
+
+### `api/orders/bulk_update.php` (POST)
+
+**Allowed roles:** staff, admin (and partially customer for bulk cancel of pending)
+
+**Input:** `order_ids` (array), `action` ('confirm', 'cancel', 'assign_auto', 'on_delivery', 'delivered'), `reason` (for cancel), `csrf_token`
+
+**Logic:**
+1. Loop through order_ids
+2. For each order, apply the action using the same logic as individual endpoints
+3. For 'confirm': decrement stock for each, change status
+4. For 'cancel': restore stock if needed, require reason
+5. For 'assign_auto': run auto-assign for each confirmed order
+6. Collect results: `{success: X, failed: Y, details: [...]}`
+7. Create notifications for each
+8. Log info
+
+### `api/orders/confirm_received.php` (POST)
+
+**Allowed roles:** customer (own orders only, status must be delivered/picked_up)
+
+**Input:** `order_id`, `csrf_token`
+
+**Logic:**
+1. Validate order belongs to customer and status is delivered or picked_up
+2. Update: `customer_confirmed = 1`, `customer_confirmed_at = NOW()`, `status = 'accepted'`
+3. Log info
+
+### `api/orders/get_receipt.php` (GET)
+
+**Public endpoint (no auth required)**
+
+**Input:** `token` (receipt_token)
+
+**Logic:**
+1. Fetch order WHERE receipt_token = token
+2. Fetch order_items for this order
+3. Fetch customer details
+4. Return all data as JSON for receipt rendering
+
+### `api/orders/reorder.php` (POST)
+
+**Allowed roles:** customer (active only)
+
+**Input:** `order_id` (source order to reorder from), `csrf_token`
+
+**Logic:**
+1. Fetch original order and its items
+2. Validate original order belongs to this customer
+3. For each original order_item:
+   - Check if inventory item still exists and is active
+   - Check stock availability
+   - If available: add to new order items with same quantity (or max available)
+   - If not available: add to `unavailable_items` list
+4. Return: `{success: true, available_items: [...], unavailable_items: [...]}` (frontend populates the Place Order page with these items pre-selected)
+
+### `api/accounts/approve.php` (POST)
+
+**Allowed roles:** staff (customer/rider only), admin/super_admin (all roles except super_admin)
+
+**Input:** `user_id`, `csrf_token`
+
+**Logic:**
+1. Fetch user by ID, must be status='pending'
+2. Validate role permissions (staff can only approve customer/rider)
+3. Update status to 'active'
+4. Create notification for the user: "Your account has been approved!"
+5. Log info
+
+### `api/accounts/create.php` (POST)
+
+**Allowed roles:** staff (customer/rider), admin (customer/rider/staff), super_admin (all including admin)
+
+**Input:** `full_name`, `username`, `email`, `phone`, `password`, `role`, `full_address` (for customer), `csrf_token`
+
+**Logic:**
+1. Validate role permissions for creating the specified role
+2. Validate all fields, username unique
+3. Encrypt password if setting ON
+4. Insert user with status='active' (skip pending since created by authority)
+5. If role='customer': create default address + user_preferences
+6. For all roles: create user_preferences row
+7. Log info "Account created by {creator}"
+
+### `api/accounts/update.php` (POST)
+
+**Allowed roles:** staff (edit customer/rider), admin (edit all except super_admin), super_admin (edit all including self)
+
+**Input:** `user_id`, `full_name`, `email`, `phone`, `password` (optional — only if changing), `csrf_token`
+
+**Logic:**
+1. Fetch target user
+2. Validate role permissions (staff can't edit staff/admin; admin can't edit super_admin)
+3. If password provided → encrypt if setting ON
+4. Update user record
+5. Log info "Account updated by {editor}"
+
+### `api/accounts/delete.php` (POST)
+
+**Allowed roles:** staff (delete customer/rider), admin (delete all except super_admin), super_admin (delete all except self)
+
+**Input:** `user_id`, `csrf_token`
+
+**Logic:**
+1. Fetch target user
+2. Super_admin cannot be deleted → return error
+3. Validate role permissions
+4. If user has order history → soft delete: set status='deleted', deleted_at=NOW()
+5. If user is pending (no orders) → hard delete from database including user_preferences, customer_addresses
+6. Log info "Account deleted by {deleter}"
+
+### `api/accounts/get_accounts.php` (GET)
+
+**Allowed roles:** staff, admin, super_admin
+
+**Input (query params):** `filter_role`, `filter_status`, `search`, `page`
+
+**Logic:**
+1. Staff: return only customer + rider accounts (no staff/admin/super_admin)
+2. Admin: return all except super_admin
+3. Super_admin: return all
+4. Pending accounts sorted FIRST (priority)
+5. Exclude soft-deleted accounts (status='deleted') from active list
+6. Apply filters and search
+7. Paginate
+
+### `api/inventory/add_item.php` (POST)
+
+**Allowed roles:** admin, super_admin
+
+**Input:** `item_name`, `stock_count`, `price`, `item_icon` (file upload, optional), `csrf_token`
+
+**Logic:**
+1. Validate fields
+2. Handle icon upload if provided → save to `assets/uploads/items/`, store relative path
+3. Insert into inventory
+4. If stock_count <= low_stock_threshold → create low stock notification for admins
+5. Log info
+
+### `api/inventory/update_item.php` (POST)
+
+**Allowed roles:** admin, super_admin
+
+**Input:** `item_id`, `item_name`, `price`, `status`, `item_icon` (optional), `csrf_token`
+
+**Logic:**
+1. Fetch item
+2. Update fields
+3. If new icon uploaded, replace old one
+4. Log info
+
+### `api/inventory/restock.php` (POST)
+
+**Allowed roles:** admin, super_admin
+
+**Input:** `item_id`, `add_quantity`, `csrf_token`
+
+**Logic:**
+1. Fetch item
+2. Update stock_count += add_quantity
+3. Set last_restocked_at = NOW()
+4. If item was `out_of_stock` and new count > 0 → set status='active'
+5. Log info "Item restocked"
+
+### `api/inventory/delete_item.php` (POST)
+
+**Allowed roles:** admin, super_admin
+
+**Input:** `item_id`, `csrf_token`
+
+**Logic:**
+1. Check if item has any active orders (order_items with orders that are not cancelled/delivered/accepted/picked_up) → if yes, return error "Cannot delete item with active orders"
+2. Delete from inventory
+3. Log info
+
+### `api/inventory/get_items.php` (GET)
+
+**Allowed roles:** customer (active items only), staff (read-only all items), admin (all items)
+
+**Input:** `status_filter`, `search`, `page`
+
+**Logic:**
+- Customer: return only WHERE status='active' (for Place Order page)
+- Staff: return all items (read-only view)
+- Admin: return all items
+- Apply filters and pagination
+
+### `api/inventory/check_stock.php` (GET)
+
+**Allowed roles:** customer
+
+**Input:** `item_ids` (comma-separated list of inventory IDs)
+
+**Logic:**
+1. For each item_id: fetch current stock_count and status
+2. Return: `[{id: X, stock: Y, status: "active"}, ...]`
+3. Used for real-time validation before checkout
+
+### `api/inventory/upload_icon.php` (POST)
+
+**Allowed roles:** admin, super_admin
+
+**Input:** `item_id`, `icon` (file upload), `csrf_token`
+
+**Logic:**
+1. Validate file (image type: jpg/jpeg/png/gif/webp, max size 2MB)
+2. Generate unique filename
+3. Save to `assets/uploads/items/`
+4. Update inventory.item_icon with relative path
+5. Return new icon path
+
+### `api/riders/toggle_availability.php` (POST)
+
+**Allowed roles:** rider (self only)
+
+**Input:** `csrf_token`
+
+**Logic:**
+1. If trying to set unavailable → check if rider has ANY orders with status='on_delivery' → if yes, return error "Cannot go unavailable while having active deliveries"
+2. Toggle is_available (0→1 or 1→0)
+3. Log info
+
+### `api/riders/update_priority.php` (POST)
+
+**Allowed roles:** rider (own deliveries only)
+
+**Input:** `priorities` (array of {order_id, priority_order}), `csrf_token`
+
+**Logic:**
+1. Validate all order_ids belong to this rider and are assigned/on_delivery
+2. Update `delivery_priority` table for each
+3. Log debug
+
+### `api/riders/get_statistics.php` (GET)
+
+**Allowed roles:** staff, admin
+
+**Input:** `page`
+
+**Logic:**
+1. For each rider (role='rider', not deleted):
+   - Count completed deliveries (orders delivered + picked_up WHERE rider_id = this rider)
+   - Count cancelled deliveries
+   - Calculate success rate: completed / (completed + cancelled) × 100
+   - Count current pending (assigned + on_delivery)
+   - Get current availability status
+2. Sort by completed deliveries DESC (top performers first)
+3. Paginate
+4. Return: total_riders, available_riders, rider stats table data
+
+### `api/riders/get_available.php` (GET)
+
+**Allowed roles:** staff, admin
+
+**Logic:**
+1. Get all riders WHERE status='active' AND is_available=1 AND deleted_at IS NULL
+2. For each: count current load (assigned + on_delivery orders)
+3. Sort by current_load ASC
+4. Return: `[{rider_id, full_name, current_load, is_available}, ...]`
+
+### `api/addresses/add.php` (POST)
+
+**Allowed roles:** customer (own addresses)
+
+**Input:** `label`, `full_address`, `is_default`, `csrf_token`
+
+**Logic:**
+1. If is_default=1 → set all other addresses for this customer to is_default=0
+2. Insert new address
+
+### `api/addresses/update.php` (POST)
+
+**Allowed roles:** customer (own addresses)
+
+**Input:** `address_id`, `label`, `full_address`, `is_default`, `csrf_token`
+
+**Logic:**
+1. Validate address belongs to this customer
+2. If is_default=1 → unset other defaults
+3. Update address
+
+### `api/addresses/delete.php` (POST)
+
+**Allowed roles:** customer (own addresses)
+
+**Input:** `address_id`, `csrf_token`
+
+**Logic:**
+1. Validate belongs to customer
+2. If this is the only address → return error "Cannot delete your only address"
+3. If this is default → set another address as default
+4. Delete address
+
+### `api/addresses/get.php` (GET)
+
+**Allowed roles:** customer (own addresses)
+
+**Logic:**
+1. Return all addresses for this customer, default first
+
+### `api/appeals/submit.php` (POST)
+
+**Allowed roles:** customer (flagged only)
+
+**Input:** `reason`, `csrf_token`
+
+**Logic:**
+1. Validate customer status is 'flagged'
+2. Check no pending appeal exists already → if exists, return error "You already have a pending appeal"
+3. Insert into `cancellation_appeals`
+4. Log info
+
+### `api/appeals/review.php` (POST)
+
+**Allowed roles:** staff, admin
+
+**Input:** `appeal_id`, `decision` ('approved' or 'denied'), `admin_notes` (optional), `csrf_token`
+
+**Logic:**
+1. Fetch appeal
+2. If approved:
+   - Set appeal status='approved', reviewed_by, reviewed_at
+   - Set customer status='active', cancellation_count=0
+   - Create notification: "Your appeal has been approved!"
+3. If denied:
+   - Set appeal status='denied', reviewed_by, reviewed_at, admin_notes
+   - Create notification: "Your appeal has been denied."
+4. Log info
+
+### `api/appeals/get.php` (GET)
+
+**Allowed roles:** staff (pending appeals for customers/riders), admin (all), customer (own appeals)
+
+**Input:** `status_filter`, `page`
+
+**Logic:**
+- Customer: return only their own appeals
+- Staff/Admin: return all pending appeals (priority) + historical
+- Paginate
+
+### `api/notifications/get.php` (GET)
+
+**Allowed roles:** all authenticated
+
+**Input:** `page` (optional, default 1), `limit` (optional, default 10)
+
+**Logic:**
+1. Fetch notifications WHERE user_id = session.user_id, ORDER BY created_at DESC
+2. Paginate
+3. Return with formatted time_ago
+
+### `api/notifications/mark_read.php` (POST)
+
+**Allowed roles:** all authenticated
+
+**Input:** `notification_id` (single) OR `all` (boolean to mark all as read), `csrf_token`
+
+**Logic:**
+1. If single: UPDATE notification SET is_read=1 WHERE id AND user_id=session.user_id
+2. If all: UPDATE all notifications for this user
+
+### `api/notifications/count_unread.php` (GET)
+
+**Allowed roles:** all authenticated
+
+**Logic:**
+1. COUNT notifications WHERE user_id=session.user_id AND is_read=0
+2. Return: `{count: X}`
+
+### `api/settings/update_profile.php` (POST)
+
+**Allowed roles:** all authenticated (own profile)
+
+**Input:** `full_name`, `email`, `phone`, `csrf_token`
+
+**Logic:**
+1. Validate fields
+2. Update user record (cannot change username)
+3. Update session data
+4. Log info
+
+### `api/settings/change_password.php` (POST)
+
+**Allowed roles:** all authenticated
+
+**Input:** `current_password`, `new_password`, `confirm_password`, `csrf_token`
+
+**Logic:**
+1. Verify current password (decrypt if encrypted)
+2. Validate new password (>= 6 chars, matches confirm)
+3. Encrypt new password if setting ON
+4. Update user.password
+5. Log info (DO NOT log password values)
+
+### `api/settings/update_system.php` (POST)
+
+**Allowed roles:** admin, super_admin
+
+**Input:** Various setting key-value pairs, `csrf_token`
+
+**Logic:**
+1. For each setting provided: update_setting(key, value)
+2. Special handling for `encrypt_passwords` toggle:
+   - If changing 0→1: encrypt all user passwords in database
+   - If changing 1→0: decrypt all user passwords in database
+3. Special handling for `station_name`: update everywhere
+4. Log info for each setting changed (old value → new value)
+
+### `api/settings/update_preferences.php` (POST)
+
+**Allowed roles:** all authenticated
+
+**Input:** `dark_mode` (0 or 1), `csrf_token`
+
+**Logic:**
+1. Update user_preferences.dark_mode for this user
+2. Return success
+
+### `api/settings/manage_default_items.php` (POST)
+
+**Allowed roles:** admin, super_admin
+
+**Input:** `action` ('add', 'edit', 'delete'), `item_id` (for edit/delete), `item_name` (for add/edit), `csrf_token`
+
+**Logic:**
+1. Add: insert into default_items
+2. Edit: update item_name
+3. Delete: remove from default_items
+4. Log debug
+
+### `api/settings/get_settings.php` (GET)
+
+**Allowed roles:** admin, super_admin (for system settings), all (for own preferences)
+
+**Input:** `scope` ('system' or 'preferences')
+
+**Logic:**
+- system: return all settings from settings table
+- preferences: return user_preferences for current user
+
+### `api/analytics/get_dashboard_stats.php` (GET)
+
+**Allowed roles:** all authenticated (role-scoped)
+
+**Logic based on role:**
+
+- **Customer:**
+  - Total orders (own, all time)
+  - Pending orders (own, current)
+  - Delivered orders (own, all time)
+
+- **Rider:**
+  - Assigned deliveries count (assigned + on_delivery)
+  - On delivery count (on_delivery only)
+
+- **Staff:**
+  - Pending orders count
+  - Confirmed orders count
+  - On delivery orders count
+  - Pending accounts count
+  - Total riders count
+  - Available riders count
+
+- **Admin:**
+  - Pending orders count
+  - Total accounts created (all, excluding deleted)
+  - Pending accounts count
+  - Low stock items count (inventory WHERE stock_count <= threshold AND status != 'inactive')
+
+### `api/analytics/get_sales.php` (GET)
+
+**Allowed roles:** admin, super_admin
+
+**Input:** `period` ('week', 'month', 'year', 'custom'), `date_from`, `date_to`
+
+**Logic:**
+1. Calculate total revenue: SUM(total_amount) WHERE status IN ('delivered','accepted','picked_up')
+2. Calculate total orders count
+3. Calculate average order value
+4. Calculate orders today
+5. Calculate cancellation rate
+6. Daily sales trend: revenue per day for the selected period
+7. Revenue by payment type breakdown
+8. Top 5 items by quantity sold
+9. Monthly comparison (this month vs last month)
+10. Return all data formatted for Chart.js
+
+### `api/analytics/get_order_stats.php` (GET)
+
+**Allowed roles:** admin, super_admin
+
+**Logic:**
+1. Count orders grouped by status
+2. Top 10 customers by order count and total spent
+3. Return data for charts
+
+### `api/analytics/export_report.php` (GET)
+
+**Allowed roles:** admin, super_admin
+
+**Input:** `period`
+
+**Logic:**
+1. Gather all analytics data for the period
+2. Return structured data that the frontend can render and convert to PDF using html2pdf.js
+
+### `logs/.htaccess`
+
+```
+Deny from all
+```
+
+This prevents browser access to log files.
+
+---
+
+## UI DESIGN SPECIFICATIONS SUMMARY
+
+- **Font:** Inter (Google Fonts CDN)
+- **Icons:** Material Icons (Google CDN)
+- **Primary Color Theme:** Blue-based (`#1565C0` primary, `#1E88E5` secondary, `#42A5F5` accent)
+- **Dark Mode:** Deep navy/dark blue tones (`#1A1A2E` surface, `#12121F` background)
+- **Glass Card Effect:** `background: rgba(255,255,255,0.85); backdrop-filter: blur(20px); border: 1px solid var(--border);` (subtle, not overused)
+- **Floating Labels:** Input labels start inside the field, animate upward on focus/fill with smooth transition
+- **Transitions:** All theme changes have `0.3s-0.4s ease` transition for smooth appearance
+- **Status/Action Buttons:** Background colors match their purpose (green for success, red for danger, orange for warning, blue for info)
+- **No high contrast neon colors.** Professional, soft, business-grade palette.
+- **Responsive:** Works on desktop, tablet, and mobile. Tables scroll horizontally on small screens.
+- **Tables:** Max 50 items per page with pagination. Show "Showing X-Y of Z items" count.
+- **Sidebar:** Collapsible on desktop (saves to localStorage), hamburger menu on mobile.
+
+---
+
+## IMPORTANT IMPLEMENTATION NOTES
+
+1. **Every PHP file that is a protected page** must start by including `includes/auth_check.php` and then calling `require_role([...allowed roles...])`.
+
+2. **Every API endpoint** must validate CSRF token on POST requests, check authentication, check role permissions, sanitize inputs, and return JSON.
+
+3. **Every function** in every file must call `logger_function_entry()` at the start and `logger_function_exit()` before returning. Every significant operation must be logged with the appropriate level.
+
+4. **Database queries** must use prepared statements (PDO) to prevent SQL injection. Use the `db_query()`, `db_fetch()`, `db_fetch_all()`, `db_insert()`, `db_update()`, `db_delete()` helper functions which automatically log queries.
+
+5. **CSS variables** from admin color settings must be applied by PHP inline styles on the `<html>` element, read from the `settings` table. This way admin color changes take effect immediately.
+
+6. **Dark mode** is determined by: (1) `force_dark_mode` setting — if ON, everyone is dark mode regardless; (2) If OFF, user's `user_preferences.dark_mode` value is used. The `<html>` element gets `data-theme="dark"` or `data-theme="light"` set by PHP.
+
+7. **CSRF tokens** are generated per session and stored in `$_SESSION[CSRF_TOKEN_NAME]`. Every form and AJAX POST must include this token. Every API POST must validate it.
+
+8. **File uploads** (item icons) must validate file type (images only), limit size (2MB), generate unique filenames, and store in `assets/uploads/items/`.
+
+9. **The `receipt.php` page is PUBLIC** — no authentication required. It's accessed via the `receipt_token` in the URL. This is by design so customers can share receipts.
+
+10. **When an account is soft-deleted** (status='deleted'), their orders remain in history. In order tables and history, show the username/name with a `[Deleted]` label. The account cannot log in.
+
+---
+
+**Now generate ALL the files marked with ✅ in the file structure above. Generate complete, production-ready code for every file. Do not use placeholders or "// TODO" comments. Every function must be fully implemented. Every CSS must be complete with all states and responsive breakpoints. Every JS must be fully functional.**

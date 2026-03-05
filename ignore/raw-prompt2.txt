@@ -1,0 +1,2320 @@
+ANALYZE THE CONVERSATION I HAVE WITH AI. AND GET THE FULL CONTEXT OF OUR CONVERSATION.
+
+Me:
+Help me plan for my School System Project. I will create a convenient Water Refilling Station (Philippine based) Website built in pure PHP, no frameworks just php, html, js and css. I don't need your code, I want you to help me plan it and it's expected website structure.
+So here's my thoughts of the website and it's features and functionalities, please try to understand what I meant to implement or how will my website looks like.
+So this website has 4 roles: Customer, Riders, Staffs, Admin.
+
+# Customer!
+The customer account can be created through registration page but to prevent spam accounts this account will be marked as "pending" in the Staff and Admin user lists tab and to be confirmed by them. The customer informations needed on registration will be Full name, Username, Email, Full Address, Phone Number, Password. After registering they will be able to access their dashboard but dashboard features and functions are still disabled or hidden and they will see a message that saying "Your account is pending to be approved" or something similar.  So the customer interface after being approved on registration. It has navigation header and on the left side of it features the System Name and it's logo (Put a temporary logo for now) Below it is the current time now in Philippines Manila in small text size. On the right side of the header features the Account Full Name, Dark/Light Mode button, Account Icon that state their role for example "C" icon for Customer and so forth, and when the Icon is clicked it will show a drop down buttons that shows "Logout" to log the user out.
+
+It has side panels: "Dashboard, Place Order, My Orders, Order History, Settings"
+
+Dashboard:
+- This features a text greeting them. (On Every role)
+- This features a quick action buttons that is the same as the side panel buttons.
+- This features the Total Orders Count, Pending Orders Count, Delivered Orders Count. Below this is a preview of the pending orders in table about 2-3 items max and has a button that will show all orders to be redirected to the "My Orders" page. The table in this preview section has these columns "Order ID, Item Name, Payment Type, Status, Quantity, Rider Name (none if the order is confirmed by Staff/Admin but doesn't assign riders to it), Order Date, Expected Delivery Date". The Item name beside it features the Item Icon before the Item Name. If there are no orders then show a button that says "Make Order" or something similar that button will redirect them to "Place Order" page.
+
+Place Order:
+- This features the items available on the store/station ex: "30L water, Bleach, etc..."
+- Items are displayed in Card forms, inside those cards features the item name, item icon, item price, stock count, quantity input field(no decimals, can be incremented/decremented by typing or clicking the + and - button beside the field).
+- Items can be selected by marking it with a check symbol or putting a green border to it.
+- This can only render 20 items per page and has a next button to show next items.
+- After that there will be a "Checkout" button for user that will show a popup dialog. This dialog shows the items about to be ordered in lists form that has "X" or remove button beside it, Select Payment method "Cash on Delivery, Pickup at Store, Online Payment", the online payment is disabled and shows a message that it will be coming soon.
+- And finally the total items count to be ordered and the total cost and the "Order Now" button.
+- After "Order now" those items will be marked as pending and to be confirmed by Staff and Admin and to be assigned by them who will be the rider of that items. And they will be given a popup dialog showing the order is now sent to the staffs and a button for "Show receipt" this button will redirect them to the order receipt page, this page will show the receipt (plain minimal page) and its total and calculations with a qr code, date created, store name, logo, and everything. Finally a button below allowing them to download the receipt as pdf, or image file and a Go home button.
+
+My Orders: 
+- This features the pending orders in table element. It has columns of "Order ID, Item Name, Payment Type, Status, Quantity, Rider Name (none if order isn't confirmed), Order Date, Expected Delivery Date Actions". This table has filter buttons for faster searching of the user "Pending Order, Confirmed Orders, On Delivery". The Item name beside it features the Item Icon before the Item Name. The actions features a button in icon form:  Green/Check Icon - A notification popup saying that "Mark this Order as delivered, can't be undone", "YES or NO". Red/Cross Icon - A notification popup saying that "Are you sure you want to cancel this order?", "Selection of cancelling reason(Can be typed freely too)","YES or NO". Take note: Action buttons can only be accessible/visible if the order status are "Pending and Confirmed" because when it is "On Delivery and other statuses" it's much harder for riders and staffs/admin to assess. Can be also bulk edit statuses or mark as delivered or cancel all with reasonings.
+
+Order History:
+- This will be the table list for the order history and it's proper column and full informations. This table has also filters and a search field.
+
+Settings:
+- This features the profile informations such as the personal details and can be changed here except the username which is shown but cannot be edited. Passwords can also be changed here and any other details to be changed.
+
+# Riders!
+The rider account can only be created by Staff and Admin roles. Apply the navigation headers from customer with it's proper designs.
+
+It has side panels: "Dashboard, Assigned Deliveries, Delivery History, Settings"
+
+Dashboard:
+- This features the Assigned Deliveries Count, On Delivery Items Count.
+- This features a quick action buttons that is the same as the side panel buttons. A preview section similar to the customer preview items but for riders of course. And if there are no assigned orders/items then show a message that says "No Deliveries assigned" or similar phrase. And if there are assigned deliveries show the preview and a button that will redirect to the "Assigned Deliveries" page.
+
+Assigned Deliveries:
+- Similar to the customer and it's column should align with the necessary columns needed, and add this "Customer Details" (This is all written in one column) it should be written like this "Jhon Doe, Phone Number - Full Address. Can be also bulk update/cancel statuses with reasonings. Actions: "On Delivery, Mark Delivered, Cancel" shows proper notification/alerts "YES or NO".
+
+Delivery History:
+- Similar to customers but for riders informations and has filter list.
+
+Settings:
+- Similar to customers but for riders.
+
+# Staffs!
+- This account can only be created by Admin role. Apply the navigation headers from customer/rider with it's proper designs.
+
+It has side panels: "Dashboard, Account Management, Manage Orders, Order History, Riders Statistics, Settings"
+
+Dashboard:
+- This features a greetings message!
+- This features a quick action buttons that is the same as the side panel buttons.
+- This features Pending Orders Count, Confirmed Orders Count, On Delivery Orders Count, Pending Accounts Count, Total Riders Count, Available Riders Count. A preview section of "Account Management" and "Manage Orders(Pending Orders from customer)" with it's redirection button to the page.
+
+Account Management:
+- This features a table that shows the pending accounts after registrations (priority/top), registered customer accounts, rider accounts. It has columns "Role, Account ID, Username, Full Name, Email, Full Address, Phone Number, Created Date, Actions". This table cannot show higher role account such as admin and other staff accounts it should not be listed here. 
+Actions: For Pending accounts "Approve" and "Delete", upon clicking Approve it will show a notification/alert saying "Are you sure you want to approve {username}?", "YES or NO". Upon clicking Delete it will show a notification/alert saying "Are you sure you want to delete {username}?", "YES or NO".
+Actions: For Registeerd Users "Edit", "Delete", upon clicking Edit this will show a notification/alert with providing editable user informations such as "Username, Password and all personal informations" and a button below "SAVE or CANCEL". Upon clicking Delete it will show a notification/alert saying "Are you sure you want to delete {username}?", "YES or NO".
+- This section has a button "Add Account" and when clicked it will show a popup dialog with its required informations needed the same as registration form but with extra field for selecting account role "customer or rider".
+
+Manage Orders:
+- This features the order list from the customers. With it's columns "Order ID, Customer Details (written similar to rider), Quantity, Payment Type, Order Date, Expected Delivery Date, Rider(if assigned), Status, Actions. 
+Actions for pending orders: "Confirm, Cancel" upon clicking Confirm it will show a notification dialog saying "Order confirmed!" "Do you want to assign rider to this order?", "YES or LATER/NO" below is the rider selection to select riders and can select "Auto" to automatically select the rider available and not loaded riders (Has deliveries).
+Actions for confirmed orders: "Assign, Cancel" upon clicking Assign it will show a drop down selection of buttons just below the button itself, these are the buttons on the drop down "Select, Auto", upon clicking Select it will show a popup dialog listing the riders available with it's order assigned count and here the user can select who will be the rider is for this order and upon clicking Auto this will automatically select the least loaded rider available, riders who does not have "On delivery" order statuses(This means they are available). Riders can also be reassigned.
+Actions for on delivery orders: "Update, Cancel" upon clicking Update this will show a popup dialog allowing the staff/admin to edit the order status, make it "Pending, Delivered, And every status available on the system". Upon clicking cancel it will show a popup dialog confirming to cancel the order with it's reason (can be free text always).
+Allow bulk actions in every order for faster editing.
+- On every order that has the same status and same customer name it will be on 1 row for faster customer order management.
+
+Order History:
+- This features similar to customer/rider roles with it's necessary columns and informations to be seen here like order statuses, cancellation reasons and more. Has filter buttons for faster searching.
+
+
+Rider Statistics:
+- This features Total Rider Counts, Active Riders(Does not have on delivery orders).
+- This has a table of the top performing riders with its necessary columns like "Rider Name, Email, Current Status(If active), Completed Deliveries (Not cancelled), Pending Deliveries, Success rate, Actions. Actions: "Show Info" This will show the rider full necessarry personal informations except the password.
+
+Settings:
+- This is similar to customer/rider settings but for Staffs.
+
+# Admin!
+- This has a built in super admin role which cannot be deleted. This role can create Admin, Staff, Rider, Roles through Account Management page.
+- This has all the features the same as staffs but with higher authority.
+
+It has side panels: "Dashboard, Inventory, Account Management, Manage Orders, Order History, Riders Statistics, Analytics, Session Logs, Settings"
+
+Dashboard:
+- This has a quick action buttons that is the same as the side panel buttons.
+- This features Pending Orders Count, Accounts Created Count, Pending Accounts, Low Stock Items Count.
+- This has preview section similar to the staffs but with this preview section called "Low stocks Items" with it's redirection button to the "Inventory" page.
+
+Inventory:
+- This has a table listing all the items available on the station with its column "Item Name, Stock Count, Price, Low Stock Alert, Last Restocked Date, Item Status, Actions.
+- This has a button to add items and upon clicking it will show a dialog with this fields/selections "Item Name, Stock Count, Price", below is the button "Add Item, Cancel". Item names has pre selection or can be custom, selection items can be changed/added/removed in Admin settings page with a label "Default Item List".
+- Actions: "Edit, Restock or Remove" upon clicking Edit it will show a popup dialog allowing to edit the item attributes. Upon clicking Restock a popup dialog with input field for restock count will appear below button is "Restock or Cancel". Upon clicking Remove, it will show a dialog confirming "Are you sure you want to delete {Item Name}", "YES or NO".
+
+Account Management:
+- This is similar to Staffs Account management but has more authority, every account roles are show here, can modify every account except super admin account(only super admin can modify himself).
+- Normal admins can manage everything except modifying the super admin informations/details.
+
+Manage Orders:
+- Similar to Staffs everything is the same.
+
+Order History:
+- Similar to Staffs everything is the same.
+
+Rider Statistics:
+- Similar to Staffs everything is the same.
+
+Analytics:
+- Features the necessary analytics needed in the station, such as "Daily Sales Trend, Order Status Distribution, (Feel free to add more necessary statistics)"
+- This features "Total Revenue, Total Orders, Average Order Value, Top Customers, Top Riders Performance, (Add necessary/needed).
+- Add a download button for the analytics to be downloaded into document file.
+
+Session Logs:
+- Features a table of session/login/logout with its column needed like "Timestamp, Role, Username, Action (login or logout), IP Address. This table has search and filters to show specific values in the table like "roles" and etc...
+
+Settings:
+- Features the Station Name, can be changed here. If changed then it will change the whole page station name/Label in navigation headers.
+- Features input fields "Max Cancellation Per Customer, Pending Accounts Expiry, Low Stock Threshold"
+- Features Toggle Switches "Maintenance Mode, Encrypt DB Passwords, Auto Assign Every Orders". Maintenance mode means the system is unusable except for the Admins, lower roles will be notified if they try to login to the website that the system is currently in maintenance mode. Encrypt DB Passwords this will allow us to see the passwords in the XAMPP DB unencrypted or encrypted (if turned ON). Auto Assign Every Orders will automatically auto assign the riders in every orders made by costumers so that it won't be hard for staffs/admins to manage orders(if turned ON).
+- Features "Time Zone(Selection)" for UI time. And a switch for "Always DARK MODE".
+- Features website UI like primary colors, secondary colors, and any other UI designs can be changed colors here. (Use Color Picker)
+
+
+NOTE/REMINDER:
+- The system name is "Azeu Water Station". The database name is "station_azeu".
+- The system must use:
+  - PHP (No frameworks)
+  - XAMPP (MySQL Database)
+  - HTML / CSS / JavaScript
+- Authentication must be session-based and use browser session on every login.
+- If a database table does not exist, it must be automatically created instead of causing an error.
+- All role codes must be separated into different folders for easier future updates.
+- Every page-specific:
+  - Styles must be placed in a separate CSS file.
+  - Scripts must be placed in a separate JS file.
+- The system must have Dark / Light Mode with:
+  - Soft animation during toggle.
+  - Clean, business-grade UI.
+  - Non-high contrast colors.
+  - Dark mode preference saved in each user's database settings.
+  - Automatically apply saved theme on login.
+- UI Requirements:
+  - Clean and professional business-grade interface.
+  - Consistent design across all pages and roles.
+  - Glass card effects (not overused).
+  - Animated floating labels/placeholders for input fields.
+  - Status and Action buttons must use background colors that match their purpose.
+- Online payment must be disabled for now and display:
+  "To be implemented soon"
+- On every order cancellation:
+  - A reason must be required.
+  - Indicate who cancelled it (e.g., "Cancelled by Admin/Staff/etc.").
+- Tables must:
+  - Render only 50 items per page.
+  - Include a Next button for pagination.
+  - Display the total number of items in the table.
+
+
+I WANT YOU TO ANALYZE THE FLOW AND ALGORITHM OF THE PROJECT I EXPLAINED ABOVE AND GIVE ME YOUR THOUGHTS  IF IT'S ENOUGH TO BE IMPLEMENTED. ASK ME QUESTIONS IF YOU HAVE CONFUSIONS OF HOW IT SHOULD TURN OUT LIKE HOW IT IS STYLED IN CSS, FILE STRUCTURES. AND EVERYTHING. JUST TO MAKE THE SYSTEM FULLY FUNCTIONAL
+
+AI:
+
+
+# Project Analysis — Azeu Water Station
+
+I went through every detail of your plan. Overall, it's **very well thought out** for a school project — the role hierarchy, order lifecycle, and UI expectations are clear. However, there are **critical gaps, undefined behaviors, and ambiguities** that will cause problems during development if not resolved now.
+
+Below is my full breakdown organized by category.
+
+---
+
+## 1. ORDER LIFECYCLE — The Most Critical Part
+
+You mentioned these statuses throughout your description:
+**Pending → Confirmed → On Delivery → Delivered / Cancelled**
+
+But there are undefined behaviors:
+
+### Questions:
+
+**Q1.** Are those the **only** statuses? You mentioned staff can update on-delivery orders to *"Pending, Delivered, and every status available on the system"* — what is the **complete and final list** of all order statuses? I need an exact list because this affects the entire system flow. My suggestion:
+
+```
+Pending → Confirmed → Assigned → On Delivery → Delivered
+                                                → Cancelled (at any allowed stage)
+```
+
+Should **"Assigned"** be its own status (rider assigned but not yet picked up), or does assigning a rider just keep the status at "Confirmed"?
+
+**Q2.** When a customer places an order with **multiple items**, is that **ONE order with multiple items (line items)**, or does **each item become its own separate order with its own Order ID?** This fundamentally changes your database structure and table displays.
+
+**Q3.** You said *"On every order that has the same status and same customer name it will be on 1 row for faster customer order management"* in the Staff Manage Orders section — does this mean you want **order grouping/collapsing** in the table UI? How would the actions work on a grouped row? Apply to all items in that group?
+
+**Q4.** **Expected Delivery Date** — who sets this and when? Is it:
+- Auto-calculated (e.g., +1 day from order date)?
+- Manually set by Staff/Admin when confirming?
+- Set by the rider?
+
+**Q5.** When a customer clicks the **green check (Mark as Delivered)** in "My Orders," does the **rider also need to confirm delivery**, or is the customer's confirmation alone enough to finalize it?
+
+**Q6.** Can a **Delivered** order be reverted to any other status, or is it permanently final?
+
+**Q7.** You mentioned **"Pickup at Store"** as a payment/delivery method. If the customer picks up at the store:
+- Is a rider still assigned?
+- Does it skip the "On Delivery" status entirely?
+- Does the flow become: Pending → Confirmed → Ready for Pickup → Picked Up/Delivered?
+
+**Q8.** For **"Cash on Delivery"** — is there any payment confirmation step? Or is it just assumed paid once marked as Delivered?
+
+---
+
+## 2. INVENTORY & STOCK — Undefined Behaviors
+
+You only gave Admin access to the Inventory page, but stock affects the entire order flow.
+
+### Questions:
+
+**Q9.** **When is stock decremented?**
+- When the customer places the order (Pending)?
+- When Staff/Admin confirms the order?
+- This matters because if stock is decremented at placement, cancelled orders need to restore stock.
+
+**Q10.** **What happens if a customer tries to order an item that goes out of stock** while they're on the checkout dialog? Do you want real-time stock validation before the order is finalized?
+
+**Q11.** When an order is **cancelled**, is the stock **automatically restored**?
+
+**Q12.** What are the possible **Item Statuses** in inventory? My suggestion:
+```
+Active, Inactive (hidden from customers), Out of Stock
+```
+Should out-of-stock items still be visible to customers but unorderable, or completely hidden?
+
+**Q13.** The **"Low Stock Threshold"** in Admin settings — is this a **global threshold** (same number for all items), or the **per-item "Low Stock Alert"** column in the Inventory table? Or both (per-item overrides global)?
+
+**Q14.** Can **Staff** view the inventory (read-only), or is it completely invisible to them? Because Staff confirms orders but can't check stock — that seems like a gap.
+
+---
+
+## 3. ACCOUNT & ROLE MANAGEMENT — Edge Cases
+
+### Questions:
+
+**Q15.** **Max Cancellation Per Customer** — what happens when the limit is reached?
+- Customer can't cancel anymore orders?
+- Account gets suspended/flagged?
+- Is it a lifetime limit or resets monthly?
+
+**Q16.** **Pending Accounts Expiry** — what happens when a pending account expires?
+- Auto-deleted from the database?
+- Marked as "Expired" and kept for records?
+- How is the expiry measured? Days after registration?
+
+**Q17.** Can a **Staff** create other Staff accounts? Your description says *"Staff account can only be created by Admin role"* — confirming this is strict, correct?
+
+**Q18.** Can accounts be **deactivated/suspended** instead of deleted? Or is deletion the only option? Because deleting an account that has order history would break references in the database.
+
+**Q19.** **How many Super Admins exist?** Only one that is seeded into the database initially? What are the default super admin credentials (for initial setup)?
+
+**Q20.** When Admin creates an account through Account Management, does the created account **skip the pending approval** step and become immediately active?
+
+---
+
+## 4. RIDER LOGIC — Assignment Gaps
+
+### Questions:
+
+**Q21.** **"Auto Assign"** selects the *least loaded rider available, riders who do not have On Delivery order statuses.* What if **ALL riders** have "On Delivery" orders? Does the system:
+- Queue the order and wait?
+- Assign to the least loaded rider anyway?
+- Notify staff that no riders are available?
+
+**Q22.** Can riders **set themselves as unavailable/offline?** Or is availability purely determined by their current delivery count?
+
+**Q23.** The **"Auto Assign Every Orders"** toggle in Admin settings — does this mean:
+- Orders skip "Pending" and go directly to "Confirmed + Assigned"?
+- Or orders are still confirmed manually but rider assignment is automatic upon confirmation?
+
+**Q24.** In Rider's "Assigned Deliveries," can the rider **change the order of their deliveries** (priority), or is it just a flat list?
+
+**Q25.** When a rider **cancels** a delivery, does the order go back to **Confirmed (unassigned)** status so Staff can reassign it?
+
+---
+
+## 5. RECEIPT & QR CODE
+
+### Questions:
+
+**Q26.** The **QR Code** on the receipt — what should it contain or link to?
+- A URL to view the order details online?
+- Just encoded order information (Order ID, total, etc.)?
+- A verification code for pickup orders?
+
+**Q27.** The receipt download as **PDF** — are you okay with using a JavaScript library like `html2pdf.js` or `jsPDF` for client-side PDF generation? Since no PHP frameworks are allowed, server-side PDF generation would require a library like TCPDF/FPDF. Which approach do you prefer?
+
+---
+
+## 6. NOTIFICATIONS & REAL-TIME UPDATES
+
+This is a **major gap** in your plan. You haven't mentioned how users are notified of changes.
+
+### Questions:
+
+**Q28.** When an order status changes (e.g., Staff confirms, Rider marks On Delivery), how is the **customer notified**?
+- Just sees it when they refresh/visit the page?
+- In-app notification bell/counter?
+- Email notification?
+- Real-time update (would require polling or WebSockets)?
+
+**Q29.** When a new order is placed, how are **Staff/Admin notified**?
+- Same question as above — refresh-based or real-time?
+
+**Q30.** Do you want a **notification system** (bell icon with unread count) in the header for all roles? This is very common and expected in this type of system.
+
+My **suggestion**: Add a simple notification bell in the header that shows unread notifications. Use **AJAX polling every 30 seconds** to check for new notifications. No WebSockets needed — keeps it simple with pure PHP.
+
+---
+
+## 7. UI / DESIGN CLARIFICATIONS
+
+### Questions:
+
+**Q31.** **Responsive/Mobile-friendly** — should the website be responsive? The sidebar navigation would need to collapse into a hamburger menu on mobile. Confirm this is expected.
+
+**Q32.** **Icon library** — do you want to use:
+- Font Awesome (most common, CDN-based)?
+- Bootstrap Icons?
+- Custom SVG icons?
+- Material Icons?
+
+**Q33.** **Font family** — any preference? Suggestions for business-grade:
+- `Inter` (clean, modern)
+- `Poppins` (slightly rounded, friendly)
+- `Roboto` (Google standard)
+
+**Q34.** **Default color scheme** — you mentioned admin can change primary/secondary colors. But what should the **default** be?
+- Blue-based (trust, professional)?
+- Green-based (water/nature themed)?
+- Suggest a primary + secondary + accent color.
+
+**Q35.** **Dark mode "Always DARK MODE"** toggle in Admin settings — does this **force dark mode for ALL users** system-wide (overriding individual preference)? Or is it just the **default** for new users?
+
+**Q36.** The **sidebar** — should it be:
+- Fixed (always visible)?
+- Collapsible (can be minimized to icons only)?
+- Both (collapsible on desktop, hamburger on mobile)?
+
+**Q37.** **Item Icons** — you mention items have icons. Where do these come from?
+- Uploaded by Admin when adding items to inventory?
+- Selected from a predefined set of icons?
+- Auto-assigned based on item category?
+
+---
+
+## 8. SECURITY CONSIDERATIONS
+
+Since this is a school project, it doesn't need enterprise security, but these basics should be in place:
+
+### Questions/Suggestions:
+
+**Q38.** **Password hashing** — the "Encrypt DB Passwords" toggle concerns me. Storing passwords in plain text (even optionally) is a critical vulnerability. For a school project, are you sure you want this toggle? My **strong recommendation**: always hash passwords with `password_hash()` and provide a note that "passwords cannot be viewed for security." If the teacher requires seeing passwords in the DB, use a simple reversible encryption, but document that this is insecure.
+
+**Q39.** Do you want basic **CSRF protection** on forms (hidden tokens)?
+
+**Q40.** Do you want **session timeout** (auto-logout after X minutes of inactivity)? If yes, how long?
+
+**Q41.** **Login attempt limits** — should there be a lockout after X failed login attempts?
+
+---
+
+## 9. DATABASE — Tables I've Identified
+
+Based on your description, here are the tables I see as necessary:
+
+| Table | Purpose |
+|---|---|
+| `users` | All accounts (customers, riders, staff, admins) |
+| `orders` | Order header (order ID, customer, payment type, status, dates, rider, cancellation reason, cancelled by) |
+| `order_items` | Individual items in each order (links to orders + inventory) |
+| `inventory` | Items available at the station |
+| `notifications` | If you implement the notification system |
+| `session_logs` | Login/logout tracking |
+| `settings` | System-wide settings (key-value pairs or single row) |
+| `default_items` | Predefined item name list for inventory |
+| `user_preferences` | Dark/light mode, per-user settings (or add columns to users table) |
+
+**Q42.** Does this table list look complete to you? Or do you see something missing?
+
+**Q43.** Should `user_preferences` be its own table or just columns in the `users` table (simpler approach)?
+
+---
+
+## 10. FILE STRUCTURE — My Proposed Plan
+
+Based on your requirement that roles are in separate folders and page-specific CSS/JS are in separate files:
+
+```
+azeu-water-station/
+│
+├── index.php                          (Login page / Landing)
+├── register.php                       (Customer registration)
+│
+├── config/
+│   ├── database.php                   (DB connection + auto-create tables)
+│   ├── session.php                    (Session handling, auth checks)
+│   ├── constants.php                  (Status codes, role codes, etc.)
+│   └── functions.php                  (Shared utility functions)
+│
+├── assets/
+│   ├── css/
+│   │   ├── global.css                 (Shared styles, variables, dark/light)
+│   │   ├── login.css
+│   │   ├── register.css
+│   │   ├── components.css             (Cards, tables, dialogs, buttons)
+│   │   └── themes.css                 (Color variables, theme switching)
+│   ├── js/
+│   │   ├── global.js                  (Theme toggle, time display, shared)
+│   │   ├── login.js
+│   │   ├── register.js
+│   │   └── components.js             (Dialog, notification, table pagination)
+│   ├── images/
+│   │   └── logo.png
+│   └── icons/                         (Item icons if using local files)
+│
+├── includes/
+│   ├── header.php                     (Navigation header - dynamic per role)
+│   ├── sidebar.php                    (Sidebar - dynamic per role)
+│   ├── footer.php
+│   └── dialogs.php                    (Reusable popup dialog templates)
+│
+├── api/                               (AJAX endpoints)
+│   ├── auth/
+│   │   ├── login.php
+│   │   ├── logout.php
+│   │   └── register.php
+│   ├── orders/
+│   │   ├── place_order.php
+│   │   ├── update_status.php
+│   │   ├── cancel_order.php
+│   │   ├── assign_rider.php
+│   │   └── get_orders.php
+│   ├── accounts/
+│   │   ├── approve.php
+│   │   ├── create.php
+│   │   ├── update.php
+│   │   └── delete.php
+│   ├── inventory/
+│   │   ├── add_item.php
+│   │   ├── update_item.php
+│   │   ├── restock.php
+│   │   └── delete_item.php
+│   ├── settings/
+│   │   ├── update_profile.php
+│   │   ├── update_system.php
+│   │   └── update_preferences.php
+│   ├── analytics/
+│   │   └── get_analytics.php
+│   └── notifications/
+│       └── get_notifications.php
+│
+├── customer/
+│   ├── dashboard.php
+│   ├── place_order.php
+│   ├── my_orders.php
+│   ├── order_history.php
+│   ├── receipt.php
+│   ├── settings.php
+│   ├── css/
+│   │   ├── dashboard.css
+│   │   ├── place_order.css
+│   │   ├── my_orders.css
+│   │   ├── order_history.css
+│   │   ├── receipt.css
+│   │   └── settings.css
+│   └── js/
+│       ├── dashboard.js
+│       ├── place_order.js
+│       ├── my_orders.js
+│       ├── order_history.js
+│       ├── receipt.js
+│       └── settings.js
+│
+├── rider/
+│   ├── dashboard.php
+│   ├── assigned_deliveries.php
+│   ├── delivery_history.php
+│   ├── settings.php
+│   ├── css/
+│   │   ├── dashboard.css
+│   │   ├── assigned_deliveries.css
+│   │   ├── delivery_history.css
+│   │   └── settings.css
+│   └── js/
+│       ├── dashboard.js
+│       ├── assigned_deliveries.js
+│       ├── delivery_history.js
+│       └── settings.js
+│
+├── staff/
+│   ├── dashboard.php
+│   ├── account_management.php
+│   ├── manage_orders.php
+│   ├── order_history.php
+│   ├── rider_statistics.php
+│   ├── settings.php
+│   ├── css/
+│   │   ├── dashboard.css
+│   │   ├── account_management.css
+│   │   ├── manage_orders.css
+│   │   ├── order_history.css
+│   │   ├── rider_statistics.css
+│   │   └── settings.css
+│   └── js/
+│       ├── dashboard.js
+│       ├── account_management.js
+│       ├── manage_orders.js
+│       ├── order_history.js
+│       ├── rider_statistics.js
+│       └── settings.js
+│
+├── admin/
+│   ├── dashboard.php
+│   ├── inventory.php
+│   ├── account_management.php
+│   ├── manage_orders.php
+│   ├── order_history.php
+│   ├── rider_statistics.php
+│   ├── analytics.php
+│   ├── session_logs.php
+│   ├── settings.php
+│   ├── css/
+│   │   ├── dashboard.css
+│   │   ├── inventory.css
+│   │   ├── account_management.css
+│   │   ├── manage_orders.css
+│   │   ├── order_history.css
+│   │   ├── rider_statistics.css
+│   │   ├── analytics.css
+│   │   ├── session_logs.css
+│   │   └── settings.css
+│   └── js/
+│       ├── dashboard.js
+│       ├── inventory.js
+│       ├── account_management.js
+│       ├── manage_orders.js
+│       ├── order_history.js
+│       ├── rider_statistics.js
+│       ├── analytics.js
+│       ├── session_logs.js
+│       └── settings.js
+│
+└── errors/
+    ├── 404.php
+    └── maintenance.php
+```
+
+**Q44.** Does this structure work for you? Some pages like `manage_orders.php` and `order_history.php` share very similar logic between Staff and Admin. Do you want me to:
+- **Duplicate the code** in each role folder (easier to maintain independently)?
+- **Use shared template files** that both roles include (less duplication but more complex)?
+
+---
+
+## 11. THINGS I THINK YOU'RE MISSING
+
+These aren't criticisms — just things I noticed that need decisions:
+
+| # | Missing Feature/Decision | Why It Matters |
+|---|---|---|
+| 1 | **No Forgot Password flow** | What if a customer forgets their password? Only Staff/Admin can reset it? |
+| 2 | **No email system at all** | No email verification, no order notifications via email. Is this intentional for simplicity? |
+| 3 | **Account deletion with existing orders** | If you delete an account that has order history, those order records break. Use soft-delete (mark as deleted) instead? |
+| 4 | **Order modification after placement** | Can customers modify their order (change quantity, add/remove items) while it's still Pending? |
+| 5 | **Reorder from history** | Can customers reorder a previous order with one click? |
+| 6 | **Multiple addresses per customer** | Customer has one address from registration. What if they want to deliver to a different address? |
+| 7 | **Delivery fee** | Is delivery free? Or is there a fee based on distance/location? |
+| 8 | **Operating hours** | Can customers place orders 24/7, or only during business hours? |
+| 9 | **Order notes/special instructions** | Can customers add notes to their order ("Leave at gate," etc.)? |
+| 10 | **Print receipt** | You mentioned download as PDF/image. Should there also be a direct Print button? |
+
+---
+
+## SUMMARY — What I Need From You
+
+Answer the **44 questions** above (even briefly — "yes/no/skip" is fine for obvious ones), and clarify the **10 missing feature decisions**. Once I have your answers, I will deliver:
+
+1. **Complete database schema** (all tables, columns, types, relationships)
+2. **Final confirmed file structure**
+3. **Complete page-by-page flow diagrams** (what happens on every click)
+4. **Full order status state machine** (what transitions are allowed)
+5. **Role permission matrix** (who can do what)
+6. **UI component list** (every reusable component needed)
+7. **Development priority/phases** (what to build first)
+
+Take your time answering — getting this planning right will save you dozens of hours during development.
+
+ME:
+Q1:
+It will be: Pending → Confirmed → Assigned → On Delivery → Delivered
+                                                → Cancelled (at any allowed stage)
+And also I want to change some context, I want customers should not be able to mark their orders as "Delivered" but once delivered the can have the option to change the status nor mark it as "accepted or received" this option is optional by the way, and once the item is delivered the it will be counted to the store income. 
+
+Q2:
+Okay, once the customer order multiple items that should come in ONE ORDER if it is ordered on the same click.
+
+Q3:
+Yeah, apply it to all items in that group.
+
+Q4:
+Customer can order today, and the expected delivery will be automatically set on the day the rider marked the order as "On Delivery". Note that higher roles can edit whatever the status of the order.
+
+Q5:
+Uhm, on this part the context is changed read the answer of my Question 1.
+
+Q6:
+Uhm, once delivered it cannot be changed to other statuses except the customer confirms it as "accepted or received" also read Question 1 answer. 
+
+Q7:
+No rider assigned. Skip "On Delivery Status". The flow become: Pending → Confirmed → Ready for Pickup → Picked Up/Delivered. Your idea is good apply it to the context.
+
+Q8:
+The rider can know if it is paid or not, that's why they are the first one to mark it as delivered. But note staffs and admin can change anything because maybe sometimes the customer calls the store and pay them via their own mode of transactions.
+
+Q9:
+Decrement when staff/admin confirms it.
+
+Q10:
+That's a good idea, add it to the context add a real time stock validation and if 1 item is out of stock therefore the item that is out of stock will be unchecked or removed on the preview of the items about to be ordered. This will show a notification dialog to user screen that this {item_name, more...} is out of stock and is removed from the order list.
+
+Q11:
+Yeah the stock is automatically restored.
+
+Q12:
+Okay, your suggestions are good apply it to the context of this project.
+
+Q13:
+Make it global threshold.
+
+Q14:
+Oh yeah, good analysis, staffs should be able to view the current stock in the inventory. Good idea!
+
+Q15:
+It will reset monthly or they can "appeal" and send a request to the staff/admin to remove the flag (they cant order). And if the reason is valid then it's up to the staff/admin to remove the flags. This will be also saved on the admin side where the store logs is stored. 
+
+Q16:
+Pending cccounts will expire after 7 days if not confirmed and will be fully deleted to the pending account list in the database.
+
+Q17:
+Only admin can create staff accounts.
+
+Q18:
+I see. But maybe in order history, just show that account is deleted but still show their old account username and name briefly.
+
+Q19:
+Only 1 is super admin and the default credential for username is "admin" and the password is "admin". This credential can be changed on the settings. 
+
+Q20:
+Yeah, skip the approval because the creation was created by the store authority and is surely not spam account.
+
+Q21:
+If all riders are on delivery they can still assign but risky if the rider doesn't come back to store to get it. So therefore the order should stay on Pending and has optional reason to add a comment like "Waiting for available rider" so that the customer is informed and wouldn't question what happened to their order/s.
+
+Q22:
+Oh yeah they can set themselves as available/unavailable but once they set an order as "On Delivery" they cannot be offline after that.
+
+Q23:
+The orders needs to be confirmed by staff/admin first. (They can bulk check the orders to set a new statuses to it)
+
+Q24:
+Change the order of their deliveries? I'm kind of confused but if you mean it like they can change who to delivery first in the list by customer addresses then go, let them organize their deliver path or which user they are gonna deliver first. We can add a feature that maps the customer addresses to the store and automatically searches their address and arrange the delivery list for rider easy delivery priority. And if the customer address cannot be fetched in the map then put in the bottom part of the delivery priority.
+
+Q25:
+Yes, the order go back to "Confirmed" and staff will reassign it.
+
+Q26:
+A url to view like it will saved on the project on this example url "projectsystem.com/orders/receipts/{order_id}/receipt.html or .php
+
+Q27:
+Okay, use the libraries you mentioned.
+
+Q28:
+Just sees it when they refresh/visit the page.
+
+Q29:
+Refresh-based. Sees it when they refresh/visit the page.
+
+Q30:
+Therefore this system will now have 2 types of notification. One for notification dialog similar to sweet alert and one for a notification bell which contains the list of notifications. Might be cool if implemented well and functions well then go for it.
+
+Q31:
+Should be Responsive and Mobile Friendly.
+
+Q32:
+Use Material Icons.
+
+Q33:
+Clean and Modern.
+
+Q34:
+Blue based, professional and matches to our system for "WATER" which is blue.
+
+Q35:
+Forces all users to use dark mode. once turned on.
+
+Q36:
+Both (collapsible on desktop, hamburger on mobile)?
+
+Q37:
+Uploaded by admin when adding items to inventory and has pre defined selected icons or can be just no icon or use the default icon.
+
+Q38:
+Use AESCrypt.php that has function "decrypt(text, key) and encrypt(text, key)"
+
+Q39:
+Okay, add basic CSRF protection.
+
+Q40:
+Do not auto logout.
+
+Q41:
+Yeah 10 login attempts limit which can be changed by admin. 
+
+Q42:
+Sounds alright and nothing is missing I hope.
+
+Q43:
+The "user_preferences" be its own table.
+
+Q44:
+Duplicate the code in each role folder (easier to maintain independently)
+
+
+**THINGS I THINK MISSING**
+
+"No Forgot Password flow" - Okay add Forgot password flow via email (for customer only).
+"Account deletion with existing orders" - Just mark the order that account has been deleted and show the username and name briefly if possible.
+"Order modification after placement" - Do not allow modification to prenvent inventory errors. Cancellation of the order yes they are allowed to when it's still pending but once confirmed then no more actions just let the customer wait for the order to be marked as "Delivered".
+"Reorder from history" - Sounds great implement this well enough and functional.
+"Multiple addresses per customer" - Sounds good, maybe during the order process they can choose to type a different address where to deliver or just their default address. Add this to the context.
+"Delivery fee" - Sounds good to be implemented well, but it sounds complicated to me. If possibly implemented then sure apply this feature. Add a delivery fee by how far their address is from the station, maybe use map api's or anything to make this work. Or maybe during the confirmation of order by customer they will see a "delivery fee" value before placing an order. The delivery fee is a global threshold and can be changed by admin.
+ "Operating hours" - Can customers place orders 24/7. This doesn't matter because their orders are "Pending" and is waiting to be assisted by staffs.
+"Order notes/special instructions" - That's a good idea, apply it to the context of this project.
+"Print receipt" - No, but they can download.
+
+AI:
+
+
+# Azeu Water Station — Complete Project Plan
+
+Everything below is the **finalized blueprint** based on all your confirmed answers. Use this as your single reference during development.
+
+---
+
+## 1. CONFIRMED ORDER STATUS STATE MACHINES
+
+### Delivery Orders (COD)
+```
+                                            ┌─── Cancelled
+                                            │    (by Customer)
+                                            │
+PENDING ──► CONFIRMED ──► ASSIGNED ──► ON DELIVERY ──► DELIVERED ──► ACCEPTED
+   │              │            │                                     (optional,
+   │              │            │                                      by Customer)
+   │              │            └─── Cancelled (by Staff/Admin)
+   │              └─── Cancelled (by Staff/Admin)
+   └─── Cancelled (by Customer or Staff/Admin)
+```
+
+**Rules:**
+- Customer can cancel at: `Pending` only
+- Staff/Admin can cancel at: ANY stage (with reason)
+- Rider marks: `On Delivery` → `Delivered`
+- Expected Delivery Date is auto-set when rider marks `On Delivery`
+- `Delivered` → income is counted
+- `Accepted` is optional, only by customer, purely a receipt acknowledgment
+- Stock decremented at `Confirmed`, restored at `Cancelled`
+
+### Pickup Orders (Pay at Store)
+```
+PENDING ──► CONFIRMED ──► READY FOR PICKUP ──► PICKED UP
+   │              │
+   │              └─── Cancelled (by Staff/Admin)
+   └─── Cancelled (by Customer or Staff/Admin)
+```
+
+**Rules:**
+- No rider assigned, delivery fee = ₱0
+- Staff/Admin moves from `Confirmed` → `Ready for Pickup`
+- Staff/Admin marks `Picked Up` when customer collects
+- `Picked Up` → income is counted
+- Customer can optionally mark as `Accepted` after `Picked Up`
+
+### Cancellation Rules Summary
+| Who | Can Cancel At | Must Provide Reason |
+|-----|--------------|---------------------|
+| Customer | Pending only | Yes |
+| Rider | Assigned, On Delivery | Yes, order reverts to Confirmed |
+| Staff | Any status | Yes |
+| Admin | Any status | Yes |
+
+---
+
+## 2. ROLE PERMISSION MATRIX
+
+| Feature | Customer | Rider | Staff | Admin | Super Admin |
+|---------|----------|-------|-------|-------|-------------|
+| Register self | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Created by | Self (pending) | Staff/Admin | Admin | Admin | System (seeded) |
+| Place orders | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Cancel own order (Pending) | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Mark order Accepted | ✅ (after Delivered) | ❌ | ❌ | ❌ | ❌ |
+| View assigned deliveries | ❌ | ✅ | ❌ | ❌ | ❌ |
+| Set On Delivery | ❌ | ✅ | ✅ | ✅ | ✅ |
+| Mark Delivered | ❌ | ✅ | ✅ | ✅ | ✅ |
+| Set self available/unavailable | ❌ | ✅ | ❌ | ❌ | ❌ |
+| Organize delivery priority | ❌ | ✅ | ❌ | ❌ | ❌ |
+| Approve pending accounts | ❌ | ❌ | ✅ | ✅ | ✅ |
+| Create Customer accounts | ❌ | ❌ | ✅ | ✅ | ✅ |
+| Create Rider accounts | ❌ | ❌ | ✅ | ✅ | ✅ |
+| Create Staff accounts | ❌ | ❌ | ❌ | ✅ | ✅ |
+| Create Admin accounts | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Delete any account | ❌ | ❌ | ✅ (C/R only) | ✅ (not super) | ✅ |
+| Confirm orders | ❌ | ❌ | ✅ | ✅ | ✅ |
+| Assign riders | ❌ | ❌ | ✅ | ✅ | ✅ |
+| Cancel any order | ❌ | ❌ | ✅ | ✅ | ✅ |
+| Edit any order status | ❌ | ❌ | ✅ | ✅ | ✅ |
+| View inventory (read-only) | ❌ | ❌ | ✅ | ❌ | ❌ |
+| Manage inventory (CRUD) | ❌ | ❌ | ❌ | ✅ | ✅ |
+| View analytics | ❌ | ❌ | ❌ | ✅ | ✅ |
+| View session logs | ❌ | ❌ | ❌ | ✅ | ✅ |
+| System settings | ❌ | ❌ | ❌ | ✅ | ✅ |
+| Review cancellation appeals | ❌ | ❌ | ✅ | ✅ | ✅ |
+| Modify super admin account | ❌ | ❌ | ❌ | ❌ | ✅ (self only) |
+| Forgot password (email) | ✅ | ❌ | ❌ | ❌ | ❌ |
+
+---
+
+## 3. COMPLETE DATABASE SCHEMA
+
+### Table: `users`
+| Column | Type | Constraints | Notes |
+|--------|------|-------------|-------|
+| id | INT | PK, AUTO_INCREMENT | |
+| username | VARCHAR(50) | UNIQUE, NOT NULL | Cannot be changed after creation |
+| password | TEXT | NOT NULL | AES encrypted or plain (based on setting) |
+| full_name | VARCHAR(100) | NOT NULL | |
+| email | VARCHAR(100) | NOT NULL | |
+| phone | VARCHAR(20) | NOT NULL | |
+| role | ENUM('customer','rider','staff','admin','super_admin') | NOT NULL | |
+| status | ENUM('pending','active','flagged','deleted') | DEFAULT 'pending' | flagged = max cancellations hit |
+| is_available | TINYINT(1) | DEFAULT 1 | Riders only — self-set availability |
+| cancellation_count | INT | DEFAULT 0 | Resets monthly |
+| cancellation_reset_date | DATE | NULL | Date of next monthly reset |
+| login_attempts | INT | DEFAULT 0 | Reset on successful login |
+| login_locked_until | DATETIME | NULL | Set after max failed attempts |
+| created_at | DATETIME | DEFAULT CURRENT_TIMESTAMP | |
+| updated_at | DATETIME | ON UPDATE CURRENT_TIMESTAMP | |
+| deleted_at | DATETIME | NULL | Soft delete timestamp |
+
+### Table: `user_preferences`
+| Column | Type | Constraints | Notes |
+|--------|------|-------------|-------|
+| id | INT | PK, AUTO_INCREMENT | |
+| user_id | INT | FK → users.id, UNIQUE | One row per user |
+| dark_mode | TINYINT(1) | DEFAULT 0 | 0=light, 1=dark |
+| created_at | DATETIME | DEFAULT CURRENT_TIMESTAMP | |
+| updated_at | DATETIME | ON UPDATE CURRENT_TIMESTAMP | |
+
+### Table: `customer_addresses`
+| Column | Type | Constraints | Notes |
+|--------|------|-------------|-------|
+| id | INT | PK, AUTO_INCREMENT | |
+| customer_id | INT | FK → users.id | |
+| label | VARCHAR(50) | DEFAULT 'Home' | "Home", "Office", custom |
+| full_address | TEXT | NOT NULL | |
+| is_default | TINYINT(1) | DEFAULT 0 | Only one default per customer |
+| created_at | DATETIME | DEFAULT CURRENT_TIMESTAMP | |
+| updated_at | DATETIME | ON UPDATE CURRENT_TIMESTAMP | |
+
+### Table: `inventory`
+| Column | Type | Constraints | Notes |
+|--------|------|-------------|-------|
+| id | INT | PK, AUTO_INCREMENT | |
+| item_name | VARCHAR(100) | NOT NULL | |
+| item_icon | VARCHAR(255) | DEFAULT NULL | File path or NULL for default icon |
+| stock_count | INT | NOT NULL, DEFAULT 0 | |
+| price | DECIMAL(10,2) | NOT NULL | |
+| status | ENUM('active','inactive','out_of_stock') | DEFAULT 'active' | |
+| last_restocked_at | DATETIME | NULL | |
+| created_at | DATETIME | DEFAULT CURRENT_TIMESTAMP | |
+| updated_at | DATETIME | ON UPDATE CURRENT_TIMESTAMP | |
+
+### Table: `orders`
+| Column | Type | Constraints | Notes |
+|--------|------|-------------|-------|
+| id | INT | PK, AUTO_INCREMENT | Displayed as Order ID |
+| customer_id | INT | FK → users.id | |
+| rider_id | INT | FK → users.id, NULL | NULL for pickup orders |
+| payment_type | ENUM('cod','pickup','online') | NOT NULL | 'online' disabled for now |
+| delivery_type | ENUM('delivery','pickup') | NOT NULL | Derived from payment_type |
+| status | ENUM('pending','confirmed','assigned','on_delivery','delivered','accepted','ready_for_pickup','picked_up','cancelled') | DEFAULT 'pending' | |
+| delivery_address | TEXT | NULL | NULL for pickup orders |
+| order_notes | TEXT | NULL | Customer special instructions |
+| delivery_fee | DECIMAL(10,2) | DEFAULT 0.00 | 0 for pickup |
+| subtotal | DECIMAL(10,2) | NOT NULL | Sum of item subtotals |
+| total_amount | DECIMAL(10,2) | NOT NULL | subtotal + delivery_fee |
+| expected_delivery_date | DATE | NULL | Auto-set when On Delivery |
+| cancellation_reason | TEXT | NULL | |
+| cancelled_by | INT | FK → users.id, NULL | Who cancelled |
+| staff_comment | TEXT | NULL | Visible to customer, e.g. "Waiting for rider" |
+| customer_confirmed | TINYINT(1) | DEFAULT 0 | Accepted/Received |
+| customer_confirmed_at | DATETIME | NULL | |
+| receipt_token | VARCHAR(64) | UNIQUE, NULL | For public receipt URL |
+| order_date | DATETIME | DEFAULT CURRENT_TIMESTAMP | |
+| delivered_at | DATETIME | NULL | |
+| created_at | DATETIME | DEFAULT CURRENT_TIMESTAMP | |
+| updated_at | DATETIME | ON UPDATE CURRENT_TIMESTAMP | |
+
+### Table: `order_items`
+| Column | Type | Constraints | Notes |
+|--------|------|-------------|-------|
+| id | INT | PK, AUTO_INCREMENT | |
+| order_id | INT | FK → orders.id ON DELETE CASCADE | |
+| inventory_id | INT | FK → inventory.id | |
+| item_name | VARCHAR(100) | NOT NULL | Snapshot at order time |
+| item_icon | VARCHAR(255) | NULL | Snapshot at order time |
+| item_price | DECIMAL(10,2) | NOT NULL | Snapshot at order time |
+| quantity | INT | NOT NULL | |
+| subtotal | DECIMAL(10,2) | NOT NULL | item_price × quantity |
+| created_at | DATETIME | DEFAULT CURRENT_TIMESTAMP | |
+
+### Table: `notifications`
+| Column | Type | Constraints | Notes |
+|--------|------|-------------|-------|
+| id | INT | PK, AUTO_INCREMENT | |
+| user_id | INT | FK → users.id ON DELETE CASCADE | Recipient |
+| title | VARCHAR(150) | NOT NULL | |
+| message | TEXT | NOT NULL | |
+| type | VARCHAR(50) | NOT NULL | See type list below |
+| reference_id | INT | NULL | Related order_id, user_id, etc. |
+| is_read | TINYINT(1) | DEFAULT 0 | |
+| created_at | DATETIME | DEFAULT CURRENT_TIMESTAMP | |
+
+**Notification Types:**
+`order_placed`, `order_confirmed`, `order_assigned`, `order_on_delivery`, `order_delivered`, `order_cancelled`, `account_approved`, `account_flagged`, `appeal_approved`, `appeal_denied`, `low_stock`, `system`
+
+### Table: `session_logs`
+| Column | Type | Constraints | Notes |
+|--------|------|-------------|-------|
+| id | INT | PK, AUTO_INCREMENT | |
+| user_id | INT | NULL | FK → users.id ON DELETE SET NULL |
+| username | VARCHAR(50) | NOT NULL | Snapshot (persists after deletion) |
+| role | VARCHAR(20) | NOT NULL | Snapshot |
+| action | ENUM('login','logout','failed_login') | NOT NULL | |
+| ip_address | VARCHAR(45) | NOT NULL | IPv4/IPv6 |
+| created_at | DATETIME | DEFAULT CURRENT_TIMESTAMP | |
+
+### Table: `settings`
+| Column | Type | Constraints | Notes |
+|--------|------|-------------|-------|
+| id | INT | PK, AUTO_INCREMENT | |
+| setting_key | VARCHAR(100) | UNIQUE, NOT NULL | |
+| setting_value | TEXT | NOT NULL | |
+| updated_at | DATETIME | ON UPDATE CURRENT_TIMESTAMP | |
+
+### Table: `default_items`
+| Column | Type | Constraints | Notes |
+|--------|------|-------------|-------|
+| id | INT | PK, AUTO_INCREMENT | |
+| item_name | VARCHAR(100) | NOT NULL | Pre-defined item name options |
+| created_at | DATETIME | DEFAULT CURRENT_TIMESTAMP | |
+
+### Table: `cancellation_appeals`
+| Column | Type | Constraints | Notes |
+|--------|------|-------------|-------|
+| id | INT | PK, AUTO_INCREMENT | |
+| customer_id | INT | FK → users.id | |
+| reason | TEXT | NOT NULL | Customer's appeal text |
+| status | ENUM('pending','approved','denied') | DEFAULT 'pending' | |
+| reviewed_by | INT | FK → users.id, NULL | Staff/Admin who reviewed |
+| admin_notes | TEXT | NULL | Reviewer's notes |
+| reviewed_at | DATETIME | NULL | |
+| created_at | DATETIME | DEFAULT CURRENT_TIMESTAMP | |
+
+### Table: `password_resets`
+| Column | Type | Constraints | Notes |
+|--------|------|-------------|-------|
+| id | INT | PK, AUTO_INCREMENT | |
+| email | VARCHAR(100) | NOT NULL | |
+| token | VARCHAR(64) | NOT NULL | Random secure token |
+| expires_at | DATETIME | NOT NULL | Typically +1 hour |
+| used | TINYINT(1) | DEFAULT 0 | Prevent reuse |
+| created_at | DATETIME | DEFAULT CURRENT_TIMESTAMP | |
+
+### Default Settings Seed Data
+```
+station_name          = "Azeu Water Station"
+station_address       = ""
+max_cancellation      = 5
+pending_expiry_days   = 7
+low_stock_threshold   = 10
+maintenance_mode      = 0
+encrypt_passwords     = 1
+auto_assign_orders    = 0
+timezone              = "Asia/Manila"
+force_dark_mode       = 0
+primary_color         = "#1565C0"
+secondary_color       = "#1E88E5"
+accent_color          = "#42A5F5"
+surface_color         = "#F5F7FA"
+max_login_attempts    = 10
+delivery_fee          = 50.00
+```
+
+### Super Admin Seed
+```
+username    = "admin"
+password    = encrypt("admin", KEY)
+full_name   = "System Administrator"
+email       = "admin@azeu.com"
+phone       = "0000000000"
+role        = "super_admin"
+status      = "active"
+```
+
+---
+
+## 4. FINAL FILE STRUCTURE
+
+```
+azeu-water-station/
+│
+├── index.php                              ← Login page (redirects if logged in)
+├── register.php                           ← Customer registration
+├── forgot_password.php                    ← Email input for reset
+├── reset_password.php                     ← New password form (?token=xxx)
+├── receipt.php                            ← Public receipt page (?token=xxx)
+├── maintenance.php                        ← Maintenance mode page
+│
+├── config/
+│   ├── database.php                       ← DB connection + auto-create all tables + seed
+│   ├── session.php                        ← Session start, auth guards, role checks
+│   ├── constants.php                      ← Status enums, role enums, notification types
+│   ├── functions.php                      ← Shared helpers (redirect, sanitize, format, etc.)
+│   └── AESCrypt.php                       ← encrypt($text, $key) / decrypt($text, $key)
+│
+├── assets/
+│   ├── css/
+│   │   ├── global.css                     ← CSS variables, reset, typography, dark/light themes
+│   │   ├── auth.css                       ← Login, register, forgot/reset password
+│   │   ├── components.css                 ← Cards, tables, dialogs, buttons, inputs, badges
+│   │   ├── layout.css                     ← Header, sidebar, responsive breakpoints
+│   │   └── receipt.css                    ← Receipt page styling
+│   ├── js/
+│   │   ├── global.js                      ← Theme toggle, Manila time, CSRF token helper
+│   │   ├── auth.js                        ← Login/register form validation
+│   │   ├── components.js                  ← Dialog system, toast notifications, table pagination
+│   │   ├── sidebar.js                     ← Collapse/expand, hamburger, active state
+│   │   └── receipt.js                     ← QR generation, PDF/image download
+│   ├── images/
+│   │   ├── logo.png                       ← Default station logo
+│   │   └── default-item.png               ← Default item icon
+│   └── uploads/
+│       └── items/                         ← Uploaded item icons (admin)
+│
+├── includes/
+│   ├── header.php                         ← Nav header (dynamic: name, time, role icon, bell, theme)
+│   ├── sidebar.php                        ← Sidebar (dynamic per role, collapsible)
+│   ├── footer.php                         ← Close wrappers, load global JS
+│   └── auth_check.php                     ← Include at top of every protected page
+│
+├── api/
+│   ├── auth/
+│   │   ├── login.php                      ← POST: validate, session create, log
+│   │   ├── logout.php                     ← POST: session destroy, log
+│   │   ├── register.php                   ← POST: create pending customer
+│   │   ├── forgot_password.php            ← POST: send reset email
+│   │   └── reset_password.php             ← POST: update password via token
+│   │
+│   ├── orders/
+│   │   ├── place_order.php                ← POST: validate stock, create order + items, decrement stock on confirm
+│   │   ├── update_status.php              ← POST: change status (role-based permissions)
+│   │   ├── cancel_order.php               ← POST: cancel with reason, restore stock, log canceller
+│   │   ├── assign_rider.php               ← POST: assign/auto-assign rider
+│   │   ├── bulk_update.php                ← POST: bulk status change
+│   │   ├── confirm_received.php           ← POST: customer marks accepted
+│   │   ├── get_orders.php                 ← GET: filtered, paginated orders (role-scoped)
+│   │   ├── get_receipt.php                ← GET: receipt data by token
+│   │   └── reorder.php                    ← POST: clone previous order items to cart
+│   │
+│   ├── accounts/
+│   │   ├── approve.php                    ← POST: approve pending account
+│   │   ├── create.php                     ← POST: create account (skip pending)
+│   │   ├── update.php                     ← POST: edit account details
+│   │   ├── delete.php                     ← POST: soft delete account
+│   │   └── get_accounts.php               ← GET: filtered, paginated accounts (role-scoped)
+│   │
+│   ├── inventory/
+│   │   ├── add_item.php                   ← POST: create inventory item
+│   │   ├── update_item.php                ← POST: edit item details
+│   │   ├── restock.php                    ← POST: add stock count
+│   │   ├── delete_item.php                ← POST: remove item
+│   │   ├── get_items.php                  ← GET: paginated items (with stock status)
+│   │   ├── check_stock.php                ← GET: real-time stock validation
+│   │   └── upload_icon.php                ← POST: handle item icon upload
+│   │
+│   ├── riders/
+│   │   ├── toggle_availability.php        ← POST: set available/unavailable
+│   │   ├── update_priority.php            ← POST: reorder delivery list
+│   │   ├── get_statistics.php             ← GET: rider performance data
+│   │   └── get_available.php              ← GET: list available riders with load count
+│   │
+│   ├── addresses/
+│   │   ├── add.php                        ← POST: add customer address
+│   │   ├── update.php                     ← POST: edit address
+│   │   ├── delete.php                     ← POST: remove address
+│   │   └── get.php                        ← GET: customer's addresses
+│   │
+│   ├── appeals/
+│   │   ├── submit.php                     ← POST: customer submits appeal
+│   │   ├── review.php                     ← POST: staff/admin approves or denies
+│   │   └── get.php                        ← GET: list appeals (filtered)
+│   │
+│   ├── notifications/
+│   │   ├── get.php                        ← GET: user's notifications (paginated)
+│   │   ├── mark_read.php                  ← POST: mark single/all as read
+│   │   └── count_unread.php               ← GET: unread count for bell badge
+│   │
+│   ├── settings/
+│   │   ├── update_profile.php             ← POST: update own profile
+│   │   ├── change_password.php            ← POST: change own password
+│   │   ├── update_system.php              ← POST: admin system settings
+│   │   ├── update_preferences.php         ← POST: dark mode preference
+│   │   ├── manage_default_items.php       ← POST: add/remove default item names
+│   │   └── get_settings.php              ← GET: current system settings
+│   │
+│   └── analytics/
+│       ├── get_dashboard_stats.php        ← GET: role-specific dashboard counts
+│       ├── get_sales.php                  ← GET: revenue, daily trends
+│       ├── get_order_stats.php            ← GET: status distribution
+│       └── export_report.php              ← GET: generate downloadable report data
+│
+├── customer/
+│   ├── dashboard.php
+│   ├── place_order.php
+│   ├── my_orders.php
+│   ├── order_history.php
+│   ├── settings.php
+│   ├── css/
+│   │   ├── dashboard.css
+│   │   ├── place_order.css
+│   │   ├── my_orders.css
+│   │   ├── order_history.css
+│   │   └── settings.css
+│   └── js/
+│       ├── dashboard.js
+│       ├── place_order.js
+│       ├── my_orders.js
+│       ├── order_history.js
+│       └── settings.js
+│
+├── rider/
+│   ├── dashboard.php
+│   ├── assigned_deliveries.php
+│   ├── delivery_history.php
+│   ├── settings.php
+│   ├── css/
+│   │   ├── dashboard.css
+│   │   ├── assigned_deliveries.css
+│   │   ├── delivery_history.css
+│   │   └── settings.css
+│   └── js/
+│       ├── dashboard.js
+│       ├── assigned_deliveries.js
+│       ├── delivery_history.js
+│       └── settings.js
+│
+├── staff/
+│   ├── dashboard.php
+│   ├── account_management.php
+│   ├── manage_orders.php
+│   ├── order_history.php
+│   ├── inventory.php                      ← READ-ONLY view
+│   ├── rider_statistics.php
+│   ├── settings.php
+│   ├── css/
+│   │   ├── dashboard.css
+│   │   ├── account_management.css
+│   │   ├── manage_orders.css
+│   │   ├── order_history.css
+│   │   ├── inventory.css
+│   │   ├── rider_statistics.css
+│   │   └── settings.css
+│   └── js/
+│       ├── dashboard.js
+│       ├── account_management.js
+│       ├── manage_orders.js
+│       ├── order_history.js
+│       ├── inventory.js
+│       ├── rider_statistics.js
+│       └── settings.js
+│
+├── admin/
+│   ├── dashboard.php
+│   ├── inventory.php                      ← Full CRUD
+│   ├── account_management.php
+│   ├── manage_orders.php
+│   ├── order_history.php
+│   ├── rider_statistics.php
+│   ├── analytics.php
+│   ├── session_logs.php
+│   ├── settings.php
+│   ├── css/
+│   │   ├── dashboard.css
+│   │   ├── inventory.css
+│   │   ├── account_management.css
+│   │   ├── manage_orders.css
+│   │   ├── order_history.css
+│   │   ├── rider_statistics.css
+│   │   ├── analytics.css
+│   │   ├── session_logs.css
+│   │   └── settings.css
+│   └── js/
+│       ├── dashboard.js
+│       ├── inventory.js
+│       ├── account_management.js
+│       ├── manage_orders.js
+│       ├── order_history.js
+│       ├── rider_statistics.js
+│       ├── analytics.js
+│       ├── session_logs.js
+│       └── settings.js
+│
+└── errors/
+    ├── 404.php
+    └── 403.php
+```
+
+---
+
+## 5. EXTERNAL LIBRARIES (No PHP Frameworks — All Allowed)
+
+| Library | Purpose | Type | Source |
+|---------|---------|------|--------|
+| Material Icons | Icons throughout UI | CSS/Font | Google CDN |
+| Inter (Google Font) | Clean modern typography | CSS/Font | Google CDN |
+| Chart.js | Analytics charts (admin) | JS | CDN |
+| html2pdf.js | Receipt download as PDF | JS | CDN |
+| html2canvas | Receipt download as image | JS | CDN |
+| qrcode.js (davidshimjs) | QR code on receipts | JS | CDN |
+| SweetAlert2 | Notification dialogs | JS/CSS | CDN |
+| PHPMailer | Forgot password emails | PHP Library | Composer or manual download |
+| Sortable.js (optional) | Rider drag-and-drop delivery priority | JS | CDN |
+
+**No PHP frameworks. No Bootstrap. All CSS is hand-written.**
+
+---
+
+## 6. PAGE-BY-PAGE DETAILED FLOW
+
+### PUBLIC PAGES
+
+#### `index.php` — Login
+```
+LOAD → Check session
+├── If logged in → Redirect to /{role}/dashboard.php
+└── If not logged in → Show login form
+    ├── Fields: Username, Password
+    ├── Link: "Forgot Password?" → forgot_password.php
+    ├── Link: "Create Account" → register.php
+    └── ON SUBMIT (AJAX → api/auth/login.php):
+        ├── Check maintenance mode → if ON and role != admin/super_admin → show maintenance message
+        ├── Check login attempts → if >= max → show "Account locked for X minutes"
+        ├── Validate credentials (decrypt/compare)
+        ├── Check account status:
+        │   ├── pending → Login allowed but show restricted dashboard
+        │   ├── active → Full login
+        │   ├── flagged → Login allowed but ordering disabled, show appeal option
+        │   └── deleted → "Account not found"
+        ├── Create session (user_id, role, username, full_name)
+        ├── Load user_preferences → apply dark_mode
+        ├── Check force_dark_mode setting → override if ON
+        ├── Log to session_logs (login, IP)
+        └── Redirect to /{role}/dashboard.php
+```
+
+#### `register.php` — Customer Registration
+```
+LOAD → Check session
+├── If logged in → Redirect to dashboard
+└── Show registration form
+    ├── Fields: Full Name, Username, Email, Full Address, Phone, Password, Confirm Password
+    ├── Floating animated labels on all fields
+    ├── Real-time validation (username uniqueness via AJAX)
+    └── ON SUBMIT (AJAX → api/auth/register.php):
+        ├── Server-side validation (all fields, email format, username unique, password strength)
+        ├── Create user (role=customer, status=pending)
+        ├── Create default address in customer_addresses (is_default=1)
+        ├── Create user_preferences row
+        ├── Show success dialog: "Account created! Awaiting approval."
+        └── Redirect to login
+```
+
+#### `forgot_password.php`
+```
+Show email input form → SUBMIT → api/auth/forgot_password.php
+├── Check email exists AND role=customer AND status=active
+├── Generate random token, store in password_resets (expires +1 hour)
+├── Send email via PHPMailer with reset link
+└── Show: "If this email exists, a reset link has been sent."
+```
+
+#### `reset_password.php?token=xxx`
+```
+LOAD → Validate token (exists, not expired, not used)
+├── Invalid → Show error, link to forgot_password
+└── Valid → Show new password form
+    └── ON SUBMIT → api/auth/reset_password.php
+        ├── Update user password (encrypt with AES)
+        ├── Mark token as used
+        └── Show success, redirect to login
+```
+
+#### `receipt.php?token=xxx`
+```
+LOAD → Query orders WHERE receipt_token = token
+├── Not found → 404
+└── Found → Render receipt:
+    ├── Station name + logo
+    ├── Receipt date, Order ID, Order date
+    ├── Customer name, address, phone
+    ├── Items table: Name, Qty, Unit Price, Subtotal
+    ├── Subtotal, Delivery Fee, Total Amount
+    ├── Payment type
+    ├── QR code (encodes this receipt URL)
+    ├── Button: "Download as PDF" (html2pdf.js)
+    ├── Button: "Download as Image" (html2canvas)
+    └── Button: "Go to Dashboard" (if logged in) or "Go to Login"
+```
+
+---
+
+### CUSTOMER PAGES
+
+#### `customer/dashboard.php`
+```
+AUTH CHECK → Must be logged in, role=customer
+├── If status=pending:
+│   └── Show message: "Your account is pending approval. Please wait for staff confirmation."
+│   └── All sidebar items disabled/hidden except Settings
+│
+├── If status=flagged:
+│   └── Show warning: "Your account has been flagged due to excessive cancellations."
+│   └── Show "Submit Appeal" button → opens appeal dialog
+│   └── Order placement disabled, viewing allowed
+│
+└── If status=active → Full dashboard:
+    ├── Greeting: "Welcome back, {Full Name}!"
+    ├── Quick Action Buttons: [Place Order] [My Orders] [Order History] [Settings]
+    ├── Stat Cards (AJAX → api/analytics/get_dashboard_stats.php):
+    │   ├── Total Orders (all time)
+    │   ├── Pending Orders (current)
+    │   └── Delivered Orders (all time)
+    └── Pending Orders Preview:
+        ├── If no pending orders → "No pending orders" + [Make Order] button
+        └── If orders exist → Table (max 3 rows):
+            Columns: Order ID | Items (icon + name, comma-separated) | Payment Type |
+                     Status (badge) | Total Qty | Rider Name (or "Unassigned") |
+                     Order Date | Expected Delivery
+            └── [View All Orders] button → redirects to my_orders.php
+```
+
+#### `customer/place_order.php`
+```
+AUTH CHECK → active customers only (not pending, not flagged)
+
+LOAD → Fetch active inventory items (AJAX → api/inventory/get_items.php)
+
+RENDER → Item Cards Grid (20 per page, pagination):
+├── Each card:
+│   ├── Item icon (uploaded or default)
+│   ├── Item name
+│   ├── Price: ₱XX.XX
+│   ├── Stock: XX available (if 0 → "Out of Stock" overlay, unselectable)
+│   ├── Quantity: [-] [input] [+] (min 1, max = stock, integers only)
+│   └── Selection: Click to select → green border + check icon
+│       ├── Only active + in-stock items are selectable
+│       └── Selected items tracked in JS array
+│
+├── Pagination: [Previous] Page X of Y [Next]
+│
+└── [Checkout] button (disabled if nothing selected) → Opens Checkout Dialog:
+    ├── Selected Items List:
+    │   ├── Each item: Icon | Name | Qty | Unit Price | Subtotal | [X Remove]
+    │   └── Removing updates totals in real-time
+    ├── Delivery Address:
+    │   ├── Dropdown of saved addresses (from customer_addresses)
+    │   ├── Option: "Use different address" → text input
+    │   └── If delivery type → address required
+    ├── Order Notes: (optional textarea) "Special instructions..."
+    ├── Payment Method:
+    │   ├── ○ Cash on Delivery
+    │   ├── ○ Pickup at Store
+    │   └── ○ Online Payment (disabled, "Coming soon" tooltip)
+    ├── Delivery Fee: ₱XX.XX (0 for pickup, flat rate for delivery from settings)
+    ├── Summary:
+    │   ├── Total Items: X
+    │   ├── Subtotal: ₱XX.XX
+    │   ├── Delivery Fee: ₱XX.XX
+    │   └── Total: ₱XX.XX
+    │
+    └── [Place Order] button → AJAX → api/orders/place_order.php:
+        ├── REAL-TIME STOCK VALIDATION (check_stock.php):
+        │   ├── If any item now out of stock:
+        │   │   └── Show dialog: "{Item} is now out of stock and removed from your order"
+        │   │   └── Update checkout list, recalculate totals
+        │   │   └── If all items removed → "All items unavailable" → close dialog
+        │   └── If all items in stock → proceed
+        ├── Create order record (status=pending, receipt_token=random)
+        ├── Create order_items (snapshot item data)
+        ├── NOTE: Stock is NOT decremented yet (only on Confirm)
+        ├── Create notification for staff/admin: "New order #{id} from {customer}"
+        ├── Show success dialog:
+        │   ├── "Order #XXXX placed successfully!"
+        │   ├── "Your order has been sent to staff for confirmation."
+        │   └── [View Receipt] button → receipt.php?token=xxx
+        │   └── [Go to My Orders] button → my_orders.php
+```
+
+#### `customer/my_orders.php`
+```
+AUTH CHECK → active/flagged customers
+
+RENDER → Filter Buttons: [All] [Pending] [Confirmed] [Assigned] [On Delivery] [Ready for Pickup]
+
+TABLE (paginated, 50 per page):
+Columns: Order ID | Items (icon + names) | Payment Type | Status (color badge) |
+         Total Qty | Rider (or "Unassigned"/"N/A") | Order Date |
+         Expected Delivery | Staff Comment | Actions
+
+ACTIONS (per order):
+├── Status = Pending:
+│   └── [Cancel] → SweetAlert: "Cancel this order?" +
+│       Reason textarea (required) → api/orders/cancel_order.php
+│       ├── Increment cancellation_count
+│       ├── Check if count >= max → flag account
+│       └── No stock restore needed (not decremented yet at Pending)
+│
+├── Status = Delivered OR Picked Up:
+│   └── [Accept/Received] (optional) → SweetAlert: "Confirm you received this order?"
+│       → api/orders/confirm_received.php
+│       └── Sets customer_confirmed=1, customer_confirmed_at=NOW()
+│
+├── Status = Confirmed, Assigned, On Delivery, Ready for Pickup:
+│   └── No customer actions (view only)
+│
+└── Status = Cancelled, Accepted:
+    └── No actions (final states)
+
+BULK ACTIONS: (Only for Pending orders)
+├── Select multiple via checkboxes
+└── [Cancel Selected] → same cancel flow with shared reason
+
+[Reorder] button on Delivered/Accepted/Cancelled orders:
+└── Redirects to place_order.php?reorder={order_id}
+└── Pre-fills cart with same items (validates current stock/prices)
+```
+
+#### `customer/order_history.php`
+```
+TABLE (paginated, 50 per page):
+Columns: Order ID | Items | Payment Type | Delivery Type | Status | Total Qty |
+         Total Amount | Rider | Order Date | Delivered Date |
+         Cancellation Reason (if cancelled) | Cancelled By
+
+FILTERS: [All] [Delivered] [Accepted] [Cancelled] [Picked Up]
+SEARCH: Search by Order ID, Item name
+DATE RANGE: From - To
+
+[Reorder] button on each row → same reorder flow
+```
+
+#### `customer/settings.php`
+```
+PROFILE SECTION:
+├── Full Name (editable)
+├── Username (shown, NOT editable — greyed out)
+├── Email (editable)
+├── Phone (editable)
+└── [Save Changes] → api/settings/update_profile.php
+
+PASSWORD SECTION:
+├── Current Password
+├── New Password
+├── Confirm New Password
+└── [Change Password] → api/settings/change_password.php
+
+ADDRESSES SECTION:
+├── List of saved addresses with [Default] badge on default
+├── Each address: Label | Full Address | [Edit] [Delete] [Set Default]
+├── [Add Address] → dialog: Label + Full Address → api/addresses/add.php
+└── Edit → dialog with pre-filled fields → api/addresses/update.php
+
+APPEAL SECTION (only if status=flagged):
+├── Current cancellation count: X / Max
+├── Status: Flagged
+├── [Submit Appeal] → dialog: Reason textarea → api/appeals/submit.php
+└── Appeal History: table of past appeals with status
+```
+
+---
+
+### RIDER PAGES
+
+#### `rider/dashboard.php`
+```
+AUTH CHECK → role=rider, status=active
+
+├── Greeting: "Welcome back, {Full Name}!"
+├── Availability Toggle: [Available ✓] / [Unavailable ✗]
+│   └── Cannot set Unavailable if any order status = On Delivery
+│   └── AJAX → api/riders/toggle_availability.php
+├── Quick Action Buttons: [Assigned Deliveries] [Delivery History] [Settings]
+├── Stat Cards:
+│   ├── Assigned Deliveries (confirmed/assigned to me, not yet delivered)
+│   └── On Delivery (currently in transit)
+└── Preview Section:
+    ├── If no assigned deliveries → "No deliveries assigned to you."
+    └── If deliveries exist → Table (max 3 rows):
+        Columns: Order ID | Customer Details | Items | Status | Order Date
+        └── [View All Deliveries] → assigned_deliveries.php
+```
+
+#### `rider/assigned_deliveries.php`
+```
+TABLE (paginated, 50 per page):
+Columns: Order ID | Customer Details (Name, Phone — Address) |
+         Items (icon + names) | Qty | Payment Type | Status (badge) |
+         Order Date | Expected Delivery | Delivery Priority | Actions
+
+Customer Details format: "Juan Dela Cruz, 09171234567 — 123 Main St, Quezon City"
+
+DELIVERY PRIORITY:
+├── Drag-and-drop reordering (Sortable.js)
+├── Priority number shown
+└── Save order → api/riders/update_priority.php
+
+FILTERS: [All] [Assigned] [On Delivery]
+
+ACTIONS:
+├── Status = Assigned:
+│   ├── [On Delivery] → SweetAlert: "Mark as On Delivery?" [YES/NO]
+│   │   → api/orders/update_status.php
+│   │   └── Sets expected_delivery_date = TODAY
+│   │   └── Rider becomes "on delivery" (can't go offline)
+│   └── [Cancel] → SweetAlert: "Cancel delivery?" + Reason
+│       → api/orders/cancel_order.php
+│       └── Order reverts to Confirmed (unassigned)
+│
+├── Status = On Delivery:
+│   ├── [Delivered] → SweetAlert: "Mark as Delivered?" [YES/NO]
+│   │   → api/orders/update_status.php
+│   │   └── Sets delivered_at = NOW()
+│   │   └── If no more on_delivery orders → rider can go offline again
+│   └── [Cancel] → same cancel flow, reverts to Confirmed
+│
+└── BULK: Select multiple → [Mark On Delivery] [Mark Delivered] [Cancel]
+```
+
+#### `rider/delivery_history.php`
+```
+TABLE: Order ID | Customer Details | Items | Qty | Payment | Status |
+       Order Date | Delivered Date | Cancellation Reason (if any)
+
+FILTERS: [All] [Delivered] [Cancelled]
+SEARCH: Order ID, Customer name
+DATE RANGE: From - To
+```
+
+#### `rider/settings.php`
+```
+Same as customer settings but without Addresses section and Appeal section.
+Profile + Password sections only.
+```
+
+---
+
+### STAFF PAGES
+
+#### `staff/dashboard.php`
+```
+AUTH CHECK → role=staff, status=active
+
+├── Greeting: "Welcome back, {Full Name}!"
+├── Quick Action Buttons: [Account Mgmt] [Manage Orders] [Order History]
+│   [Inventory] [Rider Stats] [Settings]
+├── Stat Cards:
+│   ├── Pending Orders
+│   ├── Confirmed Orders
+│   ├── On Delivery Orders
+│   ├── Pending Accounts
+│   ├── Total Riders
+│   └── Available Riders
+├── Preview: Pending Accounts (max 3) → [View All] → account_management.php
+└── Preview: Pending Orders (max 3) → [View All] → manage_orders.php
+```
+
+#### `staff/account_management.php`
+```
+BUTTON: [Add Account] → Dialog:
+├── Role: [Customer ▼] [Rider ▼] (no staff/admin options)
+├── Fields: Full Name, Username, Email, Address, Phone, Password
+└── [Create] → api/accounts/create.php (status=active, skip pending)
+
+TABLE (paginated, 50 per page):
+Columns: Role (badge) | Account ID | Username | Full Name | Email |
+         Address | Phone | Status (badge) | Created Date | Actions
+
+DISPLAY RULES:
+├── Shows: Customers + Riders ONLY
+├── Does NOT show: Staff, Admin, Super Admin
+├── Pending accounts shown FIRST (highlighted/priority row)
+└── Deleted accounts NOT shown
+
+FILTERS: [All] [Pending] [Active] [Flagged] [Customers] [Riders]
+SEARCH: Username, Full Name, Email
+
+ACTIONS:
+├── Pending accounts:
+│   ├── [Approve] → SweetAlert: "Approve {username}?" [YES/NO]
+│   │   → api/accounts/approve.php → sets status=active
+│   │   └── Notify customer: "Your account has been approved!"
+│   └── [Delete] → SweetAlert: "Delete {username}?" [YES/NO]
+│       → api/accounts/delete.php → removes from DB (truly delete pending)
+│
+├── Active/Flagged accounts:
+│   ├── [Edit] → Dialog with pre-filled editable fields:
+│   │   Full Name, Email, Phone, Address, Password (optional change)
+│   │   └── [Save] → api/accounts/update.php
+│   │   └── [Cancel]
+│   └── [Delete] → SweetAlert: "Delete {username}?" [YES/NO]
+│       → api/accounts/delete.php → soft delete (set status=deleted, deleted_at=NOW())
+│       └── Orders preserved, display shows "[Deleted] username"
+
+CANCELLATION APPEALS SECTION:
+├── Table of pending appeals from flagged customers
+├── Columns: Customer | Reason | Submitted Date | Actions
+└── Actions: [Approve] → unflag + reset count | [Deny] → with notes
+```
+
+#### `staff/manage_orders.php`
+```
+TABLE (paginated, 50 per page):
+Columns: Order ID | Customer Details (Name, Phone — Address) | Items (grouped) |
+         Total Qty | Payment Type | Delivery Type | Order Date |
+         Expected Delivery | Rider (or "Unassigned") | Status (badge) |
+         Staff Comment | Actions
+
+GROUPING: Orders with same customer + same status → collapsed into 1 row
+├── Expandable to see individual orders
+└── Bulk actions apply to all in group
+
+FILTERS: [All] [Pending] [Confirmed] [Assigned] [On Delivery] [Ready for Pickup]
+SEARCH: Order ID, Customer name
+
+ACTIONS BY STATUS:
+
+├── PENDING:
+│   ├── [Confirm] → SweetAlert: "Order confirmed!"
+│   │   "Assign rider now?" [YES / LATER]
+│   │   ├── YES → Rider selection:
+│   │   │   ├── [Select Rider] → Dialog listing available riders:
+│   │   │   │   Table: Name | Current Assignments | Status
+│   │   │   │   └── Click to select → assigns
+│   │   │   └── [Auto] → Selects least-loaded available rider
+│   │   │       └── If no available riders → "No riders available.
+│   │   │           Order will stay as Confirmed. Add comment?"
+│   │   │           → Optional comment field → saves to staff_comment
+│   │   └── LATER → Status = Confirmed, no rider
+│   │   └── STOCK DECREMENT happens here
+│   │   └── Notify customer: "Order #{id} confirmed!"
+│   │
+│   └── [Cancel] → SweetAlert + Reason → cancel + restore NO stock (not decremented yet)
+│       └── Notify customer: "Order #{id} cancelled by staff. Reason: ..."
+│
+├── CONFIRMED (no rider):
+│   ├── [Assign] → Dropdown:
+│   │   ├── [Select] → same rider selection dialog
+│   │   └── [Auto] → auto-assign
+│   │   └── Status becomes Assigned
+│   │   └── Notify rider: "New delivery assigned: Order #{id}"
+│   ├── [Cancel] → same cancel flow
+│   │   └── STOCK RESTORED (was decremented at confirm)
+│   └── [Ready for Pickup] (if delivery_type=pickup)
+│       → Status = Ready for Pickup
+│       └── Notify customer: "Order #{id} ready for pickup!"
+│
+├── ASSIGNED:
+│   ├── [Reassign] → same rider selection (replaces current rider)
+│   │   └── Notify old rider: "Order #{id} reassigned"
+│   │   └── Notify new rider: "New delivery assigned"
+│   └── [Cancel] → cancel + STOCK RESTORED
+│
+├── ON DELIVERY:
+│   ├── [Update] → Dialog: Select new status:
+│   │   [Pending] [Confirmed] [Delivered] + any other valid status
+│   │   └── api/orders/update_status.php
+│   └── [Cancel] → cancel + STOCK RESTORED
+│
+├── READY FOR PICKUP:
+│   ├── [Picked Up] → Mark as Picked Up → income counted
+│   └── [Cancel] → cancel + STOCK RESTORED
+│
+└── DELIVERED / PICKED UP / CANCELLED / ACCEPTED:
+    └── No actions (view only in this table — see Order History)
+
+BULK ACTIONS:
+├── Select multiple orders via checkboxes
+├── [Confirm All] [Cancel All] [Assign All (Auto)]
+└── Cancel All requires shared reason input
+```
+
+#### `staff/order_history.php`
+```
+TABLE: Order ID | Customer | Items | Qty | Payment | Delivery Type | Status |
+       Total Amount | Rider | Order Date | Delivered Date |
+       Cancellation Reason | Cancelled By | Customer Confirmed
+
+FILTERS: [All] [Delivered] [Accepted] [Cancelled] [Picked Up]
+SEARCH + DATE RANGE
+```
+
+#### `staff/inventory.php` (READ-ONLY)
+```
+TABLE: Item Name (with icon) | Stock Count | Price | Status (badge) |
+       Low Stock Alert (⚠️ if below threshold) | Last Restocked
+
+NO ACTIONS — view only
+Staff can see stock levels to make informed decisions when confirming orders.
+```
+
+#### `staff/rider_statistics.php`
+```
+STAT CARDS:
+├── Total Riders
+└── Available Riders (is_available=1 AND no on_delivery orders)
+
+TABLE — Top Performing Riders:
+Columns: Rank | Rider Name | Email | Current Status (Available/Unavailable/On Delivery) |
+         Completed Deliveries | Pending Deliveries | Success Rate (%) | Actions
+
+Success Rate = Completed / (Completed + Cancelled) × 100
+
+ACTIONS:
+└── [Show Info] → Dialog showing rider full details:
+    Full Name, Email, Phone, Account Created, Total Deliveries,
+    Current Active Deliveries, Availability Status
+    (Password NEVER shown)
+```
+
+#### `staff/settings.php`
+```
+Same as customer settings: Profile + Password sections.
+No addresses, no appeals.
+```
+
+---
+
+### ADMIN PAGES
+
+#### `admin/dashboard.php`
+```
+AUTH CHECK → role=admin OR super_admin
+
+├── Greeting
+├── Quick Action Buttons: ALL sidebar items
+├── Stat Cards:
+│   ├── Pending Orders
+│   ├── Total Accounts Created
+│   ├── Pending Accounts
+│   └── Low Stock Items (below threshold)
+├── Preview: Pending Accounts (3) → account_management.php
+├── Preview: Pending Orders (3) → manage_orders.php
+└── Preview: Low Stock Items (3) → inventory.php
+```
+
+#### `admin/inventory.php` (FULL CRUD)
+```
+BUTTON: [Add Item] → Dialog:
+├── Item Name: [Dropdown of default_items OR type custom]
+├── Stock Count: [number input]
+├── Price: [number input, 2 decimals]
+├── Item Icon: [Upload image] or [Use default]
+└── [Add Item] [Cancel]
+    → api/inventory/add_item.php
+
+TABLE (paginated, 50 per page):
+Columns: Item Icon | Item Name | Stock Count | Price | Low Stock Alert (⚠️) |
+         Last Restocked | Status (badge) | Actions
+
+Low Stock Alert: Shows ⚠️ icon if stock_count <= low_stock_threshold setting
+
+ACTIONS:
+├── [Edit] → Dialog: Edit Name, Price, Status (Active/Inactive), Icon
+│   → api/inventory/update_item.php
+├── [Restock] → Dialog: "Add stock quantity:" [number input]
+│   → api/inventory/restock.php
+│   └── Updates stock_count += input, last_restocked_at = NOW()
+│   └── If was out_of_stock and now > 0 → auto-set status=active
+└── [Remove] → SweetAlert: "Delete {Item Name}?" [YES/NO]
+    → api/inventory/delete_item.php
+    └── Prevent deletion if item has active orders referencing it
+```
+
+#### `admin/account_management.php`
+```
+Same as staff BUT:
+├── Shows ALL roles: Customer, Rider, Staff, Admin
+├── Does NOT show Super Admin (unless logged in AS super admin)
+├── Can create: Customer, Rider, Staff, Admin roles
+├── Super Admin can modify own account
+├── Normal Admin cannot modify Super Admin
+├── [Add Account] dialog has role options: Customer, Rider, Staff, Admin
+└── Everything else identical to staff version
+```
+
+#### `admin/manage_orders.php`
+```
+Identical to staff/manage_orders.php — same authority, same features.
+```
+
+#### `admin/order_history.php`
+```
+Identical to staff/order_history.php.
+```
+
+#### `admin/rider_statistics.php`
+```
+Identical to staff/rider_statistics.php.
+```
+
+#### `admin/analytics.php`
+```
+DATE RANGE SELECTOR: [This Week] [This Month] [This Year] [Custom: From — To]
+
+STAT CARDS:
+├── Total Revenue (sum of total_amount where status=delivered/picked_up/accepted)
+├── Total Orders (all time)
+├── Average Order Value (revenue / delivered orders)
+├── Orders Today
+└── Cancellation Rate (%)
+
+CHARTS (Chart.js):
+├── Daily Sales Trend (line chart — revenue per day)
+├── Order Status Distribution (doughnut chart — count per status)
+├── Orders Per Day (bar chart — order count per day)
+├── Revenue by Payment Type (pie chart — COD vs Pickup)
+├── Top 5 Items by Quantity Sold (horizontal bar)
+└── Monthly Comparison (bar chart — this month vs last month)
+
+TABLES:
+├── Top 10 Customers: Name | Orders | Total Spent | Last Order Date
+├── Top 5 Riders: Name | Deliveries | Success Rate | Avg Delivery Time
+└── Popular Items: Item Name | Qty Sold | Revenue Generated
+
+DOWNLOAD:
+└── [Export Report] → Downloads analytics summary
+    └── Uses html2pdf.js to generate PDF of current view
+```
+
+#### `admin/session_logs.php`
+```
+TABLE (paginated, 50 per page):
+Columns: # | Timestamp | Role (badge) | Username | Action (Login/Logout/Failed) | IP Address
+
+FILTERS: [All] [Login] [Logout] [Failed Login] [By Role: Customer/Rider/Staff/Admin]
+SEARCH: Username, IP Address
+DATE RANGE: From — To
+```
+
+#### `admin/settings.php`
+```
+STATION SETTINGS:
+├── Station Name: [text input] (changes all headers system-wide)
+├── Station Address: [text input] (for receipt/reference)
+
+ORDER SETTINGS:
+├── Max Cancellations Per Customer: [number] (per month)
+├── Pending Account Expiry: [number] days
+├── Low Stock Threshold: [number]
+├── Delivery Fee: ₱[number]
+
+TOGGLE SWITCHES:
+├── Maintenance Mode [ON/OFF]
+│   └── ON: All non-admin roles see maintenance.php on login
+├── Encrypt DB Passwords [ON/OFF]
+│   └── Toggle triggers migration: encrypt all / decrypt all passwords
+│   └── Uses AESCrypt.php
+├── Auto Assign Every Order [ON/OFF]
+│   └── ON: After staff confirms → auto-assigns least-loaded available rider
+│   └── If no available rider → stays Confirmed with auto-comment
+
+UI SETTINGS:
+├── Timezone: [Dropdown: Asia/Manila, etc.]
+├── Force Dark Mode: [ON/OFF] (overrides all user preferences)
+├── Primary Color: [Color Picker] (default: #1565C0)
+├── Secondary Color: [Color Picker] (default: #1E88E5)
+├── Accent Color: [Color Picker] (default: #42A5F5)
+└── Surface Color: [Color Picker] (default: #F5F7FA)
+
+SECURITY:
+└── Max Login Attempts: [number] (before temporary lockout)
+
+DEFAULT ITEM LIST:
+├── Table of pre-defined item names for inventory dropdown
+├── [Add] → input → api/settings/manage_default_items.php
+├── [Edit] → inline edit
+└── [Remove] → confirm → delete
+
+PROFILE + PASSWORD:
+└── Same as other roles (own profile management)
+```
+
+---
+
+## 7. UI COMPONENT LIST
+
+Every reusable component that needs to be built in `assets/css/components.css` and `assets/js/components.js`:
+
+| Component | CSS Class | Description |
+|-----------|-----------|-------------|
+| Glass Card | `.glass-card` | Frosted glass effect card with subtle blur, used for stat cards and item cards |
+| Stat Card | `.stat-card` | Dashboard counter cards (icon + number + label) |
+| Item Card | `.item-card` | Place Order item display (icon, name, price, stock, qty, select) |
+| Data Table | `.data-table` | Paginated table with header, rows, pagination controls |
+| Status Badge | `.badge-pending`, `.badge-confirmed`, `.badge-assigned`, `.badge-on-delivery`, `.badge-delivered`, `.badge-cancelled`, `.badge-accepted`, `.badge-ready`, `.badge-picked-up` | Color-coded status indicators |
+| Role Badge | `.badge-customer`, `.badge-rider`, `.badge-staff`, `.badge-admin` | Color-coded role indicators |
+| Dialog/Modal | `.modal-overlay`, `.modal-content` | Custom popup dialogs (used alongside SweetAlert2 for confirms) |
+| Float Input | `.float-input` | Animated floating label input field |
+| Toggle Switch | `.toggle-switch` | ON/OFF switches for settings |
+| Action Button | `.btn-confirm`, `.btn-cancel`, `.btn-assign`, `.btn-edit`, `.btn-delete` | Color-matched action buttons |
+| Sidebar | `.sidebar`, `.sidebar-collapsed` | Collapsible navigation sidebar |
+| Header | `.main-header` | Top navigation with logo, time, user info, bell, theme toggle |
+| Notification Bell | `.notif-bell`, `.notif-badge` | Bell icon with unread count badge |
+| Notification Dropdown | `.notif-dropdown` | Dropdown list of recent notifications |
+| Toast | `.toast` | Brief auto-dismissing notification (bottom-right) |
+| Pagination | `.pagination` | Page numbers + Prev/Next + total items count |
+| Color Picker | `.color-picker` | Settings color selection input |
+| Quantity Control | `.qty-control` | [-] [input] [+] for item quantity |
+| Checkbox Row | `.checkbox-row` | Table row with checkbox for bulk selection |
+| Filter Bar | `.filter-bar` | Horizontal scrollable filter/tab buttons |
+| Search Bar | `.search-bar` | Search input with icon |
+| Priority Handle | `.drag-handle` | Drag handle for rider delivery reordering |
+| Quick Action Grid | `.quick-actions` | Dashboard shortcut button grid |
+| Preview Section | `.preview-section` | Dashboard preview table with [View All] link |
+| Empty State | `.empty-state` | Icon + message + action button when no data |
+| Loading Spinner | `.spinner` | AJAX loading indicator |
+| Skeleton Loader | `.skeleton` | Placeholder shimmer while content loads |
+
+### Badge Color Mapping
+```css
+/* Status Badges */
+.badge-pending        { background: #FFA726; color: #fff; }  /* Orange */
+.badge-confirmed      { background: #42A5F5; color: #fff; }  /* Blue */
+.badge-assigned       { background: #7E57C2; color: #fff; }  /* Purple */
+.badge-on-delivery    { background: #26A69A; color: #fff; }  /* Teal */
+.badge-delivered      { background: #66BB6A; color: #fff; }  /* Green */
+.badge-accepted       { background: #2E7D32; color: #fff; }  /* Dark Green */
+.badge-ready          { background: #29B6F6; color: #fff; }  /* Light Blue */
+.badge-picked-up      { background: #4CAF50; color: #fff; }  /* Green */
+.badge-cancelled      { background: #EF5350; color: #fff; }  /* Red */
+
+/* Role Badges */
+.badge-customer       { background: #42A5F5; }
+.badge-rider          { background: #26A69A; }
+.badge-staff          { background: #FFA726; }
+.badge-admin          { background: #EF5350; }
+```
+
+---
+
+## 8. NOTIFICATION SYSTEM DESIGN
+
+### Two Types
+
+**Type 1 — SweetAlert2 Dialogs (Immediate Actions)**
+- Confirmation prompts ("Are you sure?")
+- Success/Error messages after actions
+- Form dialogs (edit, cancel reason, etc.)
+- Triggered by user action, blocking
+
+**Type 2 — Bell Notifications (Persistent)**
+- Stored in `notifications` table
+- Bell icon in header with unread count badge
+- Click bell → dropdown showing recent 10 notifications
+- Each notification: icon + title + time ago + link
+- [Mark All Read] button
+- Refreshed on page load (no polling needed since refresh-based)
+
+### When Notifications Are Created
+
+| Event | Notified User(s) | Title |
+|-------|------------------|-------|
+| New order placed | All Staff + Admin | "New order #{id} from {customer}" |
+| Order confirmed | Customer | "Order #{id} confirmed!" |
+| Rider assigned | Rider + Customer | "Delivery assigned" / "Rider assigned to order" |
+| Order On Delivery | Customer | "Order #{id} is on the way!" |
+| Order Delivered | Customer | "Order #{id} delivered!" |
+| Order Cancelled | Customer/Rider (depending) | "Order #{id} cancelled. Reason: ..." |
+| Account approved | Customer | "Your account has been approved!" |
+| Account flagged | Customer | "Account flagged: cancellation limit reached" |
+| Appeal approved | Customer | "Your appeal has been approved!" |
+| Appeal denied | Customer | "Your appeal has been denied" |
+| Low stock | All Admin | "{Item} is running low (X remaining)" |
+| Ready for Pickup | Customer | "Order #{id} ready for pickup!" |
+| Rider reassigned | Old Rider + New Rider | "Order reassigned" / "New delivery assigned" |
+
+---
+
+## 9. KEY ALGORITHMS
+
+### Auto-Assign Rider Algorithm
+```
+FUNCTION autoAssignRider(order_id):
+    1. Get all riders WHERE:
+       - role = 'rider'
+       - status = 'active'
+       - is_available = 1
+       - NOT deleted
+    2. For each rider, COUNT orders WHERE:
+       - rider_id = this rider
+       - status IN ('assigned', 'on_delivery')
+       → This is their "current_load"
+    3. Filter out riders where ALL their orders are on_delivery
+       (they're fully occupied on the road)
+       → Actually, INCLUDE them but prefer riders with 0 on_delivery first
+    4. Sort by current_load ASC (least loaded first)
+    5. If tie, sort by rider.id ASC (first created)
+    6. If NO available riders → return NULL (order stays Confirmed with comment)
+    7. Assign top rider → update order.rider_id, status='assigned'
+    8. Create notification for rider
+    RETURN assigned_rider_id or NULL
+```
+
+### Cancellation Monthly Reset
+```
+CRON JOB (or check on each login / page load):
+    For each user WHERE role='customer':
+        If cancellation_reset_date <= TODAY:
+            SET cancellation_count = 0
+            SET cancellation_reset_date = FIRST_DAY_OF_NEXT_MONTH
+            If status = 'flagged' AND no pending appeals:
+                Keep flagged (requires appeal to unflag)
+```
+> Since you're using XAMPP (no cron), run this check in `config/session.php` on every authenticated page load. It only runs a quick query so no performance impact.
+
+### Pending Account Expiry Cleanup
+```
+Same approach — run on page load in session.php:
+    DELETE FROM users
+    WHERE status = 'pending'
+    AND DATEDIFF(NOW(), created_at) > {pending_expiry_days setting}
+```
+
+### Password Encryption Toggle Migration
+```
+WHEN admin toggles "Encrypt DB Passwords":
+    If turning ON:
+        SELECT all users
+        For each: UPDATE password = encrypt(password, KEY)
+    If turning OFF:
+        SELECT all users
+        For each: UPDATE password = decrypt(password, KEY)
+    Save setting
+```
+
+### Stock Validation at Checkout
+```
+FUNCTION validateStock(cart_items[]):
+    removed_items = []
+    For each item in cart_items:
+        current_stock = SELECT stock_count FROM inventory WHERE id = item.inventory_id
+        If current_stock < item.quantity:
+            If current_stock == 0:
+                removed_items.push(item) // completely unavailable
+            Else:
+                item.quantity = current_stock // reduce to available
+                item.adjusted = true
+    RETURN { valid_items, removed_items, adjusted_items }
+```
+
+---
+
+## 10. DEVELOPMENT PHASES
+
+### Phase 1 — Foundation (Build First)
+```
+Priority: CRITICAL
+Estimated: 2–3 days
+
+□ config/database.php     — Connection + auto-create ALL tables + seed settings + seed super admin
+□ config/AESCrypt.php     — Encrypt/decrypt functions
+□ config/session.php      — Session start, auth guards, role checks, maintenance check,
+                            pending expiry cleanup, cancellation reset check, CSRF token
+□ config/constants.php    — All enums, status arrays, role arrays
+□ config/functions.php    — Sanitize, redirect, format date, format currency, generate token
+□ assets/css/global.css   — CSS variables (colors, spacing, fonts), dark/light theme variables,
+                            theme transition animations, reset, typography (Inter font)
+□ assets/css/layout.css   — Header, sidebar, main content area, responsive breakpoints
+□ assets/css/components.css — ALL component styles from Component List
+□ assets/js/global.js     — Theme toggle (reads preference + force setting), Manila time clock,
+                            CSRF token attachment to AJAX, role icon mapping
+□ assets/js/components.js — Dialog system, toast system, table pagination, notification dropdown
+□ assets/js/sidebar.js    — Collapse/expand, hamburger toggle, active page highlight
+□ includes/header.php     — Dynamic header (station name from DB, time, user info, bell, theme toggle)
+□ includes/sidebar.php    — Dynamic sidebar based on role
+□ includes/footer.php     — Close wrappers, global JS includes
+□ includes/auth_check.php — Include guard for protected pages
+□ errors/404.php
+□ errors/403.php
+□ maintenance.php
+```
+
+### Phase 2 — Authentication (Build Second)
+```
+Priority: CRITICAL
+Estimated: 1–2 days
+
+□ index.php               — Login page UI
+□ assets/css/auth.css     — Login + register styles
+□ assets/js/auth.js       — Form validation, submit handlers
+□ register.php            — Registration page UI
+□ forgot_password.php     — Forgot password UI
+□ reset_password.php      — Reset password UI
+□ api/auth/login.php      — Login logic + session + logging + maintenance check
+□ api/auth/logout.php     — Destroy session + log
+□ api/auth/register.php   — Create pending customer + default address + preferences
+□ api/auth/forgot_password.php  — Generate token + send email (PHPMailer)
+□ api/auth/reset_password.php   — Validate token + update password
+```
+
+### Phase 3 — Customer Flow (Core Business Logic)
+```
+Priority: HIGH
+Estimated: 3–4 days
+
+□ customer/dashboard.php + CSS + JS
+□ customer/place_order.php + CSS + JS
+    □ api/inventory/get_items.php (active items for customer)
+    □ api/inventory/check_stock.php (real-time validation)
+    □ api/addresses/get.php
+    □ api/orders/place_order.php
+□ customer/my_orders.php + CSS + JS
+    □ api/orders/get_orders.php (customer-scoped)
+    □ api/orders/cancel_order.php
+    □ api/orders/confirm_received.php
+□ customer/order_history.php + CSS + JS
+    □ api/orders/reorder.php
+□ customer/settings.php + CSS + JS
+    □ api/settings/update_profile.php
+    □ api/settings/change_password.php
+    □ api/addresses/add.php
+    □ api/addresses/update.php
+    □ api/addresses/delete.php
+    □ api/appeals/submit.php
+□ receipt.php + CSS + JS
+    □ api/orders/get_receipt.php
+    □ QR code generation
+    □ PDF/Image download
+```
+
+### Phase 4 — Staff & Admin Order Management
+```
+Priority: HIGH
+Estimated: 3–4 days
+
+□ staff/manage_orders.php + CSS + JS
+    □ api/orders/update_status.php (role-restricted)
+    □ api/orders/assign_rider.php
+    □ api/orders/bulk_update.php
+    □ api/riders/get_available.php
+□ staff/order_history.php + CSS + JS
+□ staff/account_management.php + CSS + JS
+    □ api/accounts/approve.php
+    □ api/accounts/create.php
+    □ api/accounts/update.php
+    □ api/accounts/delete.php
+    □ api/accounts/get_accounts.php
+    □ api/appeals/review.php
+    □ api/appeals/get.php
+□ staff/dashboard.php + CSS + JS
+    □ api/analytics/get_dashboard_stats.php
+□ staff/inventory.php + CSS + JS (read-only)
+□ staff/rider_statistics.php + CSS + JS
+    □ api/riders/get_statistics.php
+□ staff/settings.php + CSS + JS
+
+□ admin/ — Duplicate all staff pages into admin folder with extended permissions:
+□ admin/dashboard.php + CSS + JS
+□ admin/manage_orders.php + CSS + JS
+□ admin/order_history.php + CSS + JS
+□ admin/account_management.php + CSS + JS (shows all roles)
+□ admin/rider_statistics.php + CSS + JS
+```
+
+### Phase 5 — Rider Flow
+```
+Priority: HIGH
+Estimated: 2 days
+
+□ rider/dashboard.php + CSS + JS
+    □ api/riders/toggle_availability.php
+□ rider/assigned_deliveries.php + CSS + JS
+    □ api/riders/update_priority.php
+    □ Sortable.js integration for drag-and-drop
+□ rider/delivery_history.php + CSS + JS
+□ rider/settings.php + CSS + JS
+```
+
+### Phase 6 — Admin Exclusive Features
+```
+Priority: MEDIUM
+Estimated: 2–3 days
+
+□ admin/inventory.php + CSS + JS (full CRUD)
+    □ api/inventory/add_item.php
+    □ api/inventory/update_item.php
+    □ api/inventory/restock.php
+    □ api/inventory/delete_item.php
+    □ api/inventory/upload_icon.php
+□ admin/analytics.php + CSS + JS
+    □ api/analytics/get_sales.php
+    □ api/analytics/get_order_stats.php
+    □ api/analytics/export_report.php
+    □ Chart.js integration
+□ admin/session_logs.php + CSS + JS
+□ admin/settings.php + CSS + JS (system settings)
+    □ api/settings/update_system.php
+    □ api/settings/manage_default_items.php
+    □ api/settings/get_settings.php
+    □ Password encryption toggle migration
+```
+
+### Phase 7 — Notifications & Polish
+```
+Priority: MEDIUM
+Estimated: 2 days
+
+□ Notification bell system (header integration)
+    □ api/notifications/get.php
+    □ api/notifications/mark_read.php
+    □ api/notifications/count_unread.php
+□ Insert notification creation calls into ALL relevant api endpoints
+□ SweetAlert2 integration across all confirmation actions
+□ Dark/Light mode thorough testing + force dark mode
+□ Custom color application from admin settings
+□ Maintenance mode testing
+```
+
+### Phase 8 — Responsive & Final Testing
+```
+Priority: HIGH
+Estimated: 2–3 days
+
+□ Mobile responsive testing all pages
+□ Sidebar hamburger menu on mobile
+□ Table horizontal scroll on mobile
+□ Dialog sizing on mobile
+□ Touch-friendly quantity controls
+□ Cross-browser testing (Chrome, Firefox, Edge)
+□ Full flow testing:
+    □ Customer: Register → Approved → Order → Delivered → Accept → Reorder
+    □ Rider: Assigned → On Delivery → Delivered → History
+    □ Staff: Approve accounts → Confirm orders → Assign riders → View stats
+    □ Admin: Full CRUD inventory → Analytics → Settings → Session logs
+□ Edge cases:
+    □ Out of stock during checkout
+    □ Max cancellations → flag → appeal → unflag
+    □ All riders unavailable → auto-assign fails
+    □ Delete account with active orders
+    □ Pending account expiry
+    □ Password encryption toggle
+    □ Maintenance mode login blocking
+```
+
+---
+
+## TOTAL ESTIMATED DEVELOPMENT TIME
+
+| Phase | Duration |
+|-------|----------|
+| Phase 1 — Foundation | 2–3 days |
+| Phase 2 — Authentication | 1–2 days |
+| Phase 3 — Customer Flow | 3–4 days |
+| Phase 4 — Staff & Admin Orders | 3–4 days |
+| Phase 5 — Rider Flow | 2 days |
+| Phase 6 — Admin Exclusive | 2–3 days |
+| Phase 7 — Notifications & Polish | 2 days |
+| Phase 8 — Responsive & Testing | 2–3 days |
+| **Total** | **~17–21 days** |
+
+This assumes focused development. Adjust based on your pace and school timeline.
+
+---
+
+This plan is **implementation-ready**. Every page, every button click, every database query, and every edge case has been mapped. When you're ready to start coding, begin with **Phase 1** and follow the sequence — each phase builds on the previous one. Let me know when you want to begin.
+
+ME:
+Ignore the Phases as we can create this full system project within less than a day if the prompts are created precisely.
+I want you to create a full prompt of this project, explain everything nothing should be missing. Every tiny details should be detailed to prevent missing information in the prompt. Include everything from the start to the end of our conversation. Show everything from expected outputs to final outputs. Just include every context that nothing is missing in the prompt so that an AI model can understand it well with full context and flow and functionality of this project system. Create 5 prompts for me 1 per role which in total of 4 prompts and finally 1 for general context prompt or the first prompt. Make sure every prompt includes the context of what we are making so that every prompt created will not be confusing. Now give me the prompt one by one. Give me the prompt #1 and later I will ask the rest of the remaining prompts.
+
+--- NOW FINALLY DO WHAT I SAID(ME) AFTER ANALYSIS. 

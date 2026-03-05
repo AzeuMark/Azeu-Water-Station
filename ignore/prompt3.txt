@@ -1,0 +1,2158 @@
+# PROMPT #3 — RIDER ROLE (All Pages, CSS, JS)
+
+You are continuing the build of **"Azeu Water Station"** — a Philippine-based Water Refilling Station management web application. In previous prompts, the entire foundation was built: config files (`database.php`, `session.php`, `constants.php`, `functions.php`, `AESCrypt.php`, `logger.php`), all shared assets (`global.css`, `auth.css`, `components.css`, `layout.css`, `receipt.css`, `global.js`, `auth.js`, `components.js`, `sidebar.js`, `receipt.js`), all includes (`header.php`, `sidebar.php`, `footer.php`, `auth_check.php`), ALL API endpoints (`api/` folder — auth, orders, accounts, inventory, riders, addresses, appeals, notifications, settings, analytics), public pages (`index.php`, `register.php`, `forgot_password.php`, `reset_password.php`, `receipt.php`, `maintenance.php`), error pages, logging system, and the complete customer role (`customer/` folder with all 5 pages + CSS + JS).
+
+**This prompt covers the RIDER role only.** Generate ALL files inside the `rider/` folder.
+
+---
+
+## PROJECT CONTEXT RECAP
+
+Azeu Water Station is a web-based order and delivery management system for a water refilling station in the Philippines. It has 4 roles: Customer, Rider, Staff, Admin (with Super Admin). The tech stack is pure PHP (no frameworks), MySQL on XAMPP (database name: `station_azeu`), and hand-written HTML/CSS/JS. No frameworks, no Bootstrap, no Tailwind.
+
+**Riders** are delivery personnel who:
+- Cannot register themselves — accounts are created by Staff or Admin only
+- Are always `status='active'` from creation (skip pending approval since created by authority)
+- View deliveries assigned to them by Staff/Admin
+- Organize their delivery priority order via drag-and-drop
+- Set themselves as Available or Unavailable (but cannot go Unavailable while having `on_delivery` orders)
+- Mark orders as `On Delivery` (which auto-sets `expected_delivery_date` to today)
+- Mark orders as `Delivered` (which sets `delivered_at` timestamp and counts to store income)
+- Can cancel assigned deliveries with a reason (order reverts to `Confirmed` status with `rider_id` set to NULL for Staff to reassign)
+- View their delivery history (completed and cancelled)
+- Manage their own profile and password in Settings
+
+---
+
+## RIDER FILES TO GENERATE
+
+```
+rider/
+├── dashboard.php
+├── assigned_deliveries.php
+├── delivery_history.php
+├── settings.php
+├── css/
+│   ├── dashboard.css
+│   ├── assigned_deliveries.css
+│   ├── delivery_history.css
+│   └── settings.css
+└── js/
+    ├── dashboard.js
+    ├── assigned_deliveries.js
+    ├── delivery_history.js
+    └── settings.js
+```
+
+Generate ALL 12 files above with complete, production-ready code.
+
+---
+
+## SHARED INFRASTRUCTURE ALREADY BUILT (Reference Only — Do NOT Regenerate)
+
+These files already exist and are simply included/referenced by rider pages:
+
+### PHP Includes Available
+
+Every rider page starts with:
+```php
+<?php
+require_once __DIR__ . '/../includes/auth_check.php';
+require_role([ROLE_RIDER]);
+?>
+```
+
+Then uses these includes for layout:
+```php
+<?php include __DIR__ . '/../includes/header.php'; ?>
+<?php include __DIR__ . '/../includes/sidebar.php'; ?>
+<!-- page content -->
+<?php include __DIR__ . '/../includes/footer.php'; ?>
+```
+
+### PHP Functions Available (from `config/functions.php`)
+
+```
+sanitize($input)
+redirect($url)
+format_date($datetime)           → 'Jun 30, 2025 02:30 PM'
+format_currency($amount)         → '₱275.00'
+generate_token($length)
+time_ago($datetime)              → '2 minutes ago'
+get_setting($key)                → fetches from settings table
+get_status_badge_class($status)  → returns CSS class like 'badge-pending'
+get_role_badge_class($role)
+get_status_label($status)        → 'On Delivery', 'Ready for Pickup', etc.
+json_response($data, $code)
+get_user_by_id($id)
+create_notification(...)
+get_client_ip()
+```
+
+### PHP Database Functions Available (from `config/database.php`)
+
+```
+db_query($sql, $params)    → PDOStatement
+db_fetch($sql, $params)    → single row assoc array
+db_fetch_all($sql, $params) → all rows
+db_insert($sql, $params)   → lastInsertId
+db_update($sql, $params)   → affected rows
+db_delete($sql, $params)   → affected rows
+```
+
+### PHP Logger Functions Available (from `config/logger.php`)
+
+```
+logger_trace($msg, $ctx)
+logger_debug($msg, $ctx)
+logger_info($msg, $ctx)
+logger_warning($msg, $ctx)
+logger_error($msg, $ctx)
+logger_critical($msg, $ctx)
+logger_function_entry($params)
+logger_function_exit($result)
+logger_query($sql, $params, $duration)
+logger_exception($exception)
+```
+
+### PHP Constants Available (from `config/constants.php`)
+
+```
+ROLE_CUSTOMER, ROLE_RIDER, ROLE_STAFF, ROLE_ADMIN, ROLE_SUPER_ADMIN
+STATUS_PENDING, STATUS_CONFIRMED, STATUS_ASSIGNED, STATUS_ON_DELIVERY,
+STATUS_DELIVERED, STATUS_ACCEPTED, STATUS_READY_FOR_PICKUP,
+STATUS_PICKED_UP, STATUS_CANCELLED
+ACCOUNT_PENDING, ACCOUNT_ACTIVE, ACCOUNT_FLAGGED, ACCOUNT_DELETED
+PAY_COD, PAY_PICKUP, PAY_ONLINE
+DEL_DELIVERY, DEL_PICKUP
+INV_ACTIVE, INV_INACTIVE, INV_OUT_OF_STOCK
+ITEMS_PER_PAGE (50), ORDER_ITEMS_PER_PAGE (20)
+CSRF_TOKEN_NAME
+ENCRYPTION_KEY
+DEBUG_MODE
+```
+
+### PHP Session Variables Available
+
+After login, these are set in `$_SESSION`:
+```
+$_SESSION['user_id']
+$_SESSION['username']
+$_SESSION['role']          → 'rider'
+$_SESSION['full_name']
+$_SESSION['status']        → always 'active' for riders
+$_SESSION['dark_mode']     → 0 or 1
+$_SESSION['system_settings'] → array of all settings from DB
+$_SESSION[CSRF_TOKEN_NAME] → CSRF token string
+```
+
+### CSS Classes Available (from `components.css`, `layout.css`, `global.css`)
+
+```
+Layout: .app-wrapper, .sidebar, .sidebar.collapsed, .main-content, .main-header
+Cards: .glass-card, .stat-card, .item-card, .item-card.selected
+Tables: .data-table, .data-table-wrapper
+Badges: .badge, .badge-pending, .badge-confirmed, .badge-assigned, .badge-on-delivery,
+        .badge-delivered, .badge-accepted, .badge-ready-for-pickup, .badge-picked-up,
+        .badge-cancelled, .badge-customer, .badge-rider, .badge-staff, .badge-admin
+Inputs: .float-input-group, .float-input, .float-label
+Buttons: .btn, .btn-primary, .btn-success, .btn-danger, .btn-warning, .btn-info,
+         .btn-outline, .btn-sm, .btn-icon
+Modals: .modal-overlay, .modal, .modal-header, .modal-body, .modal-footer
+Misc: .toggle-switch, .toggle-slider, .qty-control, .qty-btn, .qty-input,
+      .filter-bar, .filter-btn, .search-bar, .search-input, .pagination, .page-btn,
+      .empty-state, .spinner, .spinner-overlay, .quick-actions, .quick-action-btn,
+      .preview-section, .preview-header, .toast, .notif-bell, .notif-badge,
+      .notif-dropdown, .custom-checkbox, .drag-handle
+```
+
+### JS Functions Available (from `components.js`, `global.js`)
+
+```
+// global.js
+toggleTheme()
+getCsrfToken()
+ajaxPost(url, data)                          → fetch POST with CSRF
+ajaxGet(url, params)                         → fetch GET
+getRoleIcon(role)
+applyAdminColors(settings)
+
+// components.js
+showToast(message, type, duration)           → types: 'success','error','warning','info'
+initPagination(tableId, itemsPerPage)
+initNotificationBell()
+openModal(modalId)
+closeModal(modalId)
+initFilterBar(filterBarId, tableId, filterColumn)
+initSearch(searchInputId, tableId, searchColumns)
+initBulkSelect(tableId)
+getSelectedIds(tableId)
+```
+
+### API Endpoints Available (Rider-Relevant)
+
+```
+GET  api/orders/get_orders.php             → ?status=&search=&page=&date_from=&date_to=
+                                              (rider-scoped: returns only orders WHERE rider_id = session user)
+POST api/orders/update_status.php          → {order_id, new_status, comment}
+                                              (rider can: assigned→on_delivery, on_delivery→delivered)
+POST api/orders/cancel_order.php           → {order_id, reason}
+                                              (rider can cancel assigned/on_delivery → reverts to confirmed)
+POST api/orders/bulk_update.php            → {order_ids, action, reason}
+POST api/riders/toggle_availability.php    → (toggles own is_available, blocked if has on_delivery orders)
+POST api/riders/update_priority.php        → {priorities: [{order_id, priority_order}, ...]}
+GET  api/notifications/get.php             → ?page=&limit=
+POST api/notifications/mark_read.php       → {notification_id} or {all: true}
+GET  api/notifications/count_unread.php
+POST api/settings/update_profile.php       → {full_name, email, phone}
+POST api/settings/change_password.php      → {current_password, new_password, confirm_password}
+POST api/settings/update_preferences.php   → {dark_mode}
+GET  api/analytics/get_dashboard_stats.php → (rider-scoped: returns assigned/on_delivery counts)
+```
+
+### External Libraries Available via CDN
+
+```
+SweetAlert2     — Swal.fire() for dialogs and confirmations
+Material Icons  — <span class="material-icons">icon_name</span>
+Sortable.js     — new Sortable(element, options) for drag-and-drop reordering
+Inter Font      — Applied globally via CSS
+Chart.js        — Available but not used on rider pages
+```
+
+**Sortable.js CDN:** `https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js`
+
+This library MUST be loaded on the `assigned_deliveries.php` page for the drag-and-drop delivery priority feature. Include it as a `<script>` tag before the page-specific JS file.
+
+---
+
+## DATABASE TABLES REFERENCE (Rider-Relevant Only)
+
+### `users` — Rider's own record
+```
+id, username (unchangeable), password, full_name, email, phone,
+role='rider', status='active',
+is_available (TINYINT 0/1 — self-toggled availability),
+created_at, updated_at
+```
+
+### `user_preferences`
+```
+id, user_id, dark_mode (0/1)
+```
+
+### `orders` — Orders assigned to this rider
+```
+id (Order ID), customer_id, rider_id (= this rider's user id),
+payment_type (cod/pickup), delivery_type (delivery/pickup),
+status (assigned/on_delivery/delivered/cancelled — rider sees these),
+delivery_address, order_notes, delivery_fee, subtotal, total_amount,
+expected_delivery_date (auto-set to TODAY when rider marks on_delivery),
+cancellation_reason, cancelled_by, staff_comment,
+customer_confirmed (0/1), receipt_token,
+order_date, delivered_at,
+created_at, updated_at
+```
+
+### `order_items` — Items within each order
+```
+id, order_id, inventory_id, item_name (snapshot), item_icon (snapshot),
+item_price (snapshot), quantity, subtotal
+```
+
+### `notifications`
+```
+id, user_id, title, message, type, reference_id, is_read, created_at
+```
+
+### `delivery_priority` — Rider's custom delivery ordering
+```
+id, rider_id, order_id, priority_order (INT — lower = higher priority, deliver first),
+updated_at
+```
+
+---
+
+## ORDER LIFECYCLE (Rider Perspective)
+
+### What the Rider Sees
+
+Riders only see orders that are **assigned to them** (`rider_id = their user ID`). They do NOT see pending or confirmed orders — those are managed by Staff/Admin. Once Staff/Admin assigns a rider to an order, it appears in the rider's "Assigned Deliveries" page.
+
+### Status Transitions a Rider Can Make
+
+```
+ASSIGNED ──► ON DELIVERY ──► DELIVERED
+    │              │
+    │              └── Cancel (with reason) → reverts to CONFIRMED, rider_id = NULL
+    └── Cancel (with reason) → reverts to CONFIRMED, rider_id = NULL
+```
+
+**Rider actions:**
+1. **Mark as On Delivery** — Changes status from `assigned` to `on_delivery`. This automatically sets `expected_delivery_date` to today's date. This means the rider has picked up the items from the station and is on the way to the customer. **Once a rider marks ANY order as On Delivery, they CANNOT set themselves as Unavailable until ALL their on_delivery orders are completed (delivered) or cancelled.**
+
+2. **Mark as Delivered** — Changes status from `on_delivery` to `delivered`. This sets `delivered_at` to NOW(). The order amount is now counted toward store income. A notification is sent to the customer: "Order #{id} has been delivered!"
+
+3. **Cancel Delivery** — Rider can cancel at `assigned` or `on_delivery` status. A reason is REQUIRED. When a rider cancels:
+   - The order status reverts to `confirmed` (NOT cancelled — the order still exists)
+   - `rider_id` is set to NULL (unassigned)
+   - Staff/Admin can then reassign to another rider
+   - If the order was `on_delivery`, stock is NOT restored (stock was decremented at confirmation, and the order is still going to be fulfilled — just by a different rider)
+   - A notification is sent to Staff/Admin: "Rider {name} cancelled delivery of Order #{id}. Reason: {reason}"
+   - This is treated as a rider reassignment request, NOT as an order cancellation
+
+### Delivery Priority System
+
+Riders can reorder their assigned deliveries to plan their route. This is a drag-and-drop feature:
+
+- Each assigned/on_delivery order has a priority number stored in `delivery_priority` table
+- Lower `priority_order` number = deliver first (higher priority)
+- Default priority is set when the order is assigned (based on assignment order — first assigned = priority 1, etc.)
+- Rider can drag-and-drop to reorder on the `assigned_deliveries.php` page
+- On reorder, JS sends the new priority list to `api/riders/update_priority.php`
+- The table/list displays orders sorted by `priority_order ASC`
+- Only `assigned` and `on_delivery` orders are in the priority list (not delivered/cancelled)
+
+### Rider Availability System
+
+- `is_available` column in `users` table (TINYINT: 0 or 1)
+- Default: 1 (available) when account is created
+- Rider can toggle via a switch on their dashboard
+- **Restriction:** Cannot set to Unavailable (0) if they have ANY orders with status `on_delivery`. They must complete or cancel all on_delivery orders first. The API endpoint enforces this — returns an error if rider tries to go unavailable while having on_delivery orders.
+- When `is_available = 0`: The rider will NOT be selected by the auto-assign algorithm. Staff/Admin CAN still manually assign orders to unavailable riders (but will see a warning).
+- The availability status is shown on the rider's dashboard and in Staff/Admin rider statistics pages.
+
+---
+
+## RIDER SIDEBAR NAVIGATION
+
+```
+Dashboard              → rider/dashboard.php              icon: dashboard
+Assigned Deliveries    → rider/assigned_deliveries.php    icon: local_shipping
+Delivery History       → rider/delivery_history.php       icon: history
+Settings               → rider/settings.php               icon: settings
+```
+
+---
+
+## PAGE-BY-PAGE SPECIFICATIONS
+
+---
+
+### 1. `rider/dashboard.php`
+
+**PHP Logic (top of file):**
+```
+1. Include auth_check.php, require_role([ROLE_RIDER])
+2. Get current user data from session
+3. Fetch rider's current availability status from DB (fresh read, not session cache):
+   SELECT is_available FROM users WHERE id = session.user_id
+4. Fetch dashboard stats:
+   - Assigned deliveries count:
+     SELECT COUNT(*) FROM orders WHERE rider_id = user_id AND status IN ('assigned', 'on_delivery')
+   - On delivery count:
+     SELECT COUNT(*) FROM orders WHERE rider_id = user_id AND status = 'on_delivery'
+   - Completed today count:
+     SELECT COUNT(*) FROM orders WHERE rider_id = user_id AND status = 'delivered'
+     AND DATE(delivered_at) = CURDATE()
+5. Check if rider can toggle availability:
+   $has_on_delivery = (on_delivery_count > 0)
+   → If true, the toggle switch should be locked to "Available" and cannot be turned off
+6. Fetch delivery preview (max 3, sorted by priority):
+   SELECT o.*, GROUP_CONCAT(oi.item_name) as item_names,
+   u.full_name as customer_name, u.phone as customer_phone,
+   ca.full_address as customer_address,
+   dp.priority_order
+   FROM orders o
+   LEFT JOIN order_items oi ON o.id = oi.order_id
+   LEFT JOIN users u ON o.customer_id = u.id
+   LEFT JOIN customer_addresses ca ON (ca.customer_id = o.customer_id AND ca.is_default = 1)
+   LEFT JOIN delivery_priority dp ON (dp.order_id = o.id AND dp.rider_id = o.rider_id)
+   WHERE o.rider_id = session.user_id AND o.status IN ('assigned', 'on_delivery')
+   GROUP BY o.id
+   ORDER BY dp.priority_order ASC, o.created_at ASC
+   LIMIT 3
+7. Include header.php, sidebar.php
+```
+
+**HTML Structure:**
+```html
+<div class="main-content">
+  <div class="page-header">
+    <h1>Dashboard</h1>
+  </div>
+
+  <!-- Greeting + Availability Toggle Row -->
+  <div class="dashboard-top">
+    <div class="greeting">
+      <h2>Welcome back, {Full Name}! 👋</h2>
+      <p class="text-muted">Here's your delivery overview for today.</p>
+    </div>
+
+    <!-- Availability Toggle -->
+    <div class="availability-toggle glass-card">
+      <div class="availability-info">
+        <span class="material-icons availability-icon {available ? 'text-success' : 'text-danger'}">
+          {available ? 'check_circle' : 'cancel'}
+        </span>
+        <div>
+          <span class="availability-label">
+            {available ? 'Available' : 'Unavailable'}
+          </span>
+          <small class="text-muted">
+            {available ? 'You can receive new deliveries' : 'You will not receive new deliveries'}
+          </small>
+        </div>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="availabilityToggle"
+               {if is_available: checked}
+               {if has_on_delivery: disabled title="Cannot go unavailable while on delivery"}>
+        <span class="toggle-slider"></span>
+      </label>
+      {if has_on_delivery:
+        <small class="text-warning toggle-warning">
+          <span class="material-icons" style="font-size:14px;vertical-align:middle;">warning</span>
+          Complete active deliveries before going unavailable
+        </small>
+      }
+    </div>
+  </div>
+
+  <!-- Quick Action Buttons -->
+  <div class="quick-actions">
+    <a href="assigned_deliveries.php" class="quick-action-btn">
+      <span class="material-icons">local_shipping</span>
+      <span>Assigned Deliveries</span>
+    </a>
+    <a href="delivery_history.php" class="quick-action-btn">
+      <span class="material-icons">history</span>
+      <span>Delivery History</span>
+    </a>
+    <a href="settings.php" class="quick-action-btn">
+      <span class="material-icons">settings</span>
+      <span>Settings</span>
+    </a>
+  </div>
+
+  <!-- Stat Cards -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon" style="background: var(--primary)">
+        <span class="material-icons">assignment</span>
+      </div>
+      <div class="stat-info">
+        <span class="stat-number">{assigned_count}</span>
+        <span class="stat-label">Assigned Deliveries</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background: var(--teal)">
+        <span class="material-icons">delivery_dining</span>
+      </div>
+      <div class="stat-info">
+        <span class="stat-number">{on_delivery_count}</span>
+        <span class="stat-label">On Delivery</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background: var(--success)">
+        <span class="material-icons">task_alt</span>
+      </div>
+      <div class="stat-info">
+        <span class="stat-number">{completed_today}</span>
+        <span class="stat-label">Completed Today</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delivery Preview Section -->
+  <div class="preview-section">
+    <div class="preview-header">
+      <h3>Upcoming Deliveries</h3>
+      <a href="assigned_deliveries.php" class="btn btn-outline btn-sm">View All</a>
+    </div>
+
+    <!-- IF NO ASSIGNED DELIVERIES -->
+    <div class="empty-state" id="emptyDeliveries" style="display: {if no deliveries}">
+      <span class="material-icons">inbox</span>
+      <p>No deliveries assigned to you.</p>
+      <small class="text-muted">New deliveries will appear here when staff assigns them to you.</small>
+    </div>
+
+    <!-- IF DELIVERIES EXIST -->
+    <div class="data-table-wrapper" style="display: {if deliveries exist}">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Order ID</th>
+            <th>Customer Details</th>
+            <th>Items</th>
+            <th>Status</th>
+            <th>Order Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- For each delivery preview (max 3): -->
+          <tr>
+            <td><span class="priority-number">{priority_order}</span></td>
+            <td><strong>#{order_id}</strong></td>
+            <td class="customer-details-cell">
+              <strong>{customer_name}</strong><br>
+              <span class="text-muted">{customer_phone}</span><br>
+              <small class="text-muted">{delivery_address or customer_address}</small>
+            </td>
+            <td>
+              <!-- Comma-separated item names with icons -->
+              <span class="item-with-icon">
+                <img src="{icon or default}" class="item-icon-sm"> {item_name}
+              </span>
+            </td>
+            <td><span class="badge {badge_class}">{status_label}</span></td>
+            <td>{formatted order_date}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+```
+
+### `rider/css/dashboard.css`
+
+```
+.dashboard-top:
+  - Flex row on desktop (space-between, align-start), column on mobile
+  - Gap: 20px
+  - Margin-bottom: 24px
+
+.greeting:
+  - Flex: 1
+  - h2: font-weight 600, color var(--text-primary)
+  - p: margin-top 4px
+
+.availability-toggle:
+  - Flex column, padding 20px
+  - Min-width 280px on desktop, full width on mobile
+  - .availability-info: flex row, align center, gap 12px
+  - .availability-icon: font-size 28px
+  - .text-success: color var(--success)
+  - .text-danger: color var(--danger)
+  - .availability-label: font-weight 600, font-size 1.1em
+  - Toggle switch positioned to the right or below the info
+  - .toggle-warning: margin-top 8px, display flex, align center, gap 4px, font-size 0.8em
+
+.stats-grid:
+  - CSS Grid: 3 columns on desktop, 2 on tablet, 1 on mobile
+  - Gap: 20px
+  - Margin-bottom: 24px
+
+.stat-card:
+  - Glass card effect, flex row, align center, gap 16px, padding 20px
+  - .stat-icon: 48x48px circle, flex center, border-radius 50%, color white
+  - .stat-number: font-size 1.8em, font-weight 700, line-height 1
+  - .stat-label: font-size 0.85em, color var(--text-muted), margin-top 2px
+
+.preview-section:
+  - Glass card, padding 20px
+  - .preview-header: flex row, space-between, align center, margin-bottom 16px
+
+.priority-number:
+  - Display inline-flex, align center, justify center
+  - 28x28px circle, background var(--primary), color white, font-weight 700, font-size 0.85em
+  - Border-radius 50%
+
+.customer-details-cell:
+  - Line-height 1.5
+  - strong: display block
+  - small: word-break break-word, max-width 250px
+
+.item-with-icon:
+  - Flex inline, align center, gap 6px
+  - .item-icon-sm: 24x24px, border-radius 4px, object-fit cover
+
+.empty-state (from components.css extended):
+  - Flex column, align center, justify center, padding 40px
+  - Icon: font-size 48px, color var(--text-muted), margin-bottom 12px
+  - p: font-size 1em, color var(--text-secondary)
+  - small: margin-top 4px
+
+Responsive:
+  @media (max-width: 1024px):
+    - dashboard-top: flex column
+    - availability-toggle: full width
+  @media (max-width: 768px):
+    - stats-grid: 1 column
+    - quick-actions: flex wrap, buttons smaller
+    - table: horizontal scroll
+  @media (max-width: 480px):
+    - customer-details-cell max-width: unset
+```
+
+### `rider/js/dashboard.js`
+
+```javascript
+document.addEventListener('DOMContentLoaded', function() {
+
+  // ===== AVAILABILITY TOGGLE =====
+  const toggleInput = document.getElementById('availabilityToggle');
+  if (toggleInput && !toggleInput.disabled) {
+    toggleInput.addEventListener('change', function() {
+      const newState = this.checked; // true = available, false = unavailable
+      const confirmMsg = newState
+        ? 'Set yourself as Available? You may receive new delivery assignments.'
+        : 'Set yourself as Unavailable? You will not receive new delivery assignments.';
+
+      Swal.fire({
+        title: newState ? 'Go Available?' : 'Go Unavailable?',
+        text: confirmMsg,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: newState ? 'Yes, Go Available' : 'Yes, Go Unavailable',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: newState ? 'var(--success)' : 'var(--warning)',
+      }).then(result => {
+        if (result.isConfirmed) {
+          ajaxPost('/api/riders/toggle_availability.php', {})
+            .then(data => {
+              if (data.success) {
+                showToast(
+                  newState ? 'You are now available for deliveries' : 'You are now unavailable',
+                  'success'
+                );
+                // Update visual state
+                updateAvailabilityUI(newState);
+              } else {
+                // Revert toggle
+                toggleInput.checked = !newState;
+                showToast(data.message || 'Failed to update availability', 'error');
+              }
+            })
+            .catch(err => {
+              toggleInput.checked = !newState;
+              showToast('An error occurred. Please try again.', 'error');
+            });
+        } else {
+          // User cancelled the dialog — revert the toggle
+          toggleInput.checked = !newState;
+        }
+      });
+    });
+  }
+
+  function updateAvailabilityUI(isAvailable) {
+    const icon = document.querySelector('.availability-icon');
+    const label = document.querySelector('.availability-label');
+    const sublabel = icon.closest('.availability-info').querySelector('small');
+
+    if (isAvailable) {
+      icon.textContent = 'check_circle';
+      icon.classList.remove('text-danger');
+      icon.classList.add('text-success');
+      label.textContent = 'Available';
+      sublabel.textContent = 'You can receive new deliveries';
+    } else {
+      icon.textContent = 'cancel';
+      icon.classList.remove('text-success');
+      icon.classList.add('text-danger');
+      label.textContent = 'Unavailable';
+      sublabel.textContent = 'You will not receive new deliveries';
+    }
+  }
+
+  // Dashboard stats and preview are rendered server-side by PHP
+  // No additional AJAX needed on dashboard page load
+
+});
+```
+
+---
+
+### 2. `rider/assigned_deliveries.php`
+
+This is the rider's main working page. It shows all currently assigned and on-delivery orders, allows status changes, cancellation, and drag-and-drop reordering.
+
+**PHP Logic (top of file):**
+```
+1. Include auth_check.php, require_role([ROLE_RIDER])
+2. Get rider's current availability from DB
+3. Include header.php, sidebar.php
+4. NOTE: Order data is loaded via AJAX (JS handles fetching and rendering)
+   But we need the rider_id for the API calls — it comes from session.
+```
+
+**HTML Structure:**
+```html
+<div class="main-content">
+  <div class="page-header">
+    <div class="page-header-left">
+      <h1>Assigned Deliveries</h1>
+      <p class="text-muted">Manage and track your current deliveries.</p>
+    </div>
+    <div class="page-header-right">
+      <!-- Availability status indicator (small, in header) -->
+      <div class="availability-badge {is_available ? 'available' : 'unavailable'}">
+        <span class="material-icons">{is_available ? 'check_circle' : 'cancel'}</span>
+        <span>{is_available ? 'Available' : 'Unavailable'}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter Bar -->
+  <div class="filter-bar" id="deliveryFilters">
+    <button class="filter-btn active" data-filter="all">All</button>
+    <button class="filter-btn" data-filter="assigned">Assigned</button>
+    <button class="filter-btn" data-filter="on_delivery">On Delivery</button>
+  </div>
+
+  <!-- Bulk Actions Bar -->
+  <div class="bulk-actions-bar" id="bulkActions" style="display: none;">
+    <span id="bulkSelectedCount">0</span> delivery(ies) selected
+    <button class="btn btn-success btn-sm" id="bulkOnDeliveryBtn" title="Mark selected as On Delivery">
+      <span class="material-icons">local_shipping</span> Mark On Delivery
+    </button>
+    <button class="btn btn-primary btn-sm" id="bulkDeliveredBtn" title="Mark selected as Delivered">
+      <span class="material-icons">check_circle</span> Mark Delivered
+    </button>
+    <button class="btn btn-danger btn-sm" id="bulkCancelBtn" title="Cancel selected deliveries">
+      <span class="material-icons">cancel</span> Cancel
+    </button>
+  </div>
+
+  <!-- Deliveries Table (sortable via drag-and-drop) -->
+  <div class="data-table-wrapper">
+    <table class="data-table" id="deliveriesTable">
+      <thead>
+        <tr>
+          <th style="width:40px;">
+            <input type="checkbox" class="custom-checkbox" id="selectAllDeliveries">
+          </th>
+          <th style="width:40px;" title="Drag to reorder priority">
+            <span class="material-icons" style="font-size:18px;">drag_indicator</span>
+          </th>
+          <th style="width:50px;">Priority</th>
+          <th>Order ID</th>
+          <th>Customer Details</th>
+          <th>Items</th>
+          <th>Qty</th>
+          <th>Payment</th>
+          <th>Status</th>
+          <th>Order Date</th>
+          <th>Expected Delivery</th>
+          <th>Notes</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="deliveriesBody">
+        <!-- Loaded and rendered by JS via AJAX -->
+        <!-- Sortable.js will be attached to this tbody -->
+        <tr class="loading-row">
+          <td colspan="13"><div class="spinner"></div></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination" id="deliveriesPagination"></div>
+
+  <!-- Empty State -->
+  <div class="empty-state" id="emptyDeliveries" style="display: none;">
+    <span class="material-icons">local_shipping</span>
+    <p>No deliveries assigned to you.</p>
+    <small class="text-muted">New deliveries will appear here when staff assigns them.</small>
+  </div>
+</div>
+
+<!-- Load Sortable.js before page JS -->
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+```
+
+### `rider/css/assigned_deliveries.css`
+
+```
+.page-header:
+  - Flex row, space-between, align center
+  - .page-header-left: flex column
+  - .page-header-right: flex row, align center
+
+.availability-badge:
+  - Display inline-flex, align center, gap 6px
+  - Padding: 6px 14px
+  - Border-radius: 20px
+  - Font-size: 0.85em, font-weight 500
+  - .available: background var(--success), color white, opacity 0.9
+  - .unavailable: background var(--danger), color white, opacity 0.9
+  - .material-icons inside: font-size 16px
+
+.filter-bar:
+  - Margin-bottom 16px
+  - Flex row, gap 8px, overflow-x auto on mobile
+
+.bulk-actions-bar:
+  - Glass card, flex row, align center, gap 12px
+  - Padding: 12px 20px
+  - Margin-bottom: 16px
+  - Slide-down animation when shown
+  - Buttons: small with icons
+
+.data-table:
+  - .drag-handle-cell: cursor grab, width 40px, text center
+    On hover: background slightly lighter
+  - tr.sortable-ghost: opacity 0.4, background var(--primary) with low opacity
+    (visual feedback while dragging)
+  - tr.sortable-chosen: box-shadow var(--shadow-lg), z-index 10
+    (the row being dragged)
+  - tr.sortable-drag: opacity 0.9
+
+.priority-number:
+  - Same circle style as dashboard: 28x28px, primary background, white text, rounded
+
+.customer-details-cell:
+  - Min-width: 200px
+  - strong: display block, font-weight 600
+  - Phone: display block, color var(--text-secondary), font-size 0.9em
+    With a small phone icon before it
+  - Address: display block, color var(--text-muted), font-size 0.85em, margin-top 2px
+    With a small location icon before it
+  - Word-wrap: break-word
+
+.items-cell:
+  - Each item on its own line or comma-separated
+  - .item-with-icon: flex inline, gap 4px, align center
+  - .item-icon-sm: 20x20px
+
+.notes-cell:
+  - Max-width: 150px
+  - Truncated with ellipsis
+  - Title attribute shows full text on hover
+  - If empty: show "—" in muted color
+
+.actions-cell:
+  - White-space: nowrap
+  - .btn-icon: 32x32px, margin 2px
+  - Flex row, gap 4px
+
+Responsive:
+  @media (max-width: 1024px):
+    - customer-details-cell min-width: 160px
+  @media (max-width: 768px):
+    - data-table-wrapper: overflow-x auto
+    - page-header: flex column, gap 12px
+    - availability-badge: align-self flex-start
+    - bulk-actions-bar: flex wrap
+  @media (max-width: 480px):
+    - Hide drag handle column on very small screens (priority shown but not draggable)
+    - Or keep draggable but with touch support (Sortable.js handles this)
+```
+
+### `rider/js/assigned_deliveries.js`
+
+This is the most complex rider JS file.
+
+```javascript
+document.addEventListener('DOMContentLoaded', function() {
+
+  let currentFilter = 'all';
+  let currentPage = 1;
+  const perPage = 50;
+  let sortableInstance = null;
+
+  // Load deliveries on page load
+  loadDeliveries();
+
+  // ===== FILTER BUTTONS =====
+  document.querySelectorAll('#deliveryFilters .filter-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('#deliveryFilters .filter-btn').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      currentFilter = this.dataset.filter;
+      currentPage = 1;
+      loadDeliveries();
+    });
+  });
+
+  // ===== LOAD DELIVERIES =====
+  function loadDeliveries() {
+    const params = {
+      status: currentFilter === 'all' ? 'assigned,on_delivery' : currentFilter,
+      page: currentPage,
+      scope: 'active' // Tell API to return only assigned + on_delivery for rider
+    };
+
+    document.getElementById('deliveriesBody').innerHTML =
+      '<tr class="loading-row"><td colspan="13"><div class="spinner"></div></td></tr>';
+    document.getElementById('emptyDeliveries').style.display = 'none';
+
+    ajaxGet('/api/orders/get_orders.php', params)
+      .then(data => {
+        if (!data.orders || data.orders.length === 0) {
+          document.getElementById('deliveriesBody').innerHTML = '';
+          document.getElementById('emptyDeliveries').style.display = 'flex';
+          document.getElementById('deliveriesPagination').innerHTML = '';
+          destroySortable();
+          return;
+        }
+
+        document.getElementById('emptyDeliveries').style.display = 'none';
+        renderDeliveries(data.orders);
+        renderPagination(data.total, data.page, data.per_page);
+        initSortable();
+      })
+      .catch(err => {
+        showToast('Failed to load deliveries', 'error');
+      });
+  }
+
+  // ===== RENDER DELIVERIES TABLE =====
+  function renderDeliveries(orders) {
+    const tbody = document.getElementById('deliveriesBody');
+    tbody.innerHTML = '';
+
+    const paymentLabels = { cod: 'Cash on Delivery', pickup: 'Pickup at Store', online: 'Online' };
+
+    orders.forEach((order, index) => {
+      const tr = document.createElement('tr');
+      tr.dataset.orderId = order.id;
+      tr.dataset.status = order.status;
+
+      // Items display
+      const itemsHtml = order.items.map(item =>
+        `<span class="item-with-icon">
+          <img src="${item.item_icon || '/assets/images/default-item.png'}" class="item-icon-sm">
+          ${item.item_name}
+        </span>`
+      ).join('<br>');
+
+      // Total quantity
+      const totalQty = order.items.reduce((sum, i) => sum + parseInt(i.quantity), 0);
+
+      // Customer details formatted:
+      // "Customer Name"
+      // "📞 Phone Number"
+      // "📍 Full Address"
+      const customerDetails = `
+        <strong>${order.customer_name || 'Unknown'}</strong>
+        <span class="customer-phone">
+          <span class="material-icons" style="font-size:14px;vertical-align:middle;">phone</span>
+          ${order.customer_phone || 'N/A'}
+        </span>
+        <small class="customer-address">
+          <span class="material-icons" style="font-size:14px;vertical-align:middle;">location_on</span>
+          ${order.delivery_address || order.customer_default_address || 'No address'}
+        </small>
+      `;
+
+      // Determine available actions based on status
+      let actionsHtml = '';
+
+      if (order.status === 'assigned') {
+        actionsHtml = `
+          <button class="btn-icon btn-success" title="Mark On Delivery"
+                  onclick="markOnDelivery(${order.id})">
+            <span class="material-icons">local_shipping</span>
+          </button>
+          <button class="btn-icon btn-danger" title="Cancel Delivery"
+                  onclick="cancelDelivery(${order.id})">
+            <span class="material-icons">cancel</span>
+          </button>
+        `;
+      } else if (order.status === 'on_delivery') {
+        actionsHtml = `
+          <button class="btn-icon btn-primary" title="Mark Delivered"
+                  onclick="markDelivered(${order.id})">
+            <span class="material-icons">check_circle</span>
+          </button>
+          <button class="btn-icon btn-danger" title="Cancel Delivery"
+                  onclick="cancelDelivery(${order.id})">
+            <span class="material-icons">cancel</span>
+          </button>
+        `;
+      }
+
+      tr.innerHTML = `
+        <td>
+          <input type="checkbox" class="custom-checkbox delivery-checkbox" data-order-id="${order.id}">
+        </td>
+        <td class="drag-handle-cell">
+          <span class="material-icons drag-handle">drag_indicator</span>
+        </td>
+        <td>
+          <span class="priority-number">${order.priority_order || (index + 1)}</span>
+        </td>
+        <td><strong>#${order.id}</strong></td>
+        <td class="customer-details-cell">${customerDetails}</td>
+        <td class="items-cell">${itemsHtml}</td>
+        <td>${totalQty}</td>
+        <td>${paymentLabels[order.payment_type] || order.payment_type}</td>
+        <td><span class="badge badge-${order.status.replace(/_/g, '-')}">${formatStatus(order.status)}</span></td>
+        <td>${formatDate(order.order_date)}</td>
+        <td>${order.expected_delivery_date ? formatDate(order.expected_delivery_date) : '<span class="text-muted">—</span>'}</td>
+        <td class="notes-cell" title="${escapeHtml(order.order_notes || '')}">${order.order_notes || '<span class="text-muted">—</span>'}</td>
+        <td class="actions-cell">${actionsHtml}</td>
+      `;
+
+      tbody.appendChild(tr);
+    });
+  }
+
+  // ===== SORTABLE.JS — Drag-and-Drop Priority =====
+  function initSortable() {
+    destroySortable(); // Destroy any existing instance first
+
+    const tbody = document.getElementById('deliveriesBody');
+    sortableInstance = new Sortable(tbody, {
+      handle: '.drag-handle',       // Only drag from the handle icon
+      animation: 200,               // Smooth animation duration
+      ghostClass: 'sortable-ghost', // Class on the drop placeholder
+      chosenClass: 'sortable-chosen', // Class on the chosen item
+      dragClass: 'sortable-drag',   // Class on the dragging item
+      onEnd: function(evt) {
+        // After drag-and-drop, save new priority order
+        savePriorityOrder();
+      }
+    });
+  }
+
+  function destroySortable() {
+    if (sortableInstance) {
+      sortableInstance.destroy();
+      sortableInstance = null;
+    }
+  }
+
+  function savePriorityOrder() {
+    const rows = document.querySelectorAll('#deliveriesBody tr[data-order-id]');
+    const priorities = [];
+
+    rows.forEach((row, index) => {
+      const orderId = parseInt(row.dataset.orderId);
+      const newPriority = index + 1;
+      priorities.push({ order_id: orderId, priority_order: newPriority });
+
+      // Update the visual priority number
+      const prioritySpan = row.querySelector('.priority-number');
+      if (prioritySpan) prioritySpan.textContent = newPriority;
+    });
+
+    // Send new priority order to server
+    ajaxPost('/api/riders/update_priority.php', {
+      priorities: JSON.stringify(priorities)
+    }).then(data => {
+      if (data.success) {
+        showToast('Delivery priority updated', 'success');
+      } else {
+        showToast(data.message || 'Failed to update priority', 'error');
+        loadDeliveries(); // Reload to revert
+      }
+    }).catch(err => {
+      showToast('Failed to save priority order', 'error');
+      loadDeliveries();
+    });
+  }
+
+  // ===== ACTION: Mark On Delivery =====
+  window.markOnDelivery = function(orderId) {
+    Swal.fire({
+      title: 'Mark as On Delivery?',
+      html: `
+        <p>Confirm that you have picked up the items and are on the way to deliver <strong>Order #${orderId}</strong>.</p>
+        <p style="margin-top:8px;color:var(--text-muted);font-size:0.9em;">
+          <span class="material-icons" style="font-size:16px;vertical-align:middle;">info</span>
+          Expected delivery date will be set to today.
+        </p>
+        <p style="margin-top:4px;color:var(--warning);font-size:0.85em;">
+          <span class="material-icons" style="font-size:16px;vertical-align:middle;">warning</span>
+          You cannot go unavailable while you have active deliveries.
+        </p>
+      `,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, On Delivery',
+      cancelButtonText: 'Not Yet',
+      confirmButtonColor: 'var(--teal)'
+    }).then(result => {
+      if (result.isConfirmed) {
+        ajaxPost('/api/orders/update_status.php', {
+          order_id: orderId,
+          new_status: 'on_delivery'
+        }).then(data => {
+          if (data.success) {
+            showToast('Order marked as On Delivery', 'success');
+            loadDeliveries();
+          } else {
+            showToast(data.message || 'Failed to update status', 'error');
+          }
+        }).catch(() => showToast('An error occurred', 'error'));
+      }
+    });
+  };
+
+  // ===== ACTION: Mark Delivered =====
+  window.markDelivered = function(orderId) {
+    Swal.fire({
+      title: 'Mark as Delivered?',
+      html: `
+        <p>Confirm that <strong>Order #${orderId}</strong> has been successfully delivered to the customer.</p>
+        <p style="margin-top:8px;color:var(--text-muted);font-size:0.9em;">
+          This action cannot be undone.
+        </p>
+      `,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, Delivered',
+      cancelButtonText: 'Not Yet',
+      confirmButtonColor: 'var(--success)'
+    }).then(result => {
+      if (result.isConfirmed) {
+        ajaxPost('/api/orders/update_status.php', {
+          order_id: orderId,
+          new_status: 'delivered'
+        }).then(data => {
+          if (data.success) {
+            showToast('Order marked as Delivered!', 'success');
+            loadDeliveries(); // This will remove the delivered order from active list
+          } else {
+            showToast(data.message || 'Failed to update status', 'error');
+          }
+        }).catch(() => showToast('An error occurred', 'error'));
+      }
+    });
+  };
+
+  // ===== ACTION: Cancel Delivery =====
+  window.cancelDelivery = function(orderId) {
+    Swal.fire({
+      title: 'Cancel Delivery?',
+      html: `
+        <p>Cancel your delivery of <strong>Order #${orderId}</strong>?</p>
+        <p style="margin-top:4px;color:var(--text-muted);font-size:0.9em;">
+          The order will be sent back to staff for reassignment to another rider.
+        </p>
+        <textarea id="cancelReason" class="swal2-textarea"
+          placeholder="Reason for cancellation (required)" rows="3"
+          style="margin-top:12px;"></textarea>
+      `,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, Cancel Delivery',
+      cancelButtonText: 'Keep It',
+      confirmButtonColor: '#EF5350',
+      preConfirm: () => {
+        const reason = document.getElementById('cancelReason').value.trim();
+        if (!reason) {
+          Swal.showValidationMessage('Please provide a reason for cancellation');
+          return false;
+        }
+        return reason;
+      }
+    }).then(result => {
+      if (result.isConfirmed) {
+        ajaxPost('/api/orders/cancel_order.php', {
+          order_id: orderId,
+          reason: result.value
+        }).then(data => {
+          if (data.success) {
+            showToast('Delivery cancelled. Order sent back for reassignment.', 'info');
+            loadDeliveries();
+          } else {
+            showToast(data.message || 'Failed to cancel delivery', 'error');
+          }
+        }).catch(() => showToast('An error occurred', 'error'));
+      }
+    });
+  };
+
+  // ===== BULK ACTIONS =====
+
+  // Select All checkbox
+  document.getElementById('selectAllDeliveries').addEventListener('change', function() {
+    const checkboxes = document.querySelectorAll('.delivery-checkbox');
+    checkboxes.forEach(cb => { cb.checked = this.checked; });
+    updateBulkBar();
+  });
+
+  // Individual checkbox change (delegated)
+  document.getElementById('deliveriesBody').addEventListener('change', function(e) {
+    if (e.target.classList.contains('delivery-checkbox')) {
+      updateBulkBar();
+    }
+  });
+
+  function updateBulkBar() {
+    const checked = document.querySelectorAll('.delivery-checkbox:checked').length;
+    const bar = document.getElementById('bulkActions');
+    bar.style.display = checked > 0 ? 'flex' : 'none';
+    document.getElementById('bulkSelectedCount').textContent = checked;
+  }
+
+  function getSelectedOrderIds() {
+    const ids = [];
+    document.querySelectorAll('.delivery-checkbox:checked').forEach(cb => {
+      ids.push(parseInt(cb.dataset.orderId));
+    });
+    return ids;
+  }
+
+  // Bulk Mark On Delivery
+  document.getElementById('bulkOnDeliveryBtn').addEventListener('click', function() {
+    const ids = getSelectedOrderIds();
+    if (ids.length === 0) return;
+
+    Swal.fire({
+      title: `Mark ${ids.length} Order(s) as On Delivery?`,
+      text: 'All selected assigned orders will be marked as On Delivery.',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, Mark All',
+      confirmButtonColor: 'var(--teal)'
+    }).then(result => {
+      if (result.isConfirmed) {
+        ajaxPost('/api/orders/bulk_update.php', {
+          order_ids: JSON.stringify(ids),
+          action: 'on_delivery'
+        }).then(data => {
+          showToast(`${data.success || 0} order(s) marked as On Delivery`, 'success');
+          if (data.failed > 0) {
+            showToast(`${data.failed} order(s) could not be updated`, 'warning');
+          }
+          loadDeliveries();
+        }).catch(() => showToast('An error occurred', 'error'));
+      }
+    });
+  });
+
+  // Bulk Mark Delivered
+  document.getElementById('bulkDeliveredBtn').addEventListener('click', function() {
+    const ids = getSelectedOrderIds();
+    if (ids.length === 0) return;
+
+    Swal.fire({
+      title: `Mark ${ids.length} Order(s) as Delivered?`,
+      text: 'All selected on-delivery orders will be marked as Delivered. This cannot be undone.',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, Mark All Delivered',
+      confirmButtonColor: 'var(--success)'
+    }).then(result => {
+      if (result.isConfirmed) {
+        ajaxPost('/api/orders/bulk_update.php', {
+          order_ids: JSON.stringify(ids),
+          action: 'delivered'
+        }).then(data => {
+          showToast(`${data.success || 0} order(s) marked as Delivered`, 'success');
+          if (data.failed > 0) {
+            showToast(`${data.failed} order(s) could not be updated`, 'warning');
+          }
+          loadDeliveries();
+        }).catch(() => showToast('An error occurred', 'error'));
+      }
+    });
+  });
+
+  // Bulk Cancel
+  document.getElementById('bulkCancelBtn').addEventListener('click', function() {
+    const ids = getSelectedOrderIds();
+    if (ids.length === 0) return;
+
+    Swal.fire({
+      title: `Cancel ${ids.length} Delivery(ies)?`,
+      html: `
+        <p>Selected orders will be sent back to staff for reassignment.</p>
+        <textarea id="bulkCancelReason" class="swal2-textarea"
+          placeholder="Reason for cancellation (required)" rows="3"></textarea>
+      `,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, Cancel All',
+      confirmButtonColor: '#EF5350',
+      preConfirm: () => {
+        const reason = document.getElementById('bulkCancelReason').value.trim();
+        if (!reason) {
+          Swal.showValidationMessage('Please provide a reason');
+          return false;
+        }
+        return reason;
+      }
+    }).then(result => {
+      if (result.isConfirmed) {
+        ajaxPost('/api/orders/bulk_update.php', {
+          order_ids: JSON.stringify(ids),
+          action: 'cancel',
+          reason: result.value
+        }).then(data => {
+          showToast(`${data.success || 0} delivery(ies) cancelled`, 'info');
+          loadDeliveries();
+        }).catch(() => showToast('An error occurred', 'error'));
+      }
+    });
+  });
+
+  // ===== HELPER FUNCTIONS =====
+  function formatStatus(status) {
+    const labels = {
+      pending: 'Pending', confirmed: 'Confirmed', assigned: 'Assigned',
+      on_delivery: 'On Delivery', delivered: 'Delivered', accepted: 'Accepted',
+      ready_for_pickup: 'Ready for Pickup', picked_up: 'Picked Up', cancelled: 'Cancelled'
+    };
+    return labels[status] || status;
+  }
+
+  function formatDate(dateStr) {
+    if (!dateStr) return '—';
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      + ' ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  function renderPagination(total, page, perPage) {
+    const totalPages = Math.ceil(total / perPage);
+    const container = document.getElementById('deliveriesPagination');
+    container.innerHTML = '';
+    if (totalPages <= 1) return;
+
+    const prevBtn = document.createElement('button');
+    prevBtn.className = 'page-btn';
+    prevBtn.textContent = 'Previous';
+    prevBtn.disabled = page <= 1;
+    prevBtn.addEventListener('click', () => { currentPage--; loadDeliveries(); });
+    container.appendChild(prevBtn);
+
+    for (let i = Math.max(1, page - 2); i <= Math.min(totalPages, page + 2); i++) {
+      const pb = document.createElement('button');
+      pb.className = `page-btn ${i === page ? 'active' : ''}`;
+      pb.textContent = i;
+      pb.addEventListener('click', () => { currentPage = i; loadDeliveries(); });
+      container.appendChild(pb);
+    }
+
+    const nextBtn = document.createElement('button');
+    nextBtn.className = 'page-btn';
+    nextBtn.textContent = 'Next';
+    nextBtn.disabled = page >= totalPages;
+    nextBtn.addEventListener('click', () => { currentPage++; loadDeliveries(); });
+    container.appendChild(nextBtn);
+
+    const info = document.createElement('span');
+    info.className = 'pagination-info';
+    info.textContent = `Showing ${(page - 1) * perPage + 1}–${Math.min(page * perPage, total)} of ${total} deliveries`;
+    container.appendChild(info);
+  }
+
+});
+```
+
+---
+
+### 3. `rider/delivery_history.php`
+
+**PHP Logic (top of file):**
+```
+1. Include auth_check.php, require_role([ROLE_RIDER])
+2. Include header.php, sidebar.php
+3. Data loaded via AJAX
+```
+
+**HTML Structure:**
+```html
+<div class="main-content">
+  <div class="page-header">
+    <h1>Delivery History</h1>
+    <p class="text-muted">View your past deliveries and performance.</p>
+  </div>
+
+  <!-- Performance Summary Cards -->
+  <div class="stats-grid" id="historyStats">
+    <div class="stat-card">
+      <div class="stat-icon" style="background: var(--success)">
+        <span class="material-icons">check_circle</span>
+      </div>
+      <div class="stat-info">
+        <span class="stat-number" id="totalDelivered">—</span>
+        <span class="stat-label">Total Delivered</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background: var(--danger)">
+        <span class="material-icons">cancel</span>
+      </div>
+      <div class="stat-info">
+        <span class="stat-number" id="totalCancelled">—</span>
+        <span class="stat-label">Total Cancelled</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background: var(--primary)">
+        <span class="material-icons">trending_up</span>
+      </div>
+      <div class="stat-info">
+        <span class="stat-number" id="successRate">—</span>
+        <span class="stat-label">Success Rate</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toolbar: Filters + Search + Date Range -->
+  <div class="toolbar">
+    <div class="filter-bar" id="historyFilters">
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="delivered">Delivered</button>
+      <button class="filter-btn" data-filter="cancelled">Cancelled</button>
+    </div>
+    <div class="toolbar-right">
+      <div class="search-bar">
+        <span class="material-icons search-icon">search</span>
+        <input type="text" id="historySearch" class="search-input" placeholder="Search by Order ID or customer...">
+      </div>
+      <div class="date-range">
+        <input type="date" id="dateFrom" class="float-input" title="From Date">
+        <span class="text-muted">to</span>
+        <input type="date" id="dateTo" class="float-input" title="To Date">
+      </div>
+    </div>
+  </div>
+
+  <!-- History Table -->
+  <div class="data-table-wrapper">
+    <table class="data-table" id="historyTable">
+      <thead>
+        <tr>
+          <th>Order ID</th>
+          <th>Customer Details</th>
+          <th>Items</th>
+          <th>Qty</th>
+          <th>Payment</th>
+          <th>Status</th>
+          <th>Order Date</th>
+          <th>Delivered Date</th>
+          <th>Cancellation Reason</th>
+        </tr>
+      </thead>
+      <tbody id="historyBody">
+        <tr class="loading-row"><td colspan="9"><div class="spinner"></div></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination" id="historyPagination"></div>
+
+  <!-- Empty State -->
+  <div class="empty-state" id="emptyHistory" style="display: none;">
+    <span class="material-icons">history</span>
+    <p>No delivery history yet.</p>
+    <small class="text-muted">Your completed and cancelled deliveries will appear here.</small>
+  </div>
+</div>
+```
+
+### `rider/css/delivery_history.css`
+
+```
+.stats-grid:
+  - CSS Grid: 3 columns desktop, 1 column mobile
+  - Gap: 20px
+  - Margin-bottom: 24px
+
+.stat-card:
+  - Same as dashboard stat cards
+
+#successRate:
+  - After the number, append "%" via JS
+
+.toolbar:
+  - Flex row on desktop, column on mobile
+  - Gap: 16px
+  - Margin-bottom: 16px
+  - Flex wrap
+
+.toolbar-right:
+  - Flex row, gap 12px, align center
+  - Flex wrap on mobile
+
+.date-range:
+  - Flex row, gap 8px, align center
+  - Inputs: styled date inputs matching theme
+
+.data-table:
+  - Same base styles as assigned_deliveries
+  - customer-details-cell: same format
+  - Cancellation reason column: max-width 200px, truncated, full text on hover (title attr)
+  - Status badge colors applied
+
+Responsive:
+  @media (max-width: 768px):
+    - toolbar stacks vertically
+    - toolbar-right wraps
+    - table scrolls horizontally
+    - stats-grid: 1 column
+```
+
+### `rider/js/delivery_history.js`
+
+```javascript
+document.addEventListener('DOMContentLoaded', function() {
+
+  let currentFilter = 'all';
+  let currentPage = 1;
+  let searchText = '';
+  let dateFrom = '';
+  let dateTo = '';
+  const perPage = 50;
+
+  // Load stats and history on page load
+  loadStats();
+  loadHistory();
+
+  // ===== PERFORMANCE STATS =====
+  function loadStats() {
+    // Fetch rider-specific stats
+    ajaxGet('/api/riders/get_statistics.php', { self: true })
+      .then(data => {
+        document.getElementById('totalDelivered').textContent = data.completed || 0;
+        document.getElementById('totalCancelled').textContent = data.cancelled || 0;
+        const rate = data.completed > 0
+          ? ((data.completed / (data.completed + data.cancelled)) * 100).toFixed(1)
+          : '0.0';
+        document.getElementById('successRate').textContent = rate + '%';
+      })
+      .catch(() => {
+        document.getElementById('totalDelivered').textContent = '—';
+        document.getElementById('totalCancelled').textContent = '—';
+        document.getElementById('successRate').textContent = '—';
+      });
+  }
+
+  // ===== FILTER BUTTONS =====
+  document.querySelectorAll('#historyFilters .filter-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('#historyFilters .filter-btn').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      currentFilter = this.dataset.filter;
+      currentPage = 1;
+      loadHistory();
+    });
+  });
+
+  // ===== SEARCH (debounced) =====
+  let searchTimeout;
+  document.getElementById('historySearch').addEventListener('input', function() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+      searchText = this.value.trim();
+      currentPage = 1;
+      loadHistory();
+    }, 300);
+  });
+
+  // ===== DATE RANGE =====
+  document.getElementById('dateFrom').addEventListener('change', function() {
+    dateFrom = this.value;
+    currentPage = 1;
+    loadHistory();
+  });
+  document.getElementById('dateTo').addEventListener('change', function() {
+    dateTo = this.value;
+    currentPage = 1;
+    loadHistory();
+  });
+
+  // ===== LOAD HISTORY =====
+  function loadHistory() {
+    const statusFilter = currentFilter === 'all' ? 'delivered,cancelled' : currentFilter;
+
+    const params = {
+      status: statusFilter,
+      search: searchText,
+      page: currentPage,
+      date_from: dateFrom,
+      date_to: dateTo,
+      scope: 'history' // Tell API to return completed/cancelled orders for rider
+    };
+
+    document.getElementById('historyBody').innerHTML =
+      '<tr class="loading-row"><td colspan="9"><div class="spinner"></div></td></tr>';
+    document.getElementById('emptyHistory').style.display = 'none';
+
+    ajaxGet('/api/orders/get_orders.php', params)
+      .then(data => {
+        if (!data.orders || data.orders.length === 0) {
+          document.getElementById('historyBody').innerHTML = '';
+          document.getElementById('emptyHistory').style.display = 'flex';
+          document.getElementById('historyPagination').innerHTML = '';
+          return;
+        }
+
+        document.getElementById('emptyHistory').style.display = 'none';
+        renderHistory(data.orders);
+        renderPagination(data.total, data.page, data.per_page);
+      })
+      .catch(() => showToast('Failed to load delivery history', 'error'));
+  }
+
+  // ===== RENDER HISTORY TABLE =====
+  function renderHistory(orders) {
+    const tbody = document.getElementById('historyBody');
+    tbody.innerHTML = '';
+
+    const paymentLabels = { cod: 'Cash on Delivery', pickup: 'Pickup at Store', online: 'Online' };
+
+    orders.forEach(order => {
+      const tr = document.createElement('tr');
+
+      const itemsHtml = order.items.map(item =>
+        `<span class="item-with-icon">
+          <img src="${item.item_icon || '/assets/images/default-item.png'}" class="item-icon-sm">
+          ${item.item_name}
+        </span>`
+      ).join('<br>');
+
+      const totalQty = order.items.reduce((sum, i) => sum + parseInt(i.quantity), 0);
+
+      const customerDetails = `
+        <strong>${order.customer_name || 'Unknown'}</strong>
+        <span class="customer-phone">
+          <span class="material-icons" style="font-size:14px;vertical-align:middle;">phone</span>
+          ${order.customer_phone || 'N/A'}
+        </span>
+        <small class="customer-address">
+          <span class="material-icons" style="font-size:14px;vertical-align:middle;">location_on</span>
+          ${order.delivery_address || order.customer_default_address || 'No address'}
+        </small>
+      `;
+
+      // For cancelled orders by rider, the cancellation reason is shown
+      // Note: When rider cancels, the order reverts to Confirmed — it's not truly "cancelled"
+      // But the history might show orders that were later cancelled by staff after rider returned them
+      // The API should return the cancellation_reason if status is cancelled
+      let cancelReasonHtml = '<span class="text-muted">—</span>';
+      if (order.status === 'cancelled' && order.cancellation_reason) {
+        cancelReasonHtml = `<span class="truncate-text" title="${escapeHtml(order.cancellation_reason)}">${escapeHtml(order.cancellation_reason)}</span>`;
+      }
+
+      tr.innerHTML = `
+        <td><strong>#${order.id}</strong></td>
+        <td class="customer-details-cell">${customerDetails}</td>
+        <td class="items-cell">${itemsHtml}</td>
+        <td>${totalQty}</td>
+        <td>${paymentLabels[order.payment_type] || order.payment_type}</td>
+        <td><span class="badge badge-${order.status.replace(/_/g, '-')}">${formatStatus(order.status)}</span></td>
+        <td>${formatDate(order.order_date)}</td>
+        <td>${order.delivered_at ? formatDate(order.delivered_at) : '<span class="text-muted">—</span>'}</td>
+        <td class="cancellation-cell">${cancelReasonHtml}</td>
+      `;
+
+      tbody.appendChild(tr);
+    });
+  }
+
+  // ===== HELPER FUNCTIONS =====
+  function formatStatus(status) {
+    const labels = {
+      pending: 'Pending', confirmed: 'Confirmed', assigned: 'Assigned',
+      on_delivery: 'On Delivery', delivered: 'Delivered', accepted: 'Accepted',
+      ready_for_pickup: 'Ready for Pickup', picked_up: 'Picked Up', cancelled: 'Cancelled'
+    };
+    return labels[status] || status;
+  }
+
+  function formatDate(dateStr) {
+    if (!dateStr) return '—';
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      + ' ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text || '';
+    return div.innerHTML;
+  }
+
+  function renderPagination(total, page, perPage) {
+    const totalPages = Math.ceil(total / perPage);
+    const container = document.getElementById('historyPagination');
+    container.innerHTML = '';
+    if (totalPages <= 1) return;
+
+    const prevBtn = document.createElement('button');
+    prevBtn.className = 'page-btn';
+    prevBtn.textContent = 'Previous';
+    prevBtn.disabled = page <= 1;
+    prevBtn.addEventListener('click', () => { currentPage--; loadHistory(); });
+    container.appendChild(prevBtn);
+
+    for (let i = Math.max(1, page - 2); i <= Math.min(totalPages, page + 2); i++) {
+      const pb = document.createElement('button');
+      pb.className = `page-btn ${i === page ? 'active' : ''}`;
+      pb.textContent = i;
+      pb.addEventListener('click', () => { currentPage = i; loadHistory(); });
+      container.appendChild(pb);
+    }
+
+    const nextBtn = document.createElement('button');
+    nextBtn.className = 'page-btn';
+    nextBtn.textContent = 'Next';
+    nextBtn.disabled = page >= totalPages;
+    nextBtn.addEventListener('click', () => { currentPage++; loadHistory(); });
+    container.appendChild(nextBtn);
+
+    const info = document.createElement('span');
+    info.className = 'pagination-info';
+    info.textContent = `Showing ${(page - 1) * perPage + 1}–${Math.min(page * perPage, total)} of ${total}`;
+    container.appendChild(info);
+  }
+
+});
+```
+
+---
+
+### 4. `rider/settings.php`
+
+The rider's settings page is simpler than the customer's — no addresses section, no appeals section. Just profile management and password change.
+
+**PHP Logic (top of file):**
+```
+1. Include auth_check.php, require_role([ROLE_RIDER])
+2. Fetch current user data fresh from DB (not session cache):
+   SELECT * FROM users WHERE id = session.user_id
+3. Fetch user preferences:
+   SELECT * FROM user_preferences WHERE user_id = session.user_id
+4. Include header.php, sidebar.php
+```
+
+**HTML Structure:**
+```html
+<div class="main-content">
+  <div class="page-header">
+    <h1>Settings</h1>
+    <p class="text-muted">Manage your profile and account settings.</p>
+  </div>
+
+  <!-- Profile Section -->
+  <div class="settings-section glass-card">
+    <h2><span class="material-icons">person</span> Profile Information</h2>
+    <form id="profileForm">
+      <div class="form-grid">
+        <div class="float-input-group">
+          <input type="text" id="profileUsername" class="float-input" value="<?= sanitize($user['username']) ?>" disabled
+                 style="opacity: 0.6; cursor: not-allowed;">
+          <label class="float-label">Username (cannot be changed)</label>
+        </div>
+        <div class="float-input-group">
+          <input type="text" id="profileFullName" class="float-input" value="<?= sanitize($user['full_name']) ?>" placeholder=" " required>
+          <label class="float-label">Full Name</label>
+        </div>
+        <div class="float-input-group">
+          <input type="email" id="profileEmail" class="float-input" value="<?= sanitize($user['email']) ?>" placeholder=" " required>
+          <label class="float-label">Email</label>
+        </div>
+        <div class="float-input-group">
+          <input type="tel" id="profilePhone" class="float-input" value="<?= sanitize($user['phone']) ?>" placeholder=" " required>
+          <label class="float-label">Phone Number</label>
+        </div>
+      </div>
+
+      <!-- Account Info (read-only display) -->
+      <div class="account-info">
+        <div class="info-item">
+          <span class="info-label">Role:</span>
+          <span class="badge badge-rider">Rider</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Status:</span>
+          <span class="badge badge-<?= $user['status'] ?>"><?= ucfirst($user['status']) ?></span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Member since:</span>
+          <span><?= format_date($user['created_at']) ?></span>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary">
+        <span class="material-icons">save</span> Save Changes
+      </button>
+    </form>
+  </div>
+
+  <!-- Password Section -->
+  <div class="settings-section glass-card">
+    <h2><span class="material-icons">lock</span> Change Password</h2>
+    <form id="passwordForm">
+      <div class="form-grid">
+        <div class="float-input-group">
+          <input type="password" id="currentPassword" class="float-input" placeholder=" " required>
+          <label class="float-label">Current Password</label>
+        </div>
+        <div class="float-input-group">
+          <input type="password" id="newPassword" class="float-input" placeholder=" " required>
+          <label class="float-label">New Password (min. 6 characters)</label>
+        </div>
+        <div class="float-input-group">
+          <input type="password" id="confirmPassword" class="float-input" placeholder=" " required>
+          <label class="float-label">Confirm New Password</label>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-warning">
+        <span class="material-icons">lock_reset</span> Change Password
+      </button>
+    </form>
+  </div>
+
+  <!-- Availability Section -->
+  <div class="settings-section glass-card">
+    <h2><span class="material-icons">toggle_on</span> Availability</h2>
+    <p class="text-muted" style="margin-bottom: 16px;">
+      Control whether you receive new delivery assignments. You can also toggle this from your Dashboard.
+    </p>
+    <div class="availability-setting">
+      <div class="availability-current">
+        <span>Current status: </span>
+        <strong id="settingsAvailStatus" class="<?= $user['is_available'] ? 'text-success' : 'text-danger' ?>">
+          <?= $user['is_available'] ? 'Available' : 'Unavailable' ?>
+        </strong>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="settingsAvailToggle"
+               <?= $user['is_available'] ? 'checked' : '' ?>
+               <?php
+                 // Check if rider has on_delivery orders — if so, disable toggle
+                 $on_delivery_count = db_fetch("SELECT COUNT(*) as cnt FROM orders WHERE rider_id = ? AND status = 'on_delivery'", [$_SESSION['user_id']]);
+                 if ($on_delivery_count && $on_delivery_count['cnt'] > 0) echo 'disabled title="Complete active deliveries first"';
+               ?>>
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <?php if ($on_delivery_count && $on_delivery_count['cnt'] > 0): ?>
+    <small class="text-warning" style="display:flex;align-items:center;gap:4px;margin-top:8px;">
+      <span class="material-icons" style="font-size:16px;">warning</span>
+      You have <?= $on_delivery_count['cnt'] ?> active delivery(ies). Complete them before going unavailable.
+    </small>
+    <?php endif; ?>
+  </div>
+</div>
+```
+
+### `rider/css/settings.css`
+
+```
+.settings-section:
+  - Margin-bottom: 24px
+  - Padding: 24px
+  - h2: flex row, align center, gap 8px, margin-bottom 20px, font-size 1.2em, font-weight 600
+
+.form-grid:
+  - CSS Grid: 2 columns on desktop, 1 on mobile
+  - Gap: 16px
+  - Margin-bottom: 20px
+
+.account-info:
+  - Display flex, flex-wrap, gap 20px
+  - Margin-bottom 20px
+  - Padding: 16px
+  - Background: var(--surface) with slight opacity difference
+  - Border-radius: var(--radius-sm)
+  - Border: 1px solid var(--border)
+
+.info-item:
+  - Display flex, align center, gap 8px
+  - .info-label: color var(--text-muted), font-size 0.9em
+
+.availability-setting:
+  - Display flex, align center, justify space-between
+  - Padding: 12px 0
+
+.availability-current:
+  - Font-size: 1em
+  - strong: font-weight 600
+
+.text-success: color var(--success)
+.text-danger: color var(--danger)
+.text-warning: color var(--warning)
+
+Responsive:
+  @media (max-width: 768px):
+    - form-grid: 1 column
+    - account-info: flex column, gap 12px
+    - availability-setting: flex column, align start, gap 12px
+    - Buttons: full width
+```
+
+### `rider/js/settings.js`
+
+```javascript
+document.addEventListener('DOMContentLoaded', function() {
+
+  // ===== PROFILE FORM =====
+  document.getElementById('profileForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const data = {
+      full_name: document.getElementById('profileFullName').value.trim(),
+      email: document.getElementById('profileEmail').value.trim(),
+      phone: document.getElementById('profilePhone').value.trim()
+    };
+
+    if (!data.full_name || !data.email || !data.phone) {
+      showToast('All fields are required', 'warning');
+      return;
+    }
+
+    // Basic email validation
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+      showToast('Please enter a valid email address', 'warning');
+      return;
+    }
+
+    const submitBtn = this.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<div class="spinner" style="width:18px;height:18px;"></div> Saving...';
+
+    ajaxPost('/api/settings/update_profile.php', data)
+      .then(res => {
+        if (res.success) {
+          showToast('Profile updated successfully', 'success');
+        } else {
+          showToast(res.message || 'Failed to update profile', 'error');
+        }
+      })
+      .catch(() => showToast('An error occurred', 'error'))
+      .finally(() => {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<span class="material-icons">save</span> Save Changes';
+      });
+  });
+
+  // ===== PASSWORD FORM =====
+  document.getElementById('passwordForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const current = document.getElementById('currentPassword').value;
+    const newPass = document.getElementById('newPassword').value;
+    const confirm = document.getElementById('confirmPassword').value;
+
+    if (!current || !newPass || !confirm) {
+      showToast('All password fields are required', 'warning');
+      return;
+    }
+    if (newPass.length < 6) {
+      showToast('New password must be at least 6 characters', 'warning');
+      return;
+    }
+    if (newPass !== confirm) {
+      showToast('New passwords do not match', 'warning');
+      return;
+    }
+
+    const submitBtn = this.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<div class="spinner" style="width:18px;height:18px;"></div> Changing...';
+
+    ajaxPost('/api/settings/change_password.php', {
+      current_password: current,
+      new_password: newPass,
+      confirm_password: confirm
+    }).then(res => {
+      if (res.success) {
+        showToast('Password changed successfully', 'success');
+        this.reset();
+      } else {
+        showToast(res.message || 'Failed to change password', 'error');
+      }
+    })
+    .catch(() => showToast('An error occurred', 'error'))
+    .finally(() => {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '<span class="material-icons">lock_reset</span> Change Password';
+    });
+  });
+
+  // ===== AVAILABILITY TOGGLE (in Settings) =====
+  const settingsToggle = document.getElementById('settingsAvailToggle');
+  if (settingsToggle && !settingsToggle.disabled) {
+    settingsToggle.addEventListener('change', function() {
+      const newState = this.checked;
+      const confirmMsg = newState
+        ? 'Set yourself as Available? You may receive new delivery assignments.'
+        : 'Set yourself as Unavailable? You will not receive new delivery assignments.';
+
+      Swal.fire({
+        title: newState ? 'Go Available?' : 'Go Unavailable?',
+        text: confirmMsg,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: newState ? 'Yes, Go Available' : 'Yes, Go Unavailable',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: newState ? 'var(--success)' : 'var(--warning)',
+      }).then(result => {
+        if (result.isConfirmed) {
+          ajaxPost('/api/riders/toggle_availability.php', {})
+            .then(data => {
+              if (data.success) {
+                showToast(
+                  newState ? 'You are now available for deliveries' : 'You are now unavailable',
+                  'success'
+                );
+                // Update the status text
+                const statusText = document.getElementById('settingsAvailStatus');
+                statusText.textContent = newState ? 'Available' : 'Unavailable';
+                statusText.className = newState ? 'text-success' : 'text-danger';
+              } else {
+                settingsToggle.checked = !newState;
+                showToast(data.message || 'Failed to update availability', 'error');
+              }
+            })
+            .catch(() => {
+              settingsToggle.checked = !newState;
+              showToast('An error occurred', 'error');
+            });
+        } else {
+          settingsToggle.checked = !newState;
+        }
+      });
+    });
+  }
+
+});
+```
+
+---
+
+## HTML PAGE TEMPLATE PATTERN
+
+Every rider PHP page must follow this exact pattern (same as customer but with rider role):
+
+```php
+<?php
+// Page-specific variables
+$page_title = 'Dashboard'; // Changes per page
+$page_css = 'css/dashboard.css'; // Changes per page
+$page_js = 'js/dashboard.js'; // Changes per page
+
+// Auth
+require_once __DIR__ . '/../includes/auth_check.php';
+require_role([ROLE_RIDER]);
+
+// Page-specific PHP logic (DB queries, data preparation)
+// ...
+
+// Logger
+logger_function_entry(['page' => 'rider/dashboard']);
+?>
+<!DOCTYPE html>
+<html lang="en" data-theme="<?= $_SESSION['dark_mode'] ? 'dark' : 'light' ?>"
+  style="--primary: <?= get_setting('primary_color') ?>; --secondary: <?= get_setting('secondary_color') ?>; --accent: <?= get_setting('accent_color') ?>; --surface: <?= ($_SESSION['dark_mode'] ? '#1A1A2E' : get_setting('surface_color')) ?>;">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><?= $page_title ?> — <?= get_setting('station_name') ?></title>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Material Icons -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <!-- SweetAlert2 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+
+  <!-- Global CSS -->
+  <link rel="stylesheet" href="/assets/css/global.css">
+  <link rel="stylesheet" href="/assets/css/layout.css">
+  <link rel="stylesheet" href="/assets/css/components.css">
+
+  <!-- Page-specific CSS -->
+  <link rel="stylesheet" href="<?= $page_css ?>">
+
+  <!-- CSRF Token Meta -->
+  <meta name="csrf-token" content="<?= $_SESSION[CSRF_TOKEN_NAME] ?>">
+</head>
+<body>
+
+  <?php include __DIR__ . '/../includes/header.php'; ?>
+
+  <div class="app-wrapper">
+    <?php include __DIR__ . '/../includes/sidebar.php'; ?>
+
+    <div class="main-content">
+      <!-- PAGE CONTENT HERE -->
+    </div>
+  </div>
+
+  <!-- Global JS -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="/assets/js/global.js"></script>
+  <script src="/assets/js/components.js"></script>
+  <script src="/assets/js/sidebar.js"></script>
+
+  <!-- Page-specific extra libraries (e.g., Sortable.js for assigned_deliveries) -->
+  <!-- Page-specific JS -->
+  <script src="<?= $page_js ?>"></script>
+
+  <?php logger_function_exit(['page' => 'rider/dashboard']); ?>
+</body>
+</html>
+```
+
+**For `assigned_deliveries.php` specifically**, add the Sortable.js CDN script BEFORE the page-specific JS:
+```html
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<script src="js/assigned_deliveries.js"></script>
+```
+
+---
+
+## IMPORTANT IMPLEMENTATION NOTES FOR RIDER PAGES
+
+1. **Rider accounts are always `status='active'`** from creation. There is no pending or flagged state for riders. No need to check for pending/flagged account status on rider pages (unlike customer pages). However, always verify the session role is `ROLE_RIDER` on every page.
+
+2. **Riders ONLY see orders assigned to them.** The `api/orders/get_orders.php` endpoint scopes results by `rider_id = session.user_id` when the role is `rider`. The rider frontend should never display or attempt to access orders not assigned to them.
+
+3. **Customer Details format in tables** must always be displayed as:
+   ```
+   Customer Full Name
+   📞 Phone Number
+   📍 Delivery Address (from the order's delivery_address field, or customer's default address)
+   ```
+   Use Material Icons (`phone`, `location_on`) inline before the phone and address. Each on its own line within the cell.
+
+4. **Drag-and-drop priority reordering** uses Sortable.js attached to the `<tbody>` element. The `.drag-handle` class on the grip icon makes only that icon draggable (not the entire row). After each drag-and-drop, the new order is saved immediately to the server via `api/riders/update_priority.php`. Visual priority numbers are updated in real-time. The ghost/placeholder row during dragging should have reduced opacity and a subtle primary color background.
+
+5. **Availability toggle appears in TWO places:** the Dashboard and the Settings page. Both use the same API endpoint (`api/riders/toggle_availability.php`). Both must show the confirmation SweetAlert before toggling. Both must handle the disabled/locked state when the rider has on_delivery orders. The toggle is a visual `<input type="checkbox">` styled as a toggle switch using the `.toggle-switch` and `.toggle-slider` CSS classes from `components.css`.
+
+6. **When a rider cancels a delivery**, the order does NOT get status `cancelled`. Instead, it reverts to `confirmed` with `rider_id` set to NULL. This is a key distinction — the rider is just declining/returning the delivery, not cancelling the customer's order. Staff/Admin will then reassign to another rider. The cancellation reason from the rider is stored for Staff/Admin reference. The frontend dialog should say "Cancel Delivery" and explain "The order will be sent back to staff for reassignment."
+
+7. **Performance stats on delivery_history.php** show:
+   - Total Delivered: Count of orders with status `delivered` (or `accepted` or `picked_up`) WHERE `rider_id = this rider`
+   - Total Cancelled: Count of orders that were reassigned away from this rider (this is tracked differently — the API should count based on session logs or a rider_cancelled flag. Alternatively, simplify: count orders in history where status = cancelled AND cancelled_by = rider's user_id)
+   - Success Rate: `Completed / (Completed + Cancelled) × 100`%
+   - The `api/riders/get_statistics.php` with `self=true` parameter returns these stats for the logged-in rider.
+
+8. **Item icons** in tables: same as customer — if item has `item_icon`, show that image. If NULL, show `/assets/images/default-item.png`. Use `.item-icon-sm` class (20-24px, rounded corners).
+
+9. **Every AJAX call** must use `ajaxPost()` or `ajaxGet()` from `global.js` which automatically attach the CSRF token. Every call must have `.catch()` error handling that shows a toast.
+
+10. **All dates** must be formatted in Philippine timezone. Use the JS `formatDate()` function which renders dates as "Jun 30, 2025 02:30 PM".
+
+11. **Each page-specific JS file** must be wrapped in `document.addEventListener('DOMContentLoaded', function() { ... })`.
+
+12. **Dark mode support** is handled entirely via CSS variables. All page-specific CSS should ONLY use CSS custom properties for colors — never hardcode colors. This ensures dark mode works automatically when `data-theme="dark"` is set on `<html>`.
+
+13. **The rider has NO access to:** placing orders, viewing inventory, managing accounts, viewing analytics, session logs, or system settings. The sidebar only shows: Dashboard, Assigned Deliveries, Delivery History, Settings. If a rider tries to access any other page, the `require_role([ROLE_RIDER])` check and proper URL routing should prevent it.
+
+14. **Tables render max 50 items per page** with pagination showing Previous/Next buttons and "Showing X-Y of Z items" counter.
+
+15. **Glass card effect** is used for: stat cards, settings sections, availability toggle card on dashboard. Not overused — keep it subtle and professional.
+
+16. **Bulk actions bar** appears only when one or more checkboxes are checked. It slides down with animation. When no items are checked, it hides. The "Select All" checkbox in the table header toggles all visible checkboxes. Bulk actions respect the same rules as individual actions — e.g., bulk "Mark Delivered" only applies to `on_delivery` orders, bulk "Mark On Delivery" only applies to `assigned` orders. If a mixed selection is made, the API processes valid ones and reports how many succeeded vs failed.
+
+---
+
+**Now generate ALL 12 files for the rider role (`rider/` folder) with complete, production-ready code. Every PHP file must include proper auth checks, logging, and the HTML template pattern. Every CSS file must include all styles described including responsive breakpoints and dark mode support via CSS variables. Every JS file must include all interactivity, AJAX calls, SweetAlert2 dialogs, Sortable.js integration, and error handling as described. Do not use placeholders or TODO comments.**

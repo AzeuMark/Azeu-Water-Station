@@ -1,0 +1,435 @@
+/**
+ * ============================================================================
+ * AZEU WATER STATION - STAFF INVENTORY JAVASCRIPT
+ * ============================================================================
+ * 
+ * Status: ✅ IMPLEMENTED
+ * ============================================================================
+ */
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadSettings();
+    loadInventory();
+    loadDefaultItems();
+    
+    document.getElementById('item-form').addEventListener('submit', saveItem);
+    document.getElementById('restock-form').addEventListener('submit', restockItem);
+});
+
+async function loadSettings() {
+    try {
+        const response = await fetch('../api/settings/get.php');
+        const data = await response.json();
+        
+        if (data.success && data.settings) {
+            lowStockThreshold = parseInt(data.settings.low_stock_threshold) || 10;
+        }
+    } catch (error) {
+        console.error('Error loading settings:', error);
+    }
+}
+
+async function loadDefaultItems() {
+    try {
+        const response = await fetch('../api/settings/get.php');
+        const data = await response.json();
+        
+        const optionsContainer = document.getElementById('item-select-options');
+        
+        if (data.success && data.settings && data.settings.default_item_names) {
+            // Parse the newline-separated items
+            const items = data.settings.default_item_names.split('\n').filter(item => item.trim() !== '');
+            
+            // Clear existing options
+            optionsContainer.innerHTML = '';
+            
+            // Add each item as an option
+            items.forEach(item => {
+                const option = document.createElement('div');
+                option.className = 'custom-select-option';
+                option.dataset.value = item.trim();
+                option.textContent = item.trim();
+                optionsContainer.appendChild(option);
+            });
+            
+            // Add "Custom/Other" option at the end
+            const customOption = document.createElement('div');
+            customOption.className = 'custom-select-option custom-option';
+            customOption.dataset.value = '__custom__';
+            customOption.textContent = 'Custom/Other';
+            optionsContainer.appendChild(customOption);
+        } else {
+            // Fallback: just add custom option
+            optionsContainer.innerHTML = '';
+            const customOption = document.createElement('div');
+            customOption.className = 'custom-select-option custom-option';
+            customOption.dataset.value = '__custom__';
+            customOption.textContent = 'Custom/Other';
+            optionsContainer.appendChild(customOption);
+        }
+    } catch (error) {
+        console.error('Error loading default items:', error);
+    }
+}
+
+let inventoryData = []; // Store inventory data for sorting
+let currentPage = 1;
+const itemsPerPage = 20;
+let lowStockThreshold = 10; // Default threshold
+
+async function loadInventory() {
+    try {
+        const response = await fetch('../api/inventory/list.php');
+        const data = await response.json();
+        
+        const tbody = document.getElementById('inventory-tbody');
+        
+        if (data.success && data.items.length > 0) {
+            inventoryData = data.items; // Store data
+            renderInventory(inventoryData); // Render
+        } else {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px; color: var(--text-secondary);">No items found</td></tr>';
+        }
+    } catch (error) {
+        console.error('Error loading inventory:', error);
+        showToast('Failed to load inventory', 'error');
+    }
+}
+
+function renderInventory(items) {
+    const tbody = document.getElementById('inventory-tbody');
+    
+    // Calculate pagination
+    const totalPages = Math.ceil(items.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedItems = items.slice(startIndex, endIndex);
+    
+    // Update pagination info
+    document.getElementById('page-info').textContent = `Page ${currentPage} of ${totalPages || 1}`;
+    
+    // Enable/disable buttons
+    document.getElementById('prev-btn').disabled = currentPage === 1;
+    document.getElementById('next-btn').disabled = currentPage >= totalPages;
+    
+    if (paginatedItems.length > 0) {
+        let html = '';
+        paginatedItems.forEach(item => {
+            // Determine stock badge class
+            const stockClass = item.stock_count === 0 ? 'danger' : (item.stock_count <= lowStockThreshold ? 'warning' : 'success');
+            
+            // Determine item status with low stock override
+            let displayStatus = item.status;
+            let statusClass = item.status;
+            
+            if (item.stock_count === 0) {
+                displayStatus = 'out of stock';
+                statusClass = 'out_of_stock';
+            } else if (item.stock_count <= lowStockThreshold && item.status === 'active') {
+                displayStatus = 'low stock';
+                statusClass = 'low_stock';
+            }
+            
+            html += `
+                <tr>
+                    <td><strong>${item.item_name}</strong></td>
+                    <td>${formatCurrency(item.price)}</td>
+                        <td><span class="badge badge-${stockClass}">${item.stock_count}</span></td>
+                        <td><span class="badge badge-${statusClass}">${displayStatus}</span></td>
+                        <td>
+                            <button class="btn-icon" onclick="showRestock(${item.id})" title="Restock">
+                                <span class="material-icons">add_circle</span>
+                            </button>
+                            <button class="btn-icon" onclick="editItem(${item.id})" title="Edit">
+                                <span class="material-icons">edit</span>
+                            </button>
+                            <button class="btn-icon" onclick="confirmDeleteItem(${item.id}, '${item.item_name.replace(/'/g, "\\'")}')" title="Delete">
+                                <span class="material-icons">delete</span>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+        });
+        tbody.innerHTML = html;
+    } else {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px; color: var(--text-secondary);">No items found</td></tr>';
+    }
+}
+
+function nextPage() {
+    const totalPages = Math.ceil(inventoryData.length / itemsPerPage);
+    if (currentPage < totalPages) {
+        currentPage++;
+        renderInventory(inventoryData);
+    }
+}
+
+function previousPage() {
+    if (currentPage > 1) {
+        currentPage--;
+        renderInventory(inventoryData);
+    }
+}
+
+function applySortFilter(button, sortBy) {
+    // Remove active class from all buttons
+    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+    
+    // Add active class to clicked button
+    button.classList.add('active');
+    
+    // Reset to page 1 when sorting
+    currentPage = 1;
+    
+    // Sort inventory
+    let sortedItems = [...inventoryData];
+    
+    switch(sortBy) {
+        case 'name':
+            sortedItems.sort((a, b) => a.item_name.localeCompare(b.item_name));
+            break;
+        case 'stock-asc':
+            sortedItems.sort((a, b) => a.stock_count - b.stock_count);
+            break;
+        case 'stock-desc':
+            sortedItems.sort((a, b) => b.stock_count - a.stock_count);
+            break;
+        case 'price-asc':
+            sortedItems.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
+            break;
+        case 'price-desc':
+            sortedItems.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
+            break;
+        case 'status':
+            const statusOrder = { 'active': 1, 'out_of_stock': 2, 'inactive': 3 };
+            sortedItems.sort((a, b) => statusOrder[a.status] - statusOrder[b.status]);
+            break;
+    }
+    
+    renderInventory(sortedItems);
+}
+
+function showAddItem() {
+    document.getElementById('item-modal-title').textContent = 'Add Item';
+    document.getElementById('item-form').reset();
+    document.getElementById('item-id').value = '';
+    document.getElementById('custom-item-name-group').style.display = 'none';
+    document.getElementById('item-name-custom').required = false;
+    document.getElementById('item-name-select').required = true;
+    
+    // Reset custom select
+    const selectedText = document.querySelector('#item-select-trigger .selected-text');
+    selectedText.textContent = 'Select an item...';
+    selectedText.classList.add('placeholder');
+    document.getElementById('item-name-select').value = '';
+    
+    loadDefaultItems(); // Reload in case settings changed
+    openModal('item-modal');
+}
+
+async function saveItem(e) {
+    e.preventDefault();
+    
+    const itemId = document.getElementById('item-id').value;
+    const url = itemId ? '../api/inventory/update.php' : '../api/inventory/create.php';
+    
+    // Get item name from dropdown or custom input
+    const selectValue = document.getElementById('item-name-select').value;
+    const itemName = selectValue === '__custom__' 
+        ? document.getElementById('item-name-custom').value 
+        : selectValue;
+    
+    if (!itemName || itemName.trim() === '') {
+        showToast('Please enter an item name', 'error');
+        return;
+    }
+    
+    const payload = {
+        item_name: itemName.trim(),
+        price: parseFloat(document.getElementById('item-price').value),
+        stock_count: parseInt(document.getElementById('item-stock').value),
+        csrf_token: getCSRFToken()
+    };
+    
+    if (itemId) payload.item_id = parseInt(itemId);
+    
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showToast('Item saved', 'success');
+            closeModal('item-modal');
+            loadInventory();
+        } else {
+            showToast(data.message || 'Failed', 'error');
+        }
+    } catch (error) {
+        showToast('Error occurred', 'error');
+    }
+}
+
+function showRestock(itemId) {
+    document.getElementById('restock-item-id').value = itemId;
+    document.getElementById('restock-qty').value = '';
+    openModal('restock-modal');
+}
+
+async function restockItem(e) {
+    e.preventDefault();
+    
+    const itemId = document.getElementById('restock-item-id').value;
+    const qty = parseInt(document.getElementById('restock-qty').value);
+    
+    try {
+        const response = await fetch('../api/inventory/restock.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                item_id: parseInt(itemId),
+                stock_count: qty,
+                mode: 'add',
+                csrf_token: getCSRFToken()
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showToast('Restocked successfully', 'success');
+            closeModal('restock-modal');
+            loadInventory();
+        } else {
+            showToast(data.message || 'Failed', 'error');
+        }
+    } catch (error) {
+        showToast('Error occurred', 'error');
+    }
+}
+
+async function editItem(itemId) {
+    try {
+        const response = await fetch(`../api/inventory/get.php?id=${itemId}`);
+        const data = await response.json();
+        
+        if (data.success && data.item) {
+            document.getElementById('item-modal-title').textContent = 'Edit Item';
+            document.getElementById('item-id').value = data.item.id;
+            
+            // Load default items first
+            await loadDefaultItems();
+            
+            // Check if item name exists in dropdown
+            const optionsContainer = document.getElementById('item-select-options');
+            const options = optionsContainer.querySelectorAll('.custom-select-option');
+            const selectedText = document.querySelector('#item-select-trigger .selected-text');
+            const hiddenInput = document.getElementById('item-name-select');
+            let optionExists = false;
+            
+            for (let option of options) {
+                if (option.dataset.value === data.item.item_name) {
+                    option.classList.add('selected');
+                    selectedText.textContent = data.item.item_name;
+                    selectedText.classList.remove('placeholder');
+                    hiddenInput.value = data.item.item_name;
+                    optionExists = true;
+                    break;
+                }
+            }
+            
+            // If not in dropdown, use custom option
+            if (!optionExists) {
+                // Find and select the custom option
+                const customOpt = Array.from(options).find(opt => opt.dataset.value === '__custom__');
+                if (customOpt) {
+                    customOpt.classList.add('selected');
+                    selectedText.textContent = 'Custom/Other';
+                    selectedText.classList.remove('placeholder');
+                }
+                
+                hiddenInput.value = '__custom__';
+                const customGroup = document.getElementById('custom-item-name-group');
+                const customInput = document.getElementById('item-name-custom');
+                if (customGroup && customInput) {
+                    customGroup.style.display = 'block';
+                    customInput.value = data.item.item_name;
+                    customInput.required = true;
+                    hiddenInput.required = false;
+                }
+            }
+            
+            document.getElementById('item-price').value = data.item.price;
+            document.getElementById('item-stock').value = data.item.stock_count;
+            openModal('item-modal');
+        } else {
+            showToast(data.message || 'Failed to load item', 'error');
+        }
+    } catch (error) {
+        console.error('Edit item error:', error);
+        showToast('Error loading item: ' + error.message, 'error');
+    }
+}
+
+function confirmDeleteItem(itemId, itemName) {
+    Swal.fire({
+        title: 'Delete Item?',
+        html: `Are you sure you want to delete <strong>${itemName}</strong>?<br><br>This action cannot be undone.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, delete it',
+        cancelButtonText: 'Cancel',
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            deleteItem(itemId, itemName);
+        }
+    });
+}
+
+async function deleteItem(itemId, itemName) {
+    try {
+        const response = await fetch('../api/inventory/delete.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                item_id: parseInt(itemId),
+                csrf_token: getCSRFToken()
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            Swal.fire({
+                title: 'Deleted!',
+                text: `${itemName} has been deleted successfully.`,
+                icon: 'success',
+                timer: 2000,
+                showConfirmButton: false
+            });
+            loadInventory();
+        } else {
+            Swal.fire({
+                title: 'Error!',
+                text: data.message || 'Failed to delete item',
+                icon: 'error',
+                confirmButtonColor: '#007bff'
+            });
+        }
+    } catch (error) {
+        console.error('Delete item error:', error);
+        Swal.fire({
+            title: 'Error!',
+            text: 'An error occurred while deleting the item',
+            icon: 'error',
+            confirmButtonColor: '#007bff'
+        });
+    }
+}

@@ -1,0 +1,2690 @@
+# PROMPT #4 — STAFF ROLE (All Pages, CSS, JS)
+
+You are continuing the build of **"Azeu Water Station"** — a Philippine-based Water Refilling Station management web application. In previous prompts, the entire foundation was built: config files (`database.php`, `session.php`, `constants.php`, `functions.php`, `AESCrypt.php`, `logger.php`), all shared assets (`global.css`, `auth.css`, `components.css`, `layout.css`, `receipt.css`, `global.js`, `auth.js`, `components.js`, `sidebar.js`, `receipt.js`), all includes (`header.php`, `sidebar.php`, `footer.php`, `auth_check.php`), ALL API endpoints (`api/` folder — auth, orders, accounts, inventory, riders, addresses, appeals, notifications, settings, analytics), public pages (`index.php`, `register.php`, `forgot_password.php`, `reset_password.php`, `receipt.php`, `maintenance.php`), error pages, logging system, the complete customer role (`customer/` folder — 5 pages + CSS + JS), and the complete rider role (`rider/` folder — 4 pages + CSS + JS).
+
+**This prompt covers the STAFF role only.** Generate ALL files inside the `staff/` folder.
+
+---
+
+## PROJECT CONTEXT RECAP
+
+Azeu Water Station is a web-based order and delivery management system for a water refilling station in the Philippines. It has 4 roles: Customer, Rider, Staff, Admin (with Super Admin). The tech stack is pure PHP (no frameworks), MySQL on XAMPP (database name: `station_azeu`), and hand-written HTML/CSS/JS. No frameworks, no Bootstrap, no Tailwind.
+
+**Staff** are operational managers who:
+- Cannot register themselves — accounts are created by Admin/Super Admin only
+- Are always `status='active'` from creation (skip pending approval)
+- Approve or delete pending customer accounts after registration
+- Create Customer and Rider accounts (NOT Staff or Admin — only Admin can create Staff)
+- Edit and delete (soft-delete) Customer and Rider accounts
+- Confirm customer orders (which triggers stock decrement from inventory)
+- Assign riders to confirmed orders (manually select or auto-assign least-loaded available rider)
+- Reassign riders on assigned orders
+- Update order status at any stage (Pending, Confirmed, Assigned, On Delivery, Delivered, Ready for Pickup, Picked Up)
+- Cancel orders at any status with a mandatory reason
+- Add staff comments to orders (visible to customers, e.g., "Waiting for available rider")
+- Mark pickup orders as "Ready for Pickup" and "Picked Up"
+- View inventory in read-only mode (see stock counts, prices, statuses — cannot add/edit/remove items)
+- View rider performance statistics (completed deliveries, success rates, current loads)
+- Review and approve/deny customer cancellation appeals
+- View all order history with filters and search
+- Manage their own profile and password
+- Perform bulk actions on orders (bulk confirm, bulk cancel, bulk assign)
+
+**Staff CANNOT:**
+- Create Staff, Admin, or Super Admin accounts (only Admin+ can do this)
+- See Staff, Admin, or Super Admin accounts in Account Management (only Customer and Rider accounts visible)
+- Modify inventory (read-only access)
+- Access Analytics, Session Logs, or System Settings pages (Admin-only features)
+- Modify or delete the Super Admin account
+
+---
+
+## STAFF FILES TO GENERATE
+
+```
+staff/
+├── dashboard.php
+├── account_management.php
+├── manage_orders.php
+├── order_history.php
+├── inventory.php
+├── rider_statistics.php
+├── settings.php
+├── css/
+│   ├── dashboard.css
+│   ├── account_management.css
+│   ├── manage_orders.css
+│   ├── order_history.css
+│   ├── inventory.css
+│   ├── rider_statistics.css
+│   └── settings.css
+└── js/
+    ├── dashboard.js
+    ├── account_management.js
+    ├── manage_orders.js
+    ├── order_history.js
+    ├── inventory.js
+    ├── rider_statistics.js
+    └── settings.js
+```
+
+Generate ALL 21 files above with complete, production-ready code.
+
+---
+
+## SHARED INFRASTRUCTURE ALREADY BUILT (Reference Only — Do NOT Regenerate)
+
+These files already exist and are simply included/referenced by staff pages:
+
+### PHP Includes Available
+
+Every staff page starts with:
+```php
+<?php
+require_once __DIR__ . '/../includes/auth_check.php';
+require_role([ROLE_STAFF]);
+?>
+```
+
+Then uses these includes for layout:
+```php
+<?php include __DIR__ . '/../includes/header.php'; ?>
+<?php include __DIR__ . '/../includes/sidebar.php'; ?>
+<!-- page content -->
+<?php include __DIR__ . '/../includes/footer.php'; ?>
+```
+
+### PHP Functions Available (from `config/functions.php`)
+
+```
+sanitize($input)
+redirect($url)
+format_date($datetime)           → 'Jun 30, 2025 02:30 PM'
+format_currency($amount)         → '₱275.00'
+generate_token($length)
+time_ago($datetime)              → '2 minutes ago'
+get_setting($key)                → fetches from settings table
+update_setting($key, $value)
+get_status_badge_class($status)  → returns CSS class like 'badge-pending'
+get_role_badge_class($role)      → returns CSS class like 'badge-customer'
+get_status_label($status)        → 'On Delivery', 'Ready for Pickup', etc.
+json_response($data, $code)
+validate_email($email)
+get_user_by_id($id)
+create_notification($user_id, $title, $message, $type, $reference_id)
+get_client_ip()
+```
+
+### PHP Database Functions Available (from `config/database.php`)
+
+```
+db_query($sql, $params)    → PDOStatement
+db_fetch($sql, $params)    → single row assoc array
+db_fetch_all($sql, $params) → all rows
+db_insert($sql, $params)   → lastInsertId
+db_update($sql, $params)   → affected rows
+db_delete($sql, $params)   → affected rows
+```
+
+### PHP Logger Functions Available (from `config/logger.php`)
+
+```
+logger_trace($msg, $ctx)
+logger_debug($msg, $ctx)
+logger_info($msg, $ctx)
+logger_warning($msg, $ctx)
+logger_error($msg, $ctx)
+logger_critical($msg, $ctx)
+logger_function_entry($params)
+logger_function_exit($result)
+logger_query($sql, $params, $duration)
+logger_exception($exception)
+```
+
+### PHP Constants Available (from `config/constants.php`)
+
+```
+ROLE_CUSTOMER, ROLE_RIDER, ROLE_STAFF, ROLE_ADMIN, ROLE_SUPER_ADMIN
+STATUS_PENDING, STATUS_CONFIRMED, STATUS_ASSIGNED, STATUS_ON_DELIVERY,
+STATUS_DELIVERED, STATUS_ACCEPTED, STATUS_READY_FOR_PICKUP,
+STATUS_PICKED_UP, STATUS_CANCELLED
+ACCOUNT_PENDING, ACCOUNT_ACTIVE, ACCOUNT_FLAGGED, ACCOUNT_DELETED
+PAY_COD, PAY_PICKUP, PAY_ONLINE
+DEL_DELIVERY, DEL_PICKUP
+INV_ACTIVE, INV_INACTIVE, INV_OUT_OF_STOCK
+ITEMS_PER_PAGE (50), ORDER_ITEMS_PER_PAGE (20)
+CSRF_TOKEN_NAME
+ENCRYPTION_KEY
+DEBUG_MODE
+```
+
+### PHP Session Variables Available
+
+After login, these are set in `$_SESSION`:
+```
+$_SESSION['user_id']
+$_SESSION['username']
+$_SESSION['role']          → 'staff'
+$_SESSION['full_name']
+$_SESSION['status']        → always 'active' for staff
+$_SESSION['dark_mode']     → 0 or 1
+$_SESSION['system_settings'] → array of all settings from DB
+$_SESSION[CSRF_TOKEN_NAME] → CSRF token string
+```
+
+### CSS Classes Available (from `components.css`, `layout.css`, `global.css`)
+
+```
+Layout: .app-wrapper, .sidebar, .sidebar.collapsed, .main-content, .main-header
+Cards: .glass-card, .stat-card, .item-card, .item-card.selected
+Tables: .data-table, .data-table-wrapper
+Badges: .badge, .badge-pending, .badge-confirmed, .badge-assigned, .badge-on-delivery,
+        .badge-delivered, .badge-accepted, .badge-ready-for-pickup, .badge-picked-up,
+        .badge-cancelled, .badge-customer, .badge-rider, .badge-staff, .badge-admin,
+        .badge-super-admin, .badge-active, .badge-flagged, .badge-deleted
+Inputs: .float-input-group, .float-input, .float-label
+Buttons: .btn, .btn-primary, .btn-success, .btn-danger, .btn-warning, .btn-info,
+         .btn-outline, .btn-sm, .btn-icon, .btn-lg
+Modals: .modal-overlay, .modal, .modal-header, .modal-body, .modal-footer
+Misc: .toggle-switch, .toggle-slider, .qty-control, .qty-btn, .qty-input,
+      .filter-bar, .filter-btn, .search-bar, .search-input, .pagination, .page-btn,
+      .empty-state, .spinner, .spinner-overlay, .quick-actions, .quick-action-btn,
+      .preview-section, .preview-header, .toast, .notif-bell, .notif-badge,
+      .notif-dropdown, .custom-checkbox, .drag-handle, .color-picker-group
+```
+
+### JS Functions Available (from `components.js`, `global.js`)
+
+```
+// global.js
+toggleTheme()
+getCsrfToken()
+ajaxPost(url, data)                          → fetch POST with CSRF
+ajaxGet(url, params)                         → fetch GET
+getRoleIcon(role)
+applyAdminColors(settings)
+
+// components.js
+showToast(message, type, duration)           → types: 'success','error','warning','info'
+initPagination(tableId, itemsPerPage)
+initNotificationBell()
+openModal(modalId)
+closeModal(modalId)
+initFilterBar(filterBarId, tableId, filterColumn)
+initSearch(searchInputId, tableId, searchColumns)
+initBulkSelect(tableId)
+getSelectedIds(tableId)
+```
+
+### API Endpoints Available (Staff-Relevant)
+
+```
+# Account Management
+GET  api/accounts/get_accounts.php     → ?filter_role=&filter_status=&search=&page=
+                                          (staff sees: customer + rider only)
+POST api/accounts/approve.php          → {user_id}
+POST api/accounts/create.php           → {full_name, username, email, phone, password, role, full_address}
+                                          (staff can create: customer, rider)
+POST api/accounts/update.php           → {user_id, full_name, email, phone, password}
+POST api/accounts/delete.php           → {user_id}
+                                          (staff can delete: customer, rider)
+
+# Order Management
+GET  api/orders/get_orders.php         → ?status=&search=&page=&date_from=&date_to=&scope=
+                                          (staff sees: ALL orders)
+POST api/orders/update_status.php      → {order_id, new_status, comment}
+                                          (staff can change any status)
+POST api/orders/cancel_order.php       → {order_id, reason}
+                                          (staff can cancel at any status)
+POST api/orders/assign_rider.php       → {order_id, rider_id} (rider_id='auto' for auto-assign)
+POST api/orders/bulk_update.php        → {order_ids, action, reason, rider_id}
+                                          actions: 'confirm','cancel','assign_auto','on_delivery','delivered'
+
+# Rider Management
+GET  api/riders/get_available.php      → returns available riders with current load counts
+GET  api/riders/get_statistics.php     → ?page= returns rider performance data
+
+# Inventory (Read-Only)
+GET  api/inventory/get_items.php       → ?status_filter=&search=&page= (staff sees all items, read-only)
+
+# Appeals
+GET  api/appeals/get.php              → ?status_filter=&page= (staff sees all appeals)
+POST api/appeals/review.php           → {appeal_id, decision, admin_notes}
+
+# Notifications
+GET  api/notifications/get.php        → ?page=&limit=
+POST api/notifications/mark_read.php  → {notification_id} or {all: true}
+GET  api/notifications/count_unread.php
+
+# Settings (own profile only)
+POST api/settings/update_profile.php   → {full_name, email, phone}
+POST api/settings/change_password.php  → {current_password, new_password, confirm_password}
+POST api/settings/update_preferences.php → {dark_mode}
+
+# Dashboard Stats
+GET  api/analytics/get_dashboard_stats.php → (staff-scoped stats)
+```
+
+---
+
+## DATABASE TABLES REFERENCE (Staff-Relevant)
+
+### `users` — All accounts staff can manage
+```
+id, username (unchangeable), password, full_name, email, phone,
+role ENUM('customer','rider','staff','admin','super_admin'),
+status ENUM('pending','active','flagged','deleted'),
+is_available (riders only), cancellation_count, cancellation_reset_date,
+login_attempts, login_locked_until,
+created_at, updated_at, deleted_at
+```
+**Staff sees:** Only `customer` and `rider` role accounts. Staff/Admin/Super Admin accounts are hidden from staff's Account Management.
+
+### `user_preferences`
+```
+id, user_id, dark_mode (0/1)
+```
+
+### `customer_addresses`
+```
+id, customer_id, label, full_address, is_default
+```
+
+### `orders` — Staff manages ALL orders
+```
+id, customer_id, rider_id, payment_type, delivery_type,
+status, delivery_address, order_notes, delivery_fee,
+subtotal, total_amount, expected_delivery_date,
+cancellation_reason, cancelled_by, staff_comment,
+customer_confirmed, customer_confirmed_at, receipt_token,
+order_date, delivered_at, created_at, updated_at
+```
+
+### `order_items`
+```
+id, order_id, inventory_id, item_name (snapshot), item_icon (snapshot),
+item_price (snapshot), quantity, subtotal
+```
+
+### `inventory` — Staff views read-only
+```
+id, item_name, item_icon, stock_count, price,
+status ENUM('active','inactive','out_of_stock'),
+last_restocked_at, created_at, updated_at
+```
+
+### `notifications`
+```
+id, user_id, title, message, type, reference_id, is_read, created_at
+```
+
+### `cancellation_appeals`
+```
+id, customer_id, reason, status ENUM('pending','approved','denied'),
+reviewed_by, admin_notes, reviewed_at, created_at
+```
+
+### `delivery_priority`
+```
+id, rider_id, order_id, priority_order, updated_at
+```
+
+---
+
+## ORDER LIFECYCLE (Staff Perspective — Full Control)
+
+Staff has the highest operational authority over orders (same level as Admin for order management). Staff can perform all status transitions except they cannot modify system settings.
+
+### Delivery Orders (Cash on Delivery) — Full Flow
+```
+PENDING ──► CONFIRMED ──► ASSIGNED ──► ON DELIVERY ──► DELIVERED ──► ACCEPTED (by customer)
+   │             │             │              │               │
+   │             │             │              │               └── Final (no staff action)
+   │             │             │              └── Staff can: Update status, Cancel
+   │             │             └── Staff can: Reassign rider, Cancel
+   │             └── Staff can: Assign rider, Cancel, Mark Ready for Pickup (if pickup type)
+   └── Staff can: Confirm (triggers stock decrement), Cancel
+```
+
+### Pickup Orders — Full Flow
+```
+PENDING ──► CONFIRMED ──► READY FOR PICKUP ──► PICKED UP ──► ACCEPTED (by customer)
+   │             │                │                 │
+   │             │                │                 └── Final
+   │             │                └── Staff can: Mark Picked Up, Cancel
+   │             └── Staff can: Mark Ready for Pickup, Cancel
+   └── Staff can: Confirm, Cancel
+```
+
+### Staff Order Actions by Status
+
+| Current Status | Available Actions | Details |
+|----------------|-------------------|---------|
+| **Pending** | Confirm, Cancel | Confirm: decrements stock, creates notification. Optionally assign rider immediately ("Assign now?" dialog). Cancel: reason required, stock NOT restored (never decremented). |
+| **Confirmed** (no rider) | Assign Rider, Ready for Pickup (pickup only), Cancel | Assign: Select rider manually or Auto-assign. Cancel: reason required, stock IS restored. |
+| **Confirmed** (pickup, no rider) | Ready for Pickup, Cancel | Move to Ready for Pickup. |
+| **Assigned** (has rider) | Reassign Rider, Cancel | Reassign: select different rider. Cancel: reason required, stock IS restored, rider notified. |
+| **On Delivery** | Update Status, Cancel | Update: change to Pending/Confirmed/Delivered/any status. Cancel: reason required, stock IS restored, rider notified. |
+| **Ready for Pickup** | Picked Up, Cancel | Mark Picked Up: income counted. Cancel: stock restored. |
+| **Delivered** | (View only) | Cannot change. Income already counted. |
+| **Picked Up** | (View only) | Cannot change. Income already counted. |
+| **Accepted** | (View only) | Customer confirmed receipt. |
+| **Cancelled** | (View only in history) | Final state. |
+
+### Stock Management Rules (Staff Must Understand)
+- **Stock decremented** when order moves from `Pending` → `Confirmed`
+- **Stock restored** when any order that was `Confirmed` or beyond is `Cancelled`
+- **Stock NOT restored** when a `Pending` order is cancelled (stock was never decremented)
+- Staff can see current stock levels in the read-only Inventory page to make informed decisions
+
+### Auto-Assign Rider Algorithm
+When staff clicks "Auto" assign:
+1. Get all riders WHERE `role='rider'` AND `status='active'` AND `is_available=1` AND `deleted_at IS NULL`
+2. For each rider, COUNT their current orders WHERE status IN `('assigned','on_delivery')` → this is "current_load"
+3. Sort by `current_load ASC` (least loaded first)
+4. If tied, sort by `rider.id ASC` (first registered)
+5. If NO available riders → return failure, order stays Confirmed, staff can optionally add a comment like "Waiting for available rider" visible to the customer
+6. If rider found → assign, set status to `assigned`, create `delivery_priority` entry, notify rider + customer
+
+### Order Grouping in Manage Orders
+Orders from the **same customer** with the **same status** should be visually grouped in the table:
+- They appear as one expandable/collapsible row showing the customer name, total items count across all orders, and combined status
+- Clicking the row expands to show individual orders underneath
+- Bulk actions on the grouped row apply to ALL orders in that group
+- This makes it easier for staff to manage multiple orders from one customer
+
+---
+
+## STAFF SIDEBAR NAVIGATION
+
+```
+Dashboard              → staff/dashboard.php              icon: dashboard
+Account Management     → staff/account_management.php     icon: people
+Manage Orders          → staff/manage_orders.php          icon: list_alt
+Order History          → staff/order_history.php          icon: history
+Inventory              → staff/inventory.php              icon: inventory_2
+Rider Statistics       → staff/rider_statistics.php       icon: bar_chart
+Settings               → staff/settings.php               icon: settings
+```
+
+---
+
+## PAGE-BY-PAGE SPECIFICATIONS
+
+---
+
+### 1. `staff/dashboard.php`
+
+**PHP Logic (top of file):**
+```
+1. Include auth_check.php, require_role([ROLE_STAFF])
+2. Fetch dashboard stats:
+   - Pending orders count: SELECT COUNT(*) FROM orders WHERE status='pending'
+   - Confirmed orders count: SELECT COUNT(*) FROM orders WHERE status='confirmed'
+   - On delivery orders count: SELECT COUNT(*) FROM orders WHERE status='on_delivery'
+   - Pending accounts count: SELECT COUNT(*) FROM users WHERE status='pending'
+   - Total riders count: SELECT COUNT(*) FROM users WHERE role='rider' AND status='active' AND deleted_at IS NULL
+   - Available riders count: SELECT COUNT(*) FROM users WHERE role='rider' AND status='active' AND is_available=1 AND deleted_at IS NULL
+3. Fetch pending accounts preview (max 3, newest first):
+   SELECT * FROM users WHERE status='pending'
+   AND role IN ('customer','rider')
+   ORDER BY created_at DESC LIMIT 3
+4. Fetch pending orders preview (max 3, newest first):
+   SELECT o.*, u.full_name as customer_name, u.phone as customer_phone,
+   GROUP_CONCAT(oi.item_name) as item_names
+   FROM orders o
+   LEFT JOIN users u ON o.customer_id = u.id
+   LEFT JOIN order_items oi ON o.id = oi.order_id
+   WHERE o.status = 'pending'
+   GROUP BY o.id
+   ORDER BY o.created_at DESC LIMIT 3
+5. Include header.php, sidebar.php
+```
+
+**HTML Structure:**
+```html
+<div class="main-content">
+  <div class="page-header">
+    <h1>Dashboard</h1>
+  </div>
+
+  <!-- Greeting -->
+  <div class="greeting">
+    <h2>Welcome back, {Full Name}! 👋</h2>
+    <p class="text-muted">Here's an overview of station operations.</p>
+  </div>
+
+  <!-- Quick Action Buttons -->
+  <div class="quick-actions">
+    <a href="account_management.php" class="quick-action-btn">
+      <span class="material-icons">people</span>
+      <span>Accounts</span>
+    </a>
+    <a href="manage_orders.php" class="quick-action-btn">
+      <span class="material-icons">list_alt</span>
+      <span>Manage Orders</span>
+    </a>
+    <a href="order_history.php" class="quick-action-btn">
+      <span class="material-icons">history</span>
+      <span>Order History</span>
+    </a>
+    <a href="inventory.php" class="quick-action-btn">
+      <span class="material-icons">inventory_2</span>
+      <span>Inventory</span>
+    </a>
+    <a href="rider_statistics.php" class="quick-action-btn">
+      <span class="material-icons">bar_chart</span>
+      <span>Rider Stats</span>
+    </a>
+    <a href="settings.php" class="quick-action-btn">
+      <span class="material-icons">settings</span>
+      <span>Settings</span>
+    </a>
+  </div>
+
+  <!-- Stat Cards - 2 rows of 3 -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon" style="background: var(--warning)">
+        <span class="material-icons">pending_actions</span>
+      </div>
+      <div class="stat-info">
+        <span class="stat-number">{pending_orders}</span>
+        <span class="stat-label">Pending Orders</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background: var(--info)">
+        <span class="material-icons">check_circle_outline</span>
+      </div>
+      <div class="stat-info">
+        <span class="stat-number">{confirmed_orders}</span>
+        <span class="stat-label">Confirmed Orders</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background: var(--teal)">
+        <span class="material-icons">local_shipping</span>
+      </div>
+      <div class="stat-info">
+        <span class="stat-number">{on_delivery_orders}</span>
+        <span class="stat-label">On Delivery</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background: var(--danger)">
+        <span class="material-icons">person_add</span>
+      </div>
+      <div class="stat-info">
+        <span class="stat-number">{pending_accounts}</span>
+        <span class="stat-label">Pending Accounts</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background: var(--purple)">
+        <span class="material-icons">delivery_dining</span>
+      </div>
+      <div class="stat-info">
+        <span class="stat-number">{total_riders}</span>
+        <span class="stat-label">Total Riders</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background: var(--success)">
+        <span class="material-icons">how_to_reg</span>
+      </div>
+      <div class="stat-info">
+        <span class="stat-number">{available_riders}</span>
+        <span class="stat-label">Available Riders</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Two-column preview section -->
+  <div class="preview-grid">
+    <!-- Pending Accounts Preview -->
+    <div class="preview-section glass-card">
+      <div class="preview-header">
+        <h3><span class="material-icons">person_add</span> Pending Accounts</h3>
+        <a href="account_management.php" class="btn btn-outline btn-sm">View All</a>
+      </div>
+      <!-- IF NO PENDING ACCOUNTS -->
+      <div class="empty-state mini" style="display: {if none}">
+        <span class="material-icons">check_circle</span>
+        <p>No pending accounts</p>
+      </div>
+      <!-- IF PENDING ACCOUNTS EXIST -->
+      <div class="data-table-wrapper" style="display: {if exist}">
+        <table class="data-table compact">
+          <thead>
+            <tr>
+              <th>Username</th>
+              <th>Full Name</th>
+              <th>Role</th>
+              <th>Registered</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- For each pending account (max 3): -->
+            <tr>
+              <td>{username}</td>
+              <td>{full_name}</td>
+              <td><span class="badge {role_badge_class}">{role}</span></td>
+              <td>{time_ago(created_at)}</td>
+              <td>
+                <button class="btn-icon btn-success" title="Approve"
+                        onclick="quickApprove({user_id}, '{username}')">
+                  <span class="material-icons">check</span>
+                </button>
+                <button class="btn-icon btn-danger" title="Delete"
+                        onclick="quickDelete({user_id}, '{username}')">
+                  <span class="material-icons">delete</span>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Pending Orders Preview -->
+    <div class="preview-section glass-card">
+      <div class="preview-header">
+        <h3><span class="material-icons">pending_actions</span> Pending Orders</h3>
+        <a href="manage_orders.php" class="btn btn-outline btn-sm">View All</a>
+      </div>
+      <!-- IF NO PENDING ORDERS -->
+      <div class="empty-state mini" style="display: {if none}">
+        <span class="material-icons">check_circle</span>
+        <p>No pending orders</p>
+      </div>
+      <!-- IF PENDING ORDERS EXIST -->
+      <div class="data-table-wrapper" style="display: {if exist}">
+        <table class="data-table compact">
+          <thead>
+            <tr>
+              <th>Order ID</th>
+              <th>Customer</th>
+              <th>Items</th>
+              <th>Payment</th>
+              <th>Ordered</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- For each pending order (max 3): -->
+            <tr>
+              <td><strong>#{order_id}</strong></td>
+              <td>{customer_name}</td>
+              <td>{item_names (truncated)}</td>
+              <td>{payment_type label}</td>
+              <td>{time_ago(order_date)}</td>
+              <td>
+                <button class="btn-icon btn-success" title="Confirm"
+                        onclick="quickConfirm({order_id})">
+                  <span class="material-icons">check_circle</span>
+                </button>
+                <button class="btn-icon btn-danger" title="Cancel"
+                        onclick="quickCancelOrder({order_id})">
+                  <span class="material-icons">cancel</span>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+```
+
+### `staff/css/dashboard.css`
+
+```
+.greeting:
+  - margin-bottom 20px
+  - h2: font-weight 600
+
+.stats-grid:
+  - CSS Grid: 3 columns desktop, 2 tablet, 1 mobile
+  - Gap: 16px
+  - Margin-bottom: 24px
+
+.stat-card:
+  - Glass card, flex row, align center, gap 16px, padding 20px
+  - .stat-icon: 48x48px circle, flex center, border-radius 50%, color white
+  - .stat-number: font-size 1.8em, font-weight 700
+  - .stat-label: font-size 0.85em, color var(--text-muted)
+
+.preview-grid:
+  - CSS Grid: 2 columns on desktop (equal width), 1 column on mobile
+  - Gap: 20px
+
+.preview-section:
+  - Padding: 20px
+  - .preview-header: flex row, space-between, align center, margin-bottom 16px
+    h3: flex row, align center, gap 8px, font-size 1.1em
+
+.data-table.compact:
+  - Smaller padding on cells (8px 12px)
+  - Font-size: 0.9em
+
+.empty-state.mini:
+  - Padding: 24px (smaller than full empty state)
+  - Icon: font-size 36px
+
+Responsive:
+  @media (max-width: 1024px):
+    - preview-grid: 1 column
+  @media (max-width: 768px):
+    - stats-grid: 1 column
+    - quick-actions: flex wrap
+```
+
+### `staff/js/dashboard.js`
+
+```javascript
+document.addEventListener('DOMContentLoaded', function() {
+
+  // Quick Approve Account from dashboard preview
+  window.quickApprove = function(userId, username) {
+    Swal.fire({
+      title: 'Approve Account?',
+      text: `Are you sure you want to approve "${username}"?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, Approve',
+      cancelButtonText: 'No',
+      confirmButtonColor: 'var(--success)'
+    }).then(result => {
+      if (result.isConfirmed) {
+        ajaxPost('/api/accounts/approve.php', { user_id: userId })
+          .then(data => {
+            if (data.success) {
+              showToast(`Account "${username}" approved!`, 'success');
+              location.reload();
+            } else {
+              showToast(data.message || 'Failed to approve', 'error');
+            }
+          }).catch(() => showToast('An error occurred', 'error'));
+      }
+    });
+  };
+
+  // Quick Delete Pending Account from dashboard
+  window.quickDelete = function(userId, username) {
+    Swal.fire({
+      title: 'Delete Account?',
+      text: `Are you sure you want to delete "${username}"? This action cannot be undone.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, Delete',
+      cancelButtonText: 'No',
+      confirmButtonColor: '#EF5350'
+    }).then(result => {
+      if (result.isConfirmed) {
+        ajaxPost('/api/accounts/delete.php', { user_id: userId })
+          .then(data => {
+            if (data.success) {
+              showToast(`Account "${username}" deleted`, 'success');
+              location.reload();
+            } else {
+              showToast(data.message || 'Failed to delete', 'error');
+            }
+          }).catch(() => showToast('An error occurred', 'error'));
+      }
+    });
+  };
+
+  // Quick Confirm Order from dashboard
+  window.quickConfirm = function(orderId) {
+    Swal.fire({
+      title: 'Confirm Order?',
+      html: `
+        <p>Confirm Order <strong>#${orderId}</strong>?</p>
+        <p style="color:var(--text-muted);font-size:0.9em;margin-top:8px;">
+          Stock will be decremented for all items in this order.
+        </p>
+      `,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Confirm Order',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: 'var(--success)'
+    }).then(result => {
+      if (result.isConfirmed) {
+        ajaxPost('/api/orders/update_status.php', {
+          order_id: orderId,
+          new_status: 'confirmed'
+        }).then(data => {
+          if (data.success) {
+            // Ask about rider assignment
+            Swal.fire({
+              title: 'Order Confirmed!',
+              text: 'Do you want to assign a rider to this order now?',
+              icon: 'success',
+              showCancelButton: true,
+              confirmButtonText: 'Yes, Assign Now',
+              cancelButtonText: 'Later',
+              confirmButtonColor: 'var(--primary)'
+            }).then(assignResult => {
+              if (assignResult.isConfirmed) {
+                window.location.href = 'manage_orders.php?highlight=' + orderId;
+              } else {
+                location.reload();
+              }
+            });
+          } else {
+            showToast(data.message || 'Failed to confirm', 'error');
+          }
+        }).catch(() => showToast('An error occurred', 'error'));
+      }
+    });
+  };
+
+  // Quick Cancel Order from dashboard
+  window.quickCancelOrder = function(orderId) {
+    Swal.fire({
+      title: 'Cancel Order #' + orderId + '?',
+      html: `<textarea id="cancelReason" class="swal2-textarea"
+              placeholder="Reason for cancellation (required)" rows="3"></textarea>`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, Cancel Order',
+      cancelButtonText: 'No, Keep It',
+      confirmButtonColor: '#EF5350',
+      preConfirm: () => {
+        const reason = document.getElementById('cancelReason').value.trim();
+        if (!reason) {
+          Swal.showValidationMessage('Please provide a cancellation reason');
+          return false;
+        }
+        return reason;
+      }
+    }).then(result => {
+      if (result.isConfirmed) {
+        ajaxPost('/api/orders/cancel_order.php', {
+          order_id: orderId,
+          reason: result.value
+        }).then(data => {
+          if (data.success) {
+            showToast('Order cancelled', 'success');
+            location.reload();
+          } else {
+            showToast(data.message || 'Failed to cancel', 'error');
+          }
+        }).catch(() => showToast('An error occurred', 'error'));
+      }
+    });
+  };
+
+});
+```
+
+---
+
+### 2. `staff/account_management.php`
+
+**PHP Logic:**
+```
+1. Include auth_check.php, require_role([ROLE_STAFF])
+2. Data loaded via AJAX
+3. Include header.php, sidebar.php
+```
+
+**HTML Structure:**
+```html
+<div class="main-content">
+  <div class="page-header">
+    <div class="page-header-left">
+      <h1>Account Management</h1>
+      <p class="text-muted">Manage customer and rider accounts.</p>
+    </div>
+    <div class="page-header-right">
+      <button class="btn btn-primary" id="addAccountBtn">
+        <span class="material-icons">person_add</span> Add Account
+      </button>
+    </div>
+  </div>
+
+  <!-- Toolbar: Filters + Search -->
+  <div class="toolbar">
+    <div class="filter-bar" id="accountFilters">
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="pending">Pending</button>
+      <button class="filter-btn" data-filter="active">Active</button>
+      <button class="filter-btn" data-filter="flagged">Flagged</button>
+      <button class="filter-btn" data-filter="customer">Customers</button>
+      <button class="filter-btn" data-filter="rider">Riders</button>
+    </div>
+    <div class="search-bar">
+      <span class="material-icons search-icon">search</span>
+      <input type="text" id="accountSearch" class="search-input" placeholder="Search username, name, email...">
+    </div>
+  </div>
+
+  <!-- Accounts Table -->
+  <div class="data-table-wrapper">
+    <table class="data-table" id="accountsTable">
+      <thead>
+        <tr>
+          <th>Role</th>
+          <th>Account ID</th>
+          <th>Username</th>
+          <th>Full Name</th>
+          <th>Email</th>
+          <th>Address</th>
+          <th>Phone</th>
+          <th>Status</th>
+          <th>Created</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="accountsBody">
+        <tr class="loading-row"><td colspan="10"><div class="spinner"></div></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pagination" id="accountsPagination"></div>
+
+  <div class="empty-state" id="emptyAccounts" style="display:none;">
+    <span class="material-icons">people</span>
+    <p>No accounts found.</p>
+  </div>
+
+  <!-- Cancellation Appeals Section -->
+  <div class="appeals-section glass-card" id="appealsSection">
+    <div class="preview-header">
+      <h3><span class="material-icons">gavel</span> Cancellation Appeals</h3>
+    </div>
+    <div class="data-table-wrapper">
+      <table class="data-table" id="appealsTable">
+        <thead>
+          <tr>
+            <th>Customer</th>
+            <th>Reason</th>
+            <th>Submitted</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="appealsBody">
+          <tr class="loading-row"><td colspan="5"><div class="spinner"></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="empty-state mini" id="emptyAppeals" style="display:none;">
+      <span class="material-icons">check_circle</span>
+      <p>No pending appeals</p>
+    </div>
+  </div>
+</div>
+```
+
+### `staff/css/account_management.css`
+
+```
+.page-header:
+  - Flex row, space-between, align center, flex wrap
+  - Gap: 16px
+
+.toolbar:
+  - Flex row, space-between, align center, flex wrap
+  - Gap: 12px
+  - Margin-bottom: 16px
+
+.filter-bar:
+  - Overflow-x auto on mobile
+  - Gap 6px
+
+.data-table:
+  - Pending accounts should have a subtle highlighted row background:
+    tr.pending-row { background: rgba(255, 167, 38, 0.05); border-left: 3px solid var(--warning); }
+  - td with addresses: max-width 200px, truncated, title tooltip
+  - Status badges: colored per status
+
+.appeals-section:
+  - Margin-top: 32px
+  - Padding: 20px
+  - Border-top: 2px solid var(--border)
+
+Responsive:
+  @media (max-width: 768px):
+    - page-header: flex column, align start
+    - toolbar: flex column
+    - Add Account button: full width
+    - Table horizontal scroll
+```
+
+### `staff/js/account_management.js`
+
+```javascript
+document.addEventListener('DOMContentLoaded', function() {
+
+  let currentFilter = 'all';
+  let currentPage = 1;
+  let searchText = '';
+  const perPage = 50;
+
+  loadAccounts();
+  loadAppeals();
+
+  // ===== FILTER BUTTONS =====
+  document.querySelectorAll('#accountFilters .filter-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('#accountFilters .filter-btn').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      currentFilter = this.dataset.filter;
+      currentPage = 1;
+      loadAccounts();
+    });
+  });
+
+  // ===== SEARCH =====
+  let searchTimeout;
+  document.getElementById('accountSearch').addEventListener('input', function() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+      searchText = this.value.trim();
+      currentPage = 1;
+      loadAccounts();
+    }, 300);
+  });
+
+  // ===== LOAD ACCOUNTS =====
+  function loadAccounts() {
+    let filterRole = '';
+    let filterStatus = '';
+
+    if (['customer', 'rider'].includes(currentFilter)) {
+      filterRole = currentFilter;
+    } else if (['pending', 'active', 'flagged'].includes(currentFilter)) {
+      filterStatus = currentFilter;
+    }
+
+    const params = {
+      filter_role: filterRole,
+      filter_status: filterStatus,
+      search: searchText,
+      page: currentPage
+    };
+
+    document.getElementById('accountsBody').innerHTML =
+      '<tr class="loading-row"><td colspan="10"><div class="spinner"></div></td></tr>';
+    document.getElementById('emptyAccounts').style.display = 'none';
+
+    ajaxGet('/api/accounts/get_accounts.php', params)
+      .then(data => {
+        if (!data.accounts || data.accounts.length === 0) {
+          document.getElementById('accountsBody').innerHTML = '';
+          document.getElementById('emptyAccounts').style.display = 'flex';
+          document.getElementById('accountsPagination').innerHTML = '';
+          return;
+        }
+        document.getElementById('emptyAccounts').style.display = 'none';
+        renderAccounts(data.accounts);
+        renderPagination(data.total, data.page, data.per_page, 'accountsPagination', loadAccounts);
+      })
+      .catch(() => showToast('Failed to load accounts', 'error'));
+  }
+
+  // ===== RENDER ACCOUNTS =====
+  function renderAccounts(accounts) {
+    const tbody = document.getElementById('accountsBody');
+    tbody.innerHTML = '';
+
+    accounts.forEach(acc => {
+      const tr = document.createElement('tr');
+      if (acc.status === 'pending') tr.classList.add('pending-row');
+
+      const isPending = acc.status === 'pending';
+      const roleLabel = acc.role.charAt(0).toUpperCase() + acc.role.slice(1);
+
+      let actionsHtml = '';
+      if (isPending) {
+        actionsHtml = `
+          <button class="btn-icon btn-success" title="Approve" onclick="approveAccount(${acc.id}, '${escapeHtml(acc.username)}')">
+            <span class="material-icons">check</span>
+          </button>
+          <button class="btn-icon btn-danger" title="Delete" onclick="deleteAccount(${acc.id}, '${escapeHtml(acc.username)}')">
+            <span class="material-icons">delete</span>
+          </button>
+        `;
+      } else {
+        actionsHtml = `
+          <button class="btn-icon btn-info" title="Edit" onclick="editAccount(${acc.id})">
+            <span class="material-icons">edit</span>
+          </button>
+          <button class="btn-icon btn-danger" title="Delete" onclick="deleteAccount(${acc.id}, '${escapeHtml(acc.username)}')">
+            <span class="material-icons">delete</span>
+          </button>
+        `;
+      }
+
+      // Get default address for display
+      const addressDisplay = acc.default_address || '<span class="text-muted">—</span>';
+
+      tr.innerHTML = `
+        <td><span class="badge badge-${acc.role}">${roleLabel}</span></td>
+        <td>${acc.id}</td>
+        <td><strong>${escapeHtml(acc.username)}</strong></td>
+        <td>${escapeHtml(acc.full_name)}</td>
+        <td>${escapeHtml(acc.email)}</td>
+        <td class="truncate-cell" title="${escapeHtml(acc.default_address || '')}">${addressDisplay}</td>
+        <td>${escapeHtml(acc.phone)}</td>
+        <td><span class="badge badge-${acc.status}">${acc.status.charAt(0).toUpperCase() + acc.status.slice(1)}</span></td>
+        <td>${formatDate(acc.created_at)}</td>
+        <td class="actions-cell">${actionsHtml}</td>
+      `;
+
+      tbody.appendChild(tr);
+    });
+  }
+
+  // ===== ADD ACCOUNT =====
+  document.getElementById('addAccountBtn').addEventListener('click', function() {
+    Swal.fire({
+      title: 'Add New Account',
+      html: `
+        <div style="text-align:left;">
+          <div style="margin-bottom:12px;">
+            <label style="font-weight:500;margin-bottom:4px;display:block;color:var(--text-secondary);">Role</label>
+            <select id="newRole" class="swal2-select" style="width:100%;">
+              <option value="customer">Customer</option>
+              <option value="rider">Rider</option>
+            </select>
+          </div>
+          <input type="text" id="newFullName" class="swal2-input" placeholder="Full Name">
+          <input type="text" id="newUsername" class="swal2-input" placeholder="Username">
+          <input type="email" id="newEmail" class="swal2-input" placeholder="Email">
+          <input type="tel" id="newPhone" class="swal2-input" placeholder="Phone Number">
+          <input type="password" id="newPassword" class="swal2-input" placeholder="Password">
+          <div id="addressField">
+            <input type="text" id="newAddress" class="swal2-input" placeholder="Full Address (for customers)">
+          </div>
+        </div>
+      `,
+      showCancelButton: true,
+      confirmButtonText: 'Create Account',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: 'var(--primary)',
+      didOpen: () => {
+        // Show/hide address field based on role
+        document.getElementById('newRole').addEventListener('change', function() {
+          document.getElementById('addressField').style.display =
+            this.value === 'customer' ? 'block' : 'none';
+        });
+      },
+      preConfirm: () => {
+        const role = document.getElementById('newRole').value;
+        const fullName = document.getElementById('newFullName').value.trim();
+        const username = document.getElementById('newUsername').value.trim();
+        const email = document.getElementById('newEmail').value.trim();
+        const phone = document.getElementById('newPhone').value.trim();
+        const password = document.getElementById('newPassword').value;
+        const address = document.getElementById('newAddress').value.trim();
+
+        if (!fullName || !username || !email || !phone || !password) {
+          Swal.showValidationMessage('All fields except address are required');
+          return false;
+        }
+        if (role === 'customer' && !address) {
+          Swal.showValidationMessage('Address is required for customers');
+          return false;
+        }
+        if (password.length < 6) {
+          Swal.showValidationMessage('Password must be at least 6 characters');
+          return false;
+        }
+
+        return { role, full_name: fullName, username, email, phone, password, full_address: address };
+      }
+    }).then(result => {
+      if (result.isConfirmed) {
+        ajaxPost('/api/accounts/create.php', result.value)
+          .then(data => {
+            if (data.success) {
+              showToast('Account created successfully', 'success');
+              loadAccounts();
+            } else {
+              showToast(data.message || 'Failed to create account', 'error');
+            }
+          }).catch(() => showToast('An error occurred', 'error'));
+      }
+    });
+  });
+
+  // ===== APPROVE ACCOUNT =====
+  window.approveAccount = function(userId, username) {
+    Swal.fire({
+      title: 'Approve Account?',
+      text: `Are you sure you want to approve "${username}"?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, Approve',
+      cancelButtonText: 'No',
+      confirmButtonColor: 'var(--success)'
+    }).then(result => {
+      if (result.isConfirmed) {
+        ajaxPost('/api/accounts/approve.php', { user_id: userId })
+          .then(data => {
+            if (data.success) {
+              showToast(`"${username}" approved!`, 'success');
+              loadAccounts();
+            } else {
+              showToast(data.message || 'Failed to approve', 'error');
+            }
+          }).catch(() => showToast('An error occurred', 'error'));
+      }
+    });
+  };
+
+  // ===== EDIT ACCOUNT =====
+  window.editAccount = function(userId) {
+    // Fetch current account data first
+    ajaxGet('/api/accounts/get_accounts.php', { user_id: userId })
+      .then(data => {
+        const acc = data.account || data.accounts?.find(a => a.id === userId);
+        if (!acc) { showToast('Account not found', 'error'); return; }
+
+        Swal.fire({
+          title: 'Edit Account',
+          html: `
+            <div style="text-align:left;">
+              <p style="margin-bottom:12px;color:var(--text-muted);">Username: <strong>${escapeHtml(acc.username)}</strong> (cannot be changed)</p>
+              <input type="text" id="editFullName" class="swal2-input" placeholder="Full Name" value="${escapeHtml(acc.full_name)}">
+              <input type="email" id="editEmail" class="swal2-input" placeholder="Email" value="${escapeHtml(acc.email)}">
+              <input type="tel" id="editPhone" class="swal2-input" placeholder="Phone" value="${escapeHtml(acc.phone)}">
+              <input type="password" id="editPassword" class="swal2-input" placeholder="New Password (leave blank to keep current)">
+            </div>
+          `,
+          showCancelButton: true,
+          confirmButtonText: 'Save Changes',
+          cancelButtonText: 'Cancel',
+          confirmButtonColor: 'var(--primary)',
+          preConfirm: () => {
+            const fullName = document.getElementById('editFullName').value.trim();
+            const email = document.getElementById('editEmail').value.trim();
+            const phone = document.getElementById('editPhone').value.trim();
+            const password = document.getElementById('editPassword').value;
+
+            if (!fullName || !email || !phone) {
+              Swal.showValidationMessage('Name, email, and phone are required');
+              return false;
+            }
+            if (password && password.length < 6) {
+              Swal.showValidationMessage('Password must be at least 6 characters');
+              return false;
+            }
+
+            const payload = { user_id: userId, full_name: fullName, email, phone };
+            if (password) payload.password = password;
+            return payload;
+          }
+        }).then(result => {
+          if (result.isConfirmed) {
+            ajaxPost('/api/accounts/update.php', result.value)
+              .then(data => {
+                if (data.success) {
+                  showToast('Account updated', 'success');
+                  loadAccounts();
+                } else {
+                  showToast(data.message || 'Failed to update', 'error');
+                }
+              }).catch(() => showToast('An error occurred', 'error'));
+          }
+        });
+      }).catch(() => showToast('Failed to load account data', 'error'));
+  };
+
+  // ===== DELETE ACCOUNT =====
+  window.deleteAccount = function(userId, username) {
+    Swal.fire({
+      title: 'Delete Account?',
+      text: `Are you sure you want to delete "${username}"? This cannot be undone for pending accounts. Active accounts with orders will be soft-deleted.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, Delete',
+      cancelButtonText: 'No',
+      confirmButtonColor: '#EF5350'
+    }).then(result => {
+      if (result.isConfirmed) {
+        ajaxPost('/api/accounts/delete.php', { user_id: userId })
+          .then(data => {
+            if (data.success) {
+              showToast(`"${username}" deleted`, 'success');
+              loadAccounts();
+            } else {
+              showToast(data.message || 'Failed to delete', 'error');
+            }
+          }).catch(() => showToast('An error occurred', 'error'));
+      }
+    });
+  };
+
+  // ===== LOAD APPEALS =====
+  function loadAppeals() {
+    ajaxGet('/api/appeals/get.php', { status_filter: 'pending' })
+      .then(data => {
+        if (!data.appeals || data.appeals.length === 0) {
+          document.getElementById('appealsBody').innerHTML = '';
+          document.getElementById('emptyAppeals').style.display = 'flex';
+          return;
+        }
+        document.getElementById('emptyAppeals').style.display = 'none';
+        renderAppeals(data.appeals);
+      })
+      .catch(() => {});
+  }
+
+  function renderAppeals(appeals) {
+    const tbody = document.getElementById('appealsBody');
+    tbody.innerHTML = '';
+
+    appeals.forEach(appeal => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><strong>${escapeHtml(appeal.customer_name || 'Unknown')}</strong><br>
+          <small class="text-muted">${escapeHtml(appeal.customer_username || '')}</small></td>
+        <td class="truncate-cell" title="${escapeHtml(appeal.reason)}">${escapeHtml(appeal.reason)}</td>
+        <td>${formatDate(appeal.created_at)}</td>
+        <td><span class="badge badge-${appeal.status}">${appeal.status.charAt(0).toUpperCase() + appeal.status.slice(1)}</span></td>
+        <td class="actions-cell">
+          <button class="btn-icon btn-success" title="Approve Appeal" onclick="reviewAppeal(${appeal.id}, 'approved')">
+            <span class="material-icons">check</span>
+          </button>
+          <button class="btn-icon btn-danger" title="Deny Appeal" onclick="reviewAppeal(${appeal.id}, 'denied')">
+            <span class="material-icons">close</span>
+          </button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  // ===== REVIEW APPEAL =====
+  window.reviewAppeal = function(appealId, decision) {
+    const title = decision === 'approved' ? 'Approve Appeal?' : 'Deny Appeal?';
+    const desc = decision === 'approved'
+      ? 'The customer\'s account will be unflagged and cancellation count reset to 0.'
+      : 'The customer will remain flagged.';
+
+    Swal.fire({
+      title: title,
+      html: `
+        <p>${desc}</p>
+        <textarea id="appealNotes" class="swal2-textarea"
+          placeholder="Admin notes (optional)" rows="3"></textarea>
+      `,
+      icon: decision === 'approved' ? 'question' : 'warning',
+      showCancelButton: true,
+      confirmButtonText: decision === 'approved' ? 'Approve' : 'Deny',
+      confirmButtonColor: decision === 'approved' ? 'var(--success)' : '#EF5350',
+      preConfirm: () => {
+        return {
+          appeal_id: appealId,
+          decision: decision,
+          admin_notes: document.getElementById('appealNotes').value.trim()
+        };
+      }
+    }).then(result => {
+      if (result.isConfirmed) {
+        ajaxPost('/api/appeals/review.php', result.value)
+          .then(data => {
+            if (data.success) {
+              showToast(`Appeal ${decision}`, 'success');
+              loadAppeals();
+              loadAccounts();
+            } else {
+              showToast(data.message || 'Failed to review appeal', 'error');
+            }
+          }).catch(() => showToast('An error occurred', 'error'));
+      }
+    });
+  };
+
+  // ===== HELPERS =====
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text || '';
+    return div.innerHTML;
+  }
+
+  function formatDate(d) {
+    if (!d) return '—';
+    return new Date(d).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })
+      + ' ' + new Date(d).toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' });
+  }
+
+  function renderPagination(total, page, perPage, containerId, loadFunc) {
+    const totalPages = Math.ceil(total / perPage);
+    const container = document.getElementById(containerId);
+    container.innerHTML = '';
+    if (totalPages <= 1) return;
+
+    const prev = document.createElement('button');
+    prev.className = 'page-btn'; prev.textContent = 'Previous'; prev.disabled = page <= 1;
+    prev.addEventListener('click', () => { currentPage--; loadFunc(); });
+    container.appendChild(prev);
+
+    for (let i = Math.max(1,page-2); i <= Math.min(totalPages,page+2); i++) {
+      const pb = document.createElement('button');
+      pb.className = `page-btn ${i===page?'active':''}`;
+      pb.textContent = i;
+      pb.addEventListener('click', () => { currentPage = i; loadFunc(); });
+      container.appendChild(pb);
+    }
+
+    const next = document.createElement('button');
+    next.className = 'page-btn'; next.textContent = 'Next'; next.disabled = page >= totalPages;
+    next.addEventListener('click', () => { currentPage++; loadFunc(); });
+    container.appendChild(next);
+
+    const info = document.createElement('span');
+    info.className = 'pagination-info';
+    info.textContent = `Showing ${(page-1)*perPage+1}–${Math.min(page*perPage,total)} of ${total}`;
+    container.appendChild(info);
+  }
+
+});
+```
+
+---
+
+### 3. `staff/manage_orders.php`
+
+This is the staff's primary operational page — the most complex page in the staff role.
+
+**PHP Logic:**
+```
+1. Include auth_check.php, require_role([ROLE_STAFF])
+2. Check for ?highlight= query param (from dashboard redirect after confirming)
+3. Include header.php, sidebar.php
+```
+
+**HTML Structure:**
+```html
+<div class="main-content">
+  <div class="page-header">
+    <h1>Manage Orders</h1>
+    <p class="text-muted">Confirm, assign, and manage all customer orders.</p>
+  </div>
+
+  <!-- Filter Bar -->
+  <div class="filter-bar" id="orderFilters">
+    <button class="filter-btn active" data-filter="all">All Active</button>
+    <button class="filter-btn" data-filter="pending">Pending</button>
+    <button class="filter-btn" data-filter="confirmed">Confirmed</button>
+    <button class="filter-btn" data-filter="assigned">Assigned</button>
+    <button class="filter-btn" data-filter="on_delivery">On Delivery</button>
+    <button class="filter-btn" data-filter="ready_for_pickup">Ready for Pickup</button>
+  </div>
+
+  <!-- Search -->
+  <div class="toolbar-row">
+    <div class="search-bar">
+      <span class="material-icons search-icon">search</span>
+      <input type="text" id="orderSearch" class="search-input" placeholder="Search by Order ID, customer name...">
+    </div>
+  </div>
+
+  <!-- Bulk Actions Bar -->
+  <div class="bulk-actions-bar" id="bulkActions" style="display:none;">
+    <span id="bulkSelectedCount">0</span> order(s) selected
+    <button class="btn btn-success btn-sm" id="bulkConfirmBtn">
+      <span class="material-icons">check_circle</span> Confirm All
+    </button>
+    <button class="btn btn-primary btn-sm" id="bulkAssignAutoBtn">
+      <span class="material-icons">person_add</span> Auto-Assign All
+    </button>
+    <button class="btn btn-danger btn-sm" id="bulkCancelBtn">
+      <span class="material-icons">cancel</span> Cancel All
+    </button>
+  </div>
+
+  <!-- Orders Table -->
+  <div class="data-table-wrapper">
+    <table class="data-table" id="ordersTable">
+      <thead>
+        <tr>
+          <th><input type="checkbox" class="custom-checkbox" id="selectAllOrders"></th>
+          <th>Order ID</th>
+          <th>Customer Details</th>
+          <th>Items</th>
+          <th>Total Qty</th>
+          <th>Payment</th>
+          <th>Type</th>
+          <th>Order Date</th>
+          <th>Expected Delivery</th>
+          <th>Rider</th>
+          <th>Status</th>
+          <th>Staff Comment</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="ordersBody">
+        <tr class="loading-row"><td colspan="13"><div class="spinner"></div></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pagination" id="ordersPagination"></div>
+
+  <div class="empty-state" id="emptyOrders" style="display:none;">
+    <span class="material-icons">inbox</span>
+    <p>No orders found matching your criteria.</p>
+  </div>
+</div>
+```
+
+### `staff/css/manage_orders.css`
+
+```
+.toolbar-row:
+  - Flex row, margin-bottom 16px
+
+.bulk-actions-bar:
+  - Glass card, flex row, align center, gap 12px, flex wrap
+  - Padding: 12px 20px
+  - Margin-bottom: 16px
+
+.data-table:
+  - Customer Details cell:
+    .customer-details-cell: min-width 180px
+    strong: customer name on first line
+    phone: second line with phone icon
+    address: third line with location icon, muted, smaller font, word-break
+  - Items cell: each item on own line with icon, max-height 80px, overflow hidden, expand on hover or show "+X more"
+  - Rider cell: show rider name or "Unassigned" in muted italic
+  - Staff Comment cell: max-width 150px, truncated, title tooltip
+  - Actions cell: nowrap, flex row, gap 4px
+
+  - Grouped rows (same customer, same status):
+    .order-group-header: slightly darker background, cursor pointer, expandable
+      Shows: customer name, "X orders", combined status badge
+      Click to expand/collapse individual orders underneath
+    .order-group-children: hidden by default, shown when group is expanded
+      Each child row is slightly indented (padding-left on first cell)
+
+  - Highlighted row (from ?highlight= param):
+    tr.highlight: box-shadow inset 3px 0 0 var(--primary), background slight primary tint
+    Auto-scroll to highlighted row on page load
+
+Responsive:
+  @media (max-width: 768px):
+    - Table horizontal scroll
+    - bulk-actions-bar: flex wrap
+    - Actions buttons stack or show fewer
+```
+
+### `staff/js/manage_orders.js`
+
+```javascript
+document.addEventListener('DOMContentLoaded', function() {
+
+  let currentFilter = 'all';
+  let currentPage = 1;
+  let searchText = '';
+  const perPage = 50;
+  const highlightOrderId = new URLSearchParams(window.location.search).get('highlight');
+
+  loadOrders();
+
+  // ===== FILTERS =====
+  document.querySelectorAll('#orderFilters .filter-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('#orderFilters .filter-btn').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      currentFilter = this.dataset.filter;
+      currentPage = 1;
+      loadOrders();
+    });
+  });
+
+  // ===== SEARCH =====
+  let searchTimeout;
+  document.getElementById('orderSearch').addEventListener('input', function() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+      searchText = this.value.trim();
+      currentPage = 1;
+      loadOrders();
+    }, 300);
+  });
+
+  // ===== LOAD ORDERS =====
+  function loadOrders() {
+    const activeStatuses = 'pending,confirmed,assigned,on_delivery,ready_for_pickup';
+    const statusParam = currentFilter === 'all' ? activeStatuses : currentFilter;
+
+    const params = {
+      status: statusParam,
+      search: searchText,
+      page: currentPage,
+      scope: 'manage'
+    };
+
+    document.getElementById('ordersBody').innerHTML =
+      '<tr class="loading-row"><td colspan="13"><div class="spinner"></div></td></tr>';
+    document.getElementById('emptyOrders').style.display = 'none';
+
+    ajaxGet('/api/orders/get_orders.php', params)
+      .then(data => {
+        if (!data.orders || data.orders.length === 0) {
+          document.getElementById('ordersBody').innerHTML = '';
+          document.getElementById('emptyOrders').style.display = 'flex';
+          document.getElementById('ordersPagination').innerHTML = '';
+          return;
+        }
+        document.getElementById('emptyOrders').style.display = 'none';
+        renderOrders(data.orders);
+        renderPagination(data.total, data.page, data.per_page);
+
+        // Highlight and scroll to order if specified
+        if (highlightOrderId) {
+          const highlightRow = document.querySelector(`tr[data-order-id="${highlightOrderId}"]`);
+          if (highlightRow) {
+            highlightRow.classList.add('highlight');
+            highlightRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }
+      })
+      .catch(() => showToast('Failed to load orders', 'error'));
+  }
+
+  // ===== RENDER ORDERS =====
+  function renderOrders(orders) {
+    const tbody = document.getElementById('ordersBody');
+    tbody.innerHTML = '';
+
+    const paymentLabels = { cod: 'Cash on Delivery', pickup: 'Pickup at Store', online: 'Online' };
+    const typeLabels = { delivery: 'Delivery', pickup: 'Pickup' };
+
+    // Group orders by customer + status for collapsing
+    const groups = {};
+    orders.forEach(order => {
+      const key = `${order.customer_id}_${order.status}`;
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(order);
+    });
+
+    Object.values(groups).forEach(group => {
+      if (group.length > 1) {
+        // Render group header (collapsible)
+        renderGroupHeader(tbody, group);
+        // Render individual orders (hidden initially)
+        group.forEach(order => {
+          renderOrderRow(tbody, order, paymentLabels, typeLabels, true); // isGroupChild = true
+        });
+      } else {
+        // Single order — render normally
+        renderOrderRow(tbody, group[0], paymentLabels, typeLabels, false);
+      }
+    });
+
+    initCheckboxListeners();
+  }
+
+  function renderGroupHeader(tbody, group) {
+    const first = group[0];
+    const totalItems = group.reduce((sum, o) => sum + o.items.reduce((s, i) => s + parseInt(i.quantity), 0), 0);
+    const groupId = `group_${first.customer_id}_${first.status}`;
+
+    const tr = document.createElement('tr');
+    tr.className = 'order-group-header';
+    tr.dataset.groupId = groupId;
+    tr.innerHTML = `
+      <td><input type="checkbox" class="custom-checkbox group-checkbox" data-group-id="${groupId}"></td>
+      <td colspan="2">
+        <span class="material-icons group-toggle" style="vertical-align:middle;cursor:pointer;">expand_more</span>
+        <strong>${escapeHtml(first.customer_name)}</strong>
+        <span class="text-muted">(${group.length} orders)</span>
+      </td>
+      <td>${totalItems} items total</td>
+      <td colspan="3"></td>
+      <td colspan="2"></td>
+      <td><span class="badge badge-${first.status.replace(/_/g,'-')}">${formatStatus(first.status)}</span></td>
+      <td></td>
+      <td class="actions-cell">
+        ${getGroupActions(first.status, group.map(o => o.id))}
+      </td>
+    `;
+
+    tr.querySelector('.group-toggle').addEventListener('click', function() {
+      const children = tbody.querySelectorAll(`.group-child[data-group-id="${groupId}"]`);
+      const isExpanded = this.textContent === 'expand_less';
+      children.forEach(c => c.style.display = isExpanded ? 'none' : '');
+      this.textContent = isExpanded ? 'expand_more' : 'expand_less';
+    });
+
+    tbody.appendChild(tr);
+  }
+
+  function getGroupActions(status, orderIds) {
+    const idsJson = JSON.stringify(orderIds);
+    let html = '';
+    if (status === 'pending') {
+      html = `<button class="btn btn-sm btn-success" onclick='bulkActionGroup(${idsJson}, "confirm")'>Confirm All</button>`;
+    } else if (status === 'confirmed') {
+      html = `<button class="btn btn-sm btn-primary" onclick='bulkActionGroup(${idsJson}, "assign_auto")'>Auto-Assign All</button>`;
+    }
+    html += ` <button class="btn btn-sm btn-danger" onclick='bulkActionGroup(${idsJson}, "cancel")'>Cancel All</button>`;
+    return html;
+  }
+
+  function renderOrderRow(tbody, order, paymentLabels, typeLabels, isGroupChild) {
+    const tr = document.createElement('tr');
+    tr.dataset.orderId = order.id;
+    tr.dataset.status = order.status;
+    if (isGroupChild) {
+      tr.className = 'group-child';
+      tr.dataset.groupId = `group_${order.customer_id}_${order.status}`;
+      tr.style.display = 'none'; // Hidden by default, expand via group header
+    }
+
+    const itemsHtml = order.items.map(i =>
+      `<span class="item-with-icon"><img src="${i.item_icon || '/assets/images/default-item.png'}" class="item-icon-sm">${escapeHtml(i.item_name)} (×${i.quantity})</span>`
+    ).join('<br>');
+
+    const totalQty = order.items.reduce((s, i) => s + parseInt(i.quantity), 0);
+
+    const customerDetails = `
+      <strong>${escapeHtml(order.customer_name)}</strong>
+      <span class="customer-phone"><span class="material-icons" style="font-size:14px;vertical-align:middle;">phone</span> ${escapeHtml(order.customer_phone || 'N/A')}</span>
+      <small class="customer-address"><span class="material-icons" style="font-size:14px;vertical-align:middle;">location_on</span> ${escapeHtml(order.delivery_address || order.customer_default_address || 'N/A')}</small>
+    `;
+
+    tr.innerHTML = `
+      <td><input type="checkbox" class="custom-checkbox order-checkbox" data-order-id="${order.id}"></td>
+      <td><strong>#${order.id}</strong></td>
+      <td class="customer-details-cell">${customerDetails}</td>
+      <td class="items-cell">${itemsHtml}</td>
+      <td>${totalQty}</td>
+      <td>${paymentLabels[order.payment_type] || order.payment_type}</td>
+      <td>${typeLabels[order.delivery_type] || order.delivery_type}</td>
+      <td>${formatDate(order.order_date)}</td>
+      <td>${order.expected_delivery_date ? formatDate(order.expected_delivery_date) : '<span class="text-muted">—</span>'}</td>
+      <td>${order.rider_name || '<span class="text-muted italic">Unassigned</span>'}</td>
+      <td><span class="badge badge-${order.status.replace(/_/g,'-')}">${formatStatus(order.status)}</span></td>
+      <td class="truncate-cell" title="${escapeHtml(order.staff_comment || '')}">${order.staff_comment || '<span class="text-muted">—</span>'}</td>
+      <td class="actions-cell">${getOrderActions(order)}</td>
+    `;
+
+    tbody.appendChild(tr);
+  }
+
+  // ===== ORDER ACTIONS BY STATUS =====
+  function getOrderActions(order) {
+    let html = '';
+
+    switch(order.status) {
+      case 'pending':
+        html = `
+          <button class="btn-icon btn-success" title="Confirm" onclick="confirmOrder(${order.id})">
+            <span class="material-icons">check_circle</span>
+          </button>
+          <button class="btn-icon btn-danger" title="Cancel" onclick="cancelOrder(${order.id})">
+            <span class="material-icons">cancel</span>
+          </button>
+        `;
+        break;
+
+      case 'confirmed':
+        if (order.delivery_type === 'delivery') {
+          html = `
+            <button class="btn-icon btn-primary" title="Assign Rider" onclick="assignRider(${order.id})">
+              <span class="material-icons">person_add</span>
+            </button>
+          `;
+        }
+        if (order.delivery_type === 'pickup') {
+          html += `
+            <button class="btn-icon btn-info" title="Ready for Pickup" onclick="markReadyForPickup(${order.id})">
+              <span class="material-icons">store</span>
+            </button>
+          `;
+        }
+        html += `
+          <button class="btn-icon btn-danger" title="Cancel" onclick="cancelOrder(${order.id})">
+            <span class="material-icons">cancel</span>
+          </button>
+        `;
+        break;
+
+      case 'assigned':
+        html = `
+          <button class="btn-icon btn-primary" title="Reassign Rider" onclick="assignRider(${order.id})">
+            <span class="material-icons">swap_horiz</span>
+          </button>
+          <button class="btn-icon btn-danger" title="Cancel" onclick="cancelOrder(${order.id})">
+            <span class="material-icons">cancel</span>
+          </button>
+        `;
+        break;
+
+      case 'on_delivery':
+        html = `
+          <button class="btn-icon btn-info" title="Update Status" onclick="updateOrderStatus(${order.id})">
+            <span class="material-icons">edit</span>
+          </button>
+          <button class="btn-icon btn-danger" title="Cancel" onclick="cancelOrder(${order.id})">
+            <span class="material-icons">cancel</span>
+          </button>
+        `;
+        break;
+
+      case 'ready_for_pickup':
+        html = `
+          <button class="btn-icon btn-success" title="Mark Picked Up" onclick="markPickedUp(${order.id})">
+            <span class="material-icons">shopping_bag</span>
+          </button>
+          <button class="btn-icon btn-danger" title="Cancel" onclick="cancelOrder(${order.id})">
+            <span class="material-icons">cancel</span>
+          </button>
+        `;
+        break;
+    }
+
+    // Add comment button for all active orders
+    html += `
+      <button class="btn-icon btn-outline" title="Add Comment" onclick="addComment(${order.id})">
+        <span class="material-icons">comment</span>
+      </button>
+    `;
+
+    return html;
+  }
+
+  // ===== CONFIRM ORDER =====
+  window.confirmOrder = function(orderId) {
+    Swal.fire({
+      title: 'Confirm Order #' + orderId + '?',
+      html: '<p>Stock will be decremented for all items.</p>',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Confirm Order',
+      confirmButtonColor: 'var(--success)'
+    }).then(result => {
+      if (result.isConfirmed) {
+        ajaxPost('/api/orders/update_status.php', {
+          order_id: orderId,
+          new_status: 'confirmed'
+        }).then(data => {
+          if (data.success) {
+            // Ask to assign rider
+            Swal.fire({
+              title: 'Order Confirmed!',
+              text: 'Assign a rider now?',
+              icon: 'success',
+              showDenyButton: true,
+              showCancelButton: false,
+              confirmButtonText: 'Yes, Assign',
+              denyButtonText: 'Later',
+              confirmButtonColor: 'var(--primary)'
+            }).then(r => {
+              if (r.isConfirmed) {
+                assignRider(orderId);
+              } else {
+                loadOrders();
+              }
+            });
+          } else {
+            showToast(data.message || 'Failed to confirm', 'error');
+          }
+        }).catch(() => showToast('An error occurred', 'error'));
+      }
+    });
+  };
+
+  // ===== ASSIGN RIDER =====
+  window.assignRider = function(orderId) {
+    // First fetch available riders
+    ajaxGet('/api/riders/get_available.php')
+      .then(data => {
+        if (!data.riders || data.riders.length === 0) {
+          Swal.fire({
+            title: 'No Riders Available',
+            html: `
+              <p>There are currently no available riders.</p>
+              <p style="margin-top:8px;color:var(--text-muted);">Would you like to add a comment for the customer?</p>
+              <textarea id="noRiderComment" class="swal2-textarea" placeholder="e.g., Waiting for available rider" rows="2"></textarea>
+            `,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Save Comment',
+            cancelButtonText: 'Close',
+            confirmButtonColor: 'var(--primary)',
+            preConfirm: () => {
+              return document.getElementById('noRiderComment').value.trim();
+            }
+          }).then(r => {
+            if (r.isConfirmed && r.value) {
+              ajaxPost('/api/orders/update_status.php', {
+                order_id: orderId,
+                new_status: null, // Don't change status, just add comment
+                comment: r.value
+              }).then(() => loadOrders());
+            }
+          });
+          return;
+        }
+
+        // Build rider selection list
+        let riderListHtml = data.riders.map(r => `
+          <div class="rider-select-item" data-rider-id="${r.rider_id}" onclick="selectRiderItem(this, ${r.rider_id})">
+            <div class="rider-select-info">
+              <strong>${escapeHtml(r.full_name)}</strong>
+              <span class="text-muted">${r.current_load} active deliveries</span>
+            </div>
+            <span class="badge ${r.is_available ? 'badge-confirmed' : 'badge-cancelled'}">
+              ${r.is_available ? 'Available' : 'Unavailable'}
+            </span>
+          </div>
+        `).join('');
+
+        Swal.fire({
+          title: 'Assign Rider',
+          html: `
+            <div style="margin-bottom:16px;">
+              <button class="btn btn-sm btn-primary" id="autoAssignBtn" style="width:100%;margin-bottom:12px;">
+                <span class="material-icons" style="vertical-align:middle;">auto_fix_high</span>
+                Auto-Assign (Least Loaded)
+              </button>
+            </div>
+            <p style="font-weight:500;margin-bottom:8px;">Or select a rider:</p>
+            <div class="rider-select-list" id="riderSelectList" style="max-height:300px;overflow-y:auto;">
+              ${riderListHtml}
+            </div>
+            <input type="hidden" id="selectedRiderId" value="">
+          `,
+          showCancelButton: true,
+          confirmButtonText: 'Assign Selected',
+          cancelButtonText: 'Cancel',
+          confirmButtonColor: 'var(--primary)',
+          didOpen: () => {
+            document.getElementById('autoAssignBtn').addEventListener('click', function() {
+              document.getElementById('selectedRiderId').value = 'auto';
+              Swal.clickConfirm();
+            });
+          },
+          preConfirm: () => {
+            const riderId = document.getElementById('selectedRiderId').value;
+            if (!riderId) {
+              Swal.showValidationMessage('Please select a rider or use Auto-Assign');
+              return false;
+            }
+            return riderId;
+          }
+        }).then(result => {
+          if (result.isConfirmed) {
+            ajaxPost('/api/orders/assign_rider.php', {
+              order_id: orderId,
+              rider_id: result.value
+            }).then(data => {
+              if (data.success) {
+                showToast(data.message || 'Rider assigned!', 'success');
+                loadOrders();
+              } else {
+                showToast(data.message || 'Failed to assign rider', 'error');
+              }
+            }).catch(() => showToast('An error occurred', 'error'));
+          }
+        });
+      })
+      .catch(() => showToast('Failed to load riders', 'error'));
+  };
+
+  // Rider selection helper
+  window.selectRiderItem = function(element, riderId) {
+    document.querySelectorAll('.rider-select-item').forEach(i => i.classList.remove('selected'));
+    element.classList.add('selected');
+    document.getElementById('selectedRiderId').value = riderId;
+  };
+
+  // ===== CANCEL ORDER =====
+  window.cancelOrder = function(orderId) {
+    Swal.fire({
+      title: 'Cancel Order #' + orderId + '?',
+      html: `
+        <p style="color:var(--text-muted);margin-bottom:12px;">
+          Stock will be restored if the order was already confirmed.
+        </p>
+        <textarea id="cancelReason" class="swal2-textarea" placeholder="Reason for cancellation (required)" rows="3"></textarea>
+      `,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, Cancel Order',
+      cancelButtonText: 'No, Keep It',
+      confirmButtonColor: '#EF5350',
+      preConfirm: () => {
+        const reason = document.getElementById('cancelReason').value.trim();
+        if (!reason) {
+          Swal.showValidationMessage('Cancellation reason is required');
+          return false;
+        }
+        return reason;
+      }
+    }).then(result => {
+      if (result.isConfirmed) {
+        ajaxPost('/api/orders/cancel_order.php', {
+          order_id: orderId,
+          reason: result.value
+        }).then(data => {
+          if (data.success) {
+            showToast('Order cancelled', 'success');
+            loadOrders();
+          } else {
+            showToast(data.message || 'Failed to cancel', 'error');
+          }
+        }).catch(() => showToast('An error occurred', 'error'));
+      }
+    });
+  };
+
+  // ===== UPDATE ORDER STATUS (for on_delivery) =====
+  window.updateOrderStatus = function(orderId) {
+    Swal.fire({
+      title: 'Update Order #' + orderId,
+      html: `
+        <p style="margin-bottom:12px;">Select new status:</p>
+        <select id="newStatusSelect" class="swal2-select" style="width:100%;">
+          <option value="pending">Pending</option>
+          <option value="confirmed">Confirmed</option>
+          <option value="delivered">Delivered</option>
+          <option value="ready_for_pickup">Ready for Pickup</option>
+          <option value="picked_up">Picked Up</option>
+        </select>
+        <textarea id="statusComment" class="swal2-textarea" placeholder="Comment (optional)" rows="2" style="margin-top:12px;"></textarea>
+      `,
+      showCancelButton: true,
+      confirmButtonText: 'Update Status',
+      confirmButtonColor: 'var(--primary)',
+      preConfirm: () => {
+        return {
+          order_id: orderId,
+          new_status: document.getElementById('newStatusSelect').value,
+          comment: document.getElementById('statusComment').value.trim()
+        };
+      }
+    }).then(result => {
+      if (result.isConfirmed) {
+        ajaxPost('/api/orders/update_status.php', result.value)
+          .then(data => {
+            if (data.success) {
+              showToast('Status updated', 'success');
+              loadOrders();
+            } else {
+              showToast(data.message || 'Failed to update', 'error');
+            }
+          }).catch(() => showToast('An error occurred', 'error'));
+      }
+    });
+  };
+
+  // ===== READY FOR PICKUP =====
+  window.markReadyForPickup = function(orderId) {
+    Swal.fire({
+      title: 'Mark Ready for Pickup?',
+      text: 'Order #' + orderId + ' will be marked as ready for the customer to collect.',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, Ready',
+      confirmButtonColor: 'var(--info)'
+    }).then(result => {
+      if (result.isConfirmed) {
+        ajaxPost('/api/orders/update_status.php', {
+          order_id: orderId,
+          new_status: 'ready_for_pickup'
+        }).then(data => {
+          if (data.success) {
+            showToast('Order marked as Ready for Pickup', 'success');
+            loadOrders();
+          } else {
+            showToast(data.message || 'Failed', 'error');
+          }
+        }).catch(() => showToast('An error occurred', 'error'));
+      }
+    });
+  };
+
+  // ===== MARK PICKED UP =====
+  window.markPickedUp = function(orderId) {
+    Swal.fire({
+      title: 'Mark as Picked Up?',
+      text: 'Confirm the customer has collected Order #' + orderId + '.',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, Picked Up',
+      confirmButtonColor: 'var(--success)'
+    }).then(result => {
+      if (result.isConfirmed) {
+        ajaxPost('/api/orders/update_status.php', {
+          order_id: orderId,
+          new_status: 'picked_up'
+        }).then(data => {
+          if (data.success) {
+            showToast('Order marked as Picked Up', 'success');
+            loadOrders();
+          } else {
+            showToast(data.message || 'Failed', 'error');
+          }
+        }).catch(() => showToast('An error occurred', 'error'));
+      }
+    });
+  };
+
+  // ===== ADD COMMENT =====
+  window.addComment = function(orderId) {
+    Swal.fire({
+      title: 'Staff Comment',
+      html: `
+        <p style="color:var(--text-muted);margin-bottom:8px;font-size:0.9em;">This comment is visible to the customer.</p>
+        <textarea id="staffComment" class="swal2-textarea" placeholder="e.g., Waiting for available rider..." rows="3"></textarea>
+      `,
+      showCancelButton: true,
+      confirmButtonText: 'Save Comment',
+      confirmButtonColor: 'var(--primary)',
+      preConfirm: () => document.getElementById('staffComment').value.trim()
+    }).then(result => {
+      if (result.isConfirmed) {
+        ajaxPost('/api/orders/update_status.php', {
+          order_id: orderId,
+          comment: result.value
+        }).then(data => {
+          if (data.success) {
+            showToast('Comment saved', 'success');
+            loadOrders();
+          } else {
+            showToast(data.message || 'Failed', 'error');
+          }
+        }).catch(() => showToast('An error occurred', 'error'));
+      }
+    });
+  };
+
+  // ===== BULK GROUP ACTION =====
+  window.bulkActionGroup = function(orderIds, action) {
+    if (action === 'cancel') {
+      Swal.fire({
+        title: `Cancel ${orderIds.length} Orders?`,
+        html: '<textarea id="bulkReason" class="swal2-textarea" placeholder="Reason (required)" rows="3"></textarea>',
+        icon: 'warning', showCancelButton: true,
+        confirmButtonText: 'Cancel All', confirmButtonColor: '#EF5350',
+        preConfirm: () => {
+          const r = document.getElementById('bulkReason').value.trim();
+          if (!r) { Swal.showValidationMessage('Reason required'); return false; }
+          return r;
+        }
+      }).then(result => {
+        if (result.isConfirmed) {
+          ajaxPost('/api/orders/bulk_update.php', {
+            order_ids: JSON.stringify(orderIds), action: 'cancel', reason: result.value
+          }).then(d => { showToast(`${d.success||0} cancelled`, 'success'); loadOrders(); })
+            .catch(() => showToast('Error', 'error'));
+        }
+      });
+    } else {
+      ajaxPost('/api/orders/bulk_update.php', {
+        order_ids: JSON.stringify(orderIds), action: action
+      }).then(d => { showToast(`${d.success||0} updated`, 'success'); loadOrders(); })
+        .catch(() => showToast('Error', 'error'));
+    }
+  };
+
+  // ===== BULK ACTIONS (from toolbar) =====
+  document.getElementById('bulkConfirmBtn').addEventListener('click', function() {
+    const ids = getSelectedOrderIds();
+    if (!ids.length) return;
+    ajaxPost('/api/orders/bulk_update.php', { order_ids: JSON.stringify(ids), action: 'confirm' })
+      .then(d => { showToast(`${d.success||0} confirmed`, 'success'); loadOrders(); })
+      .catch(() => showToast('Error', 'error'));
+  });
+
+  document.getElementById('bulkAssignAutoBtn').addEventListener('click', function() {
+    const ids = getSelectedOrderIds();
+    if (!ids.length) return;
+    ajaxPost('/api/orders/bulk_update.php', { order_ids: JSON.stringify(ids), action: 'assign_auto' })
+      .then(d => {
+        showToast(`${d.success||0} assigned`, 'success');
+        if (d.failed > 0) showToast(`${d.failed} could not be assigned (no riders?)`, 'warning');
+        loadOrders();
+      }).catch(() => showToast('Error', 'error'));
+  });
+
+  document.getElementById('bulkCancelBtn').addEventListener('click', function() {
+    const ids = getSelectedOrderIds();
+    if (!ids.length) return;
+    Swal.fire({
+      title: `Cancel ${ids.length} Order(s)?`,
+      html: '<textarea id="bulkCancelReason" class="swal2-textarea" placeholder="Reason (required)" rows="3"></textarea>',
+      icon: 'warning', showCancelButton: true,
+      confirmButtonText: 'Cancel All', confirmButtonColor: '#EF5350',
+      preConfirm: () => {
+        const r = document.getElementById('bulkCancelReason').value.trim();
+        if (!r) { Swal.showValidationMessage('Reason required'); return false; }
+        return r;
+      }
+    }).then(result => {
+      if (result.isConfirmed) {
+        ajaxPost('/api/orders/bulk_update.php', {
+          order_ids: JSON.stringify(ids), action: 'cancel', reason: result.value
+        }).then(d => { showToast(`${d.success||0} cancelled`, 'success'); loadOrders(); })
+          .catch(() => showToast('Error', 'error'));
+      }
+    });
+  });
+
+  // ===== CHECKBOX HANDLING =====
+  function initCheckboxListeners() {
+    document.getElementById('selectAllOrders').addEventListener('change', function() {
+      document.querySelectorAll('.order-checkbox').forEach(cb => { cb.checked = this.checked; });
+      updateBulkBar();
+    });
+  }
+
+  document.getElementById('ordersBody').addEventListener('change', function(e) {
+    if (e.target.classList.contains('order-checkbox') || e.target.classList.contains('group-checkbox')) {
+      updateBulkBar();
+    }
+  });
+
+  function updateBulkBar() {
+    const checked = document.querySelectorAll('.order-checkbox:checked').length;
+    document.getElementById('bulkActions').style.display = checked > 0 ? 'flex' : 'none';
+    document.getElementById('bulkSelectedCount').textContent = checked;
+  }
+
+  function getSelectedOrderIds() {
+    const ids = [];
+    document.querySelectorAll('.order-checkbox:checked').forEach(cb => ids.push(parseInt(cb.dataset.orderId)));
+    return ids;
+  }
+
+  // ===== HELPERS =====
+  function formatStatus(s) {
+    const l = { pending:'Pending', confirmed:'Confirmed', assigned:'Assigned', on_delivery:'On Delivery', delivered:'Delivered', accepted:'Accepted', ready_for_pickup:'Ready for Pickup', picked_up:'Picked Up', cancelled:'Cancelled' };
+    return l[s] || s;
+  }
+  function formatDate(d) {
+    if (!d) return '—';
+    return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) + ' ' + new Date(d).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+  }
+  function escapeHtml(t) { const d = document.createElement('div'); d.textContent = t||''; return d.innerHTML; }
+
+  function renderPagination(total, page, perPage) {
+    const totalPages = Math.ceil(total / perPage);
+    const container = document.getElementById('ordersPagination');
+    container.innerHTML = '';
+    if (totalPages <= 1) return;
+    const prev = document.createElement('button'); prev.className='page-btn'; prev.textContent='Previous'; prev.disabled=page<=1;
+    prev.addEventListener('click', () => { currentPage--; loadOrders(); }); container.appendChild(prev);
+    for (let i=Math.max(1,page-2); i<=Math.min(totalPages,page+2); i++) {
+      const pb = document.createElement('button'); pb.className=`page-btn ${i===page?'active':''}`; pb.textContent=i;
+      pb.addEventListener('click', () => { currentPage=i; loadOrders(); }); container.appendChild(pb);
+    }
+    const next = document.createElement('button'); next.className='page-btn'; next.textContent='Next'; next.disabled=page>=totalPages;
+    next.addEventListener('click', () => { currentPage++; loadOrders(); }); container.appendChild(next);
+    const info = document.createElement('span'); info.className='pagination-info';
+    info.textContent = `Showing ${(page-1)*perPage+1}–${Math.min(page*perPage,total)} of ${total}`;
+    container.appendChild(info);
+  }
+
+});
+```
+
+---
+
+### 4. `staff/order_history.php`
+
+**PHP Logic:** Include auth_check, require_role([ROLE_STAFF]), include header/sidebar. Data loaded via AJAX.
+
+**HTML Structure:** Same pattern as customer order history but showing ALL orders (not just own). Staff sees all customers' order history.
+
+```html
+<div class="main-content">
+  <div class="page-header">
+    <h1>Order History</h1>
+    <p class="text-muted">View all completed and cancelled orders.</p>
+  </div>
+
+  <div class="toolbar">
+    <div class="filter-bar" id="historyFilters">
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="delivered">Delivered</button>
+      <button class="filter-btn" data-filter="accepted">Accepted</button>
+      <button class="filter-btn" data-filter="picked_up">Picked Up</button>
+      <button class="filter-btn" data-filter="cancelled">Cancelled</button>
+    </div>
+    <div class="toolbar-right">
+      <div class="search-bar">
+        <span class="material-icons search-icon">search</span>
+        <input type="text" id="historySearch" class="search-input" placeholder="Search Order ID, customer, item...">
+      </div>
+      <div class="date-range">
+        <input type="date" id="dateFrom" class="float-input">
+        <span class="text-muted">to</span>
+        <input type="date" id="dateTo" class="float-input">
+      </div>
+    </div>
+  </div>
+
+  <div class="data-table-wrapper">
+    <table class="data-table" id="historyTable">
+      <thead>
+        <tr>
+          <th>Order ID</th>
+          <th>Customer</th>
+          <th>Items</th>
+          <th>Total Qty</th>
+          <th>Payment</th>
+          <th>Delivery Type</th>
+          <th>Status</th>
+          <th>Total Amount</th>
+          <th>Rider</th>
+          <th>Order Date</th>
+          <th>Delivered Date</th>
+          <th>Cancel Reason</th>
+          <th>Cancelled By</th>
+          <th>Customer Confirmed</th>
+        </tr>
+      </thead>
+      <tbody id="historyBody">
+        <tr class="loading-row"><td colspan="14"><div class="spinner"></div></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pagination" id="historyPagination"></div>
+  <div class="empty-state" id="emptyHistory" style="display:none;">
+    <span class="material-icons">history</span>
+    <p>No order history found.</p>
+  </div>
+</div>
+```
+
+### `staff/css/order_history.css` and `staff/js/order_history.js`
+
+Follow the same pattern as customer's `order_history.css/js` but:
+- Shows ALL orders (not filtered by customer_id)
+- Table has columns: Order ID, Customer (name), Items, Total Qty, Payment, Delivery Type, Status, Total Amount, Rider, Order Date, Delivered Date, Cancel Reason (truncated), Cancelled By (shows role+name), Customer Confirmed (Yes/No/—)
+- Same filters, search, date range, pagination pattern
+- No "Reorder" button (staff doesn't place orders)
+- No "View Receipt" button (optional — can include for reference)
+
+---
+
+### 5. `staff/inventory.php` (READ-ONLY)
+
+**PHP Logic:** Include auth_check, require_role([ROLE_STAFF]). Data loaded via AJAX.
+
+**HTML Structure:**
+```html
+<div class="main-content">
+  <div class="page-header">
+    <h1>Inventory</h1>
+    <p class="text-muted">Current stock levels (read-only view).</p>
+  </div>
+
+  <div class="toolbar-row">
+    <div class="search-bar">
+      <span class="material-icons search-icon">search</span>
+      <input type="text" id="inventorySearch" class="search-input" placeholder="Search items...">
+    </div>
+  </div>
+
+  <div class="data-table-wrapper">
+    <table class="data-table" id="inventoryTable">
+      <thead>
+        <tr>
+          <th>Item</th>
+          <th>Stock Count</th>
+          <th>Price</th>
+          <th>Status</th>
+          <th>Low Stock</th>
+          <th>Last Restocked</th>
+        </tr>
+      </thead>
+      <tbody id="inventoryBody">
+        <tr class="loading-row"><td colspan="6"><div class="spinner"></div></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pagination" id="inventoryPagination"></div>
+  <div class="empty-state" id="emptyInventory" style="display:none;">
+    <span class="material-icons">inventory_2</span>
+    <p>No inventory items found.</p>
+  </div>
+</div>
+```
+
+### `staff/css/inventory.css`
+
+```
+- Item column: flex row, icon + name. Icon: 40x40px, rounded
+- Stock count: bold. If below low_stock_threshold: red color + warning icon
+- Price: formatted with peso sign
+- Status: badge (active=green, inactive=grey, out_of_stock=red)
+- Low Stock column: warning triangle icon if stock <= threshold, otherwise "OK" in green
+- No action buttons (read-only)
+```
+
+### `staff/js/inventory.js`
+
+Load inventory items via `ajaxGet('/api/inventory/get_items.php')`, render read-only table with search and pagination. No edit/delete/add buttons. Show low stock threshold from settings. Items below threshold get a warning icon and highlighted row.
+
+---
+
+### 6. `staff/rider_statistics.php`
+
+**PHP Logic:** Include auth_check, require_role([ROLE_STAFF]). Data loaded via AJAX.
+
+**HTML Structure:**
+```html
+<div class="main-content">
+  <div class="page-header">
+    <h1>Rider Statistics</h1>
+    <p class="text-muted">Monitor rider performance and availability.</p>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid two-cols">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:var(--purple)">
+        <span class="material-icons">delivery_dining</span>
+      </div>
+      <div class="stat-info">
+        <span class="stat-number" id="totalRiders">—</span>
+        <span class="stat-label">Total Riders</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:var(--success)">
+        <span class="material-icons">how_to_reg</span>
+      </div>
+      <div class="stat-info">
+        <span class="stat-number" id="availableRiders">—</span>
+        <span class="stat-label">Available Riders</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Riders Performance Table -->
+  <div class="data-table-wrapper glass-card" style="padding:20px;">
+    <h3 style="margin-bottom:16px;">Rider Performance Rankings</h3>
+    <table class="data-table" id="ridersTable">
+      <thead>
+        <tr>
+          <th>Rank</th>
+          <th>Rider Name</th>
+          <th>Email</th>
+          <th>Current Status</th>
+          <th>Completed Deliveries</th>
+          <th>Pending Deliveries</th>
+          <th>Success Rate</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="ridersBody">
+        <tr class="loading-row"><td colspan="8"><div class="spinner"></div></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pagination" id="ridersPagination"></div>
+</div>
+```
+
+### `staff/css/rider_statistics.css`
+
+```
+.stats-grid.two-cols:
+  - Grid: 2 columns desktop, 1 mobile
+  - Gap 20px, margin-bottom 24px
+
+- Rank column: priority-number circle (1,2,3 in colored circles — gold/silver/bronze for top 3, grey for rest)
+- Current Status column: badge — "Available" (green), "Unavailable" (grey/red), "On Delivery" (teal)
+- Success Rate: percentage with subtle progress bar behind text
+- Completed: bold number, green tint
+- Pending: number, orange tint if > 0
+```
+
+### `staff/js/rider_statistics.js`
+
+```javascript
+document.addEventListener('DOMContentLoaded', function() {
+
+  loadRiderStats();
+
+  function loadRiderStats() {
+    ajaxGet('/api/riders/get_statistics.php')
+      .then(data => {
+        document.getElementById('totalRiders').textContent = data.total_riders || 0;
+        document.getElementById('availableRiders').textContent = data.available_riders || 0;
+        renderRiders(data.riders || []);
+      })
+      .catch(() => showToast('Failed to load rider statistics', 'error'));
+  }
+
+  function renderRiders(riders) {
+    const tbody = document.getElementById('ridersBody');
+    tbody.innerHTML = '';
+
+    if (riders.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No riders found</td></tr>';
+      return;
+    }
+
+    riders.forEach((rider, index) => {
+      const rank = index + 1;
+      const rankClass = rank <= 3 ? `rank-${rank}` : 'rank-default';
+
+      // Determine status display
+      let statusHtml = '';
+      if (rider.on_delivery_count > 0) {
+        statusHtml = '<span class="badge badge-on-delivery">On Delivery</span>';
+      } else if (rider.is_available) {
+        statusHtml = '<span class="badge badge-confirmed">Available</span>';
+      } else {
+        statusHtml = '<span class="badge badge-cancelled">Unavailable</span>';
+      }
+
+      const successRate = rider.completed > 0
+        ? ((rider.completed / (rider.completed + rider.cancelled)) * 100).toFixed(1)
+        : '0.0';
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><span class="rank-number ${rankClass}">${rank}</span></td>
+        <td><strong>${escapeHtml(rider.full_name)}</strong></td>
+        <td>${escapeHtml(rider.email)}</td>
+        <td>${statusHtml}</td>
+        <td><strong class="text-success">${rider.completed}</strong></td>
+        <td>${rider.pending > 0 ? `<strong class="text-warning">${rider.pending}</strong>` : '0'}</td>
+        <td>
+          <div class="success-rate-cell">
+            <div class="success-rate-bar" style="width:${successRate}%"></div>
+            <span>${successRate}%</span>
+          </div>
+        </td>
+        <td>
+          <button class="btn-icon btn-info" title="Show Full Info" onclick="showRiderInfo(${rider.rider_id})">
+            <span class="material-icons">info</span>
+          </button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  // Show Rider Full Info
+  window.showRiderInfo = function(riderId) {
+    ajaxGet('/api/accounts/get_accounts.php', { user_id: riderId })
+      .then(data => {
+        const r = data.account || data.accounts?.find(a => a.id === riderId);
+        if (!r) { showToast('Rider not found', 'error'); return; }
+
+        Swal.fire({
+          title: 'Rider Information',
+          html: `
+            <div style="text-align:left;line-height:2;">
+              <p><strong>Full Name:</strong> ${escapeHtml(r.full_name)}</p>
+              <p><strong>Username:</strong> ${escapeHtml(r.username)}</p>
+              <p><strong>Email:</strong> ${escapeHtml(r.email)}</p>
+              <p><strong>Phone:</strong> ${escapeHtml(r.phone)}</p>
+              <p><strong>Status:</strong> <span class="badge badge-${r.status}">${r.status}</span></p>
+              <p><strong>Available:</strong> ${r.is_available ? 'Yes' : 'No'}</p>
+              <p><strong>Member Since:</strong> ${formatDate(r.created_at)}</p>
+            </div>
+          `,
+          confirmButtonText: 'Close',
+          confirmButtonColor: 'var(--primary)'
+        });
+      }).catch(() => showToast('Failed to load rider info', 'error'));
+  };
+
+  function escapeHtml(t) { const d=document.createElement('div'); d.textContent=t||''; return d.innerHTML; }
+  function formatDate(d) { if(!d) return '—'; return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }
+
+});
+```
+
+---
+
+### 7. `staff/settings.php`
+
+**PHP Logic:** Include auth_check, require_role([ROLE_STAFF]). Fetch own user data fresh from DB. Include header/sidebar.
+
+**HTML Structure:** Same as rider settings — Profile section (Full Name, Username disabled, Email, Phone) + Password section. No addresses, no appeals, no availability toggle, no system settings. Staff can only manage their own profile and password.
+
+### `staff/css/settings.css`
+
+Same layout as rider settings.css — `.settings-section`, `.form-grid`, account info display.
+
+### `staff/js/settings.js`
+
+Same as rider settings.js — Profile form submit via `ajaxPost('/api/settings/update_profile.php')`, Password form submit via `ajaxPost('/api/settings/change_password.php')`. Same validation rules.
+
+---
+
+## HTML PAGE TEMPLATE PATTERN
+
+Every staff PHP page must follow this exact pattern:
+
+```php
+<?php
+$page_title = 'Dashboard';
+$page_css = 'css/dashboard.css';
+$page_js = 'js/dashboard.js';
+
+require_once __DIR__ . '/../includes/auth_check.php';
+require_role([ROLE_STAFF]);
+
+// Page-specific PHP logic
+// ...
+
+logger_function_entry(['page' => 'staff/dashboard']);
+?>
+<!DOCTYPE html>
+<html lang="en" data-theme="<?= $_SESSION['dark_mode'] ? 'dark' : 'light' ?>"
+  style="--primary: <?= get_setting('primary_color') ?>; --secondary: <?= get_setting('secondary_color') ?>; --accent: <?= get_setting('accent_color') ?>; --surface: <?= ($_SESSION['dark_mode'] ? '#1A1A2E' : get_setting('surface_color')) ?>;">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><?= $page_title ?> — <?= get_setting('station_name') ?></title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/global.css">
+  <link rel="stylesheet" href="/assets/css/layout.css">
+  <link rel="stylesheet" href="/assets/css/components.css">
+  <link rel="stylesheet" href="<?= $page_css ?>">
+  <meta name="csrf-token" content="<?= $_SESSION[CSRF_TOKEN_NAME] ?>">
+</head>
+<body>
+  <?php include __DIR__ . '/../includes/header.php'; ?>
+  <div class="app-wrapper">
+    <?php include __DIR__ . '/../includes/sidebar.php'; ?>
+    <div class="main-content">
+      <!-- PAGE CONTENT -->
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="/assets/js/global.js"></script>
+  <script src="/assets/js/components.js"></script>
+  <script src="/assets/js/sidebar.js"></script>
+  <script src="<?= $page_js ?>"></script>
+  <?php logger_function_exit(['page' => 'staff/dashboard']); ?>
+</body>
+</html>
+```
+
+---
+
+## IMPORTANT IMPLEMENTATION NOTES FOR STAFF PAGES
+
+1. **Staff CANNOT see Staff/Admin/Super Admin accounts** in Account Management. The `api/accounts/get_accounts.php` endpoint filters by role when the caller is `staff` — only returning `customer` and `rider` accounts. The frontend should never attempt to display or modify higher-role accounts.
+
+2. **Staff CANNOT create Staff/Admin accounts.** The "Add Account" dialog only offers `Customer` and `Rider` as role options. The API enforces this restriction.
+
+3. **Order grouping in Manage Orders:** When multiple orders exist from the same customer with the same status, they should be grouped into a collapsible row. The group header shows customer name, order count, and combined actions. Clicking the expand arrow reveals individual orders. Individual orders within a group are indented slightly. Actions on the group header apply to ALL orders in the group.
+
+4. **Rider assignment dialog** shows a list of available riders with their current delivery load (number of assigned + on_delivery orders). Staff can select a specific rider or click "Auto-Assign" which selects the least-loaded available rider. If no riders are available, staff is offered the option to add a comment to the order explaining the delay.
+
+5. **Staff can cancel orders at ANY status** but must always provide a reason. The cancellation record includes who cancelled it (staff's user_id). Stock is restored automatically for orders that were already confirmed.
+
+6. **Inventory page is READ-ONLY.** No add, edit, restock, or delete buttons. The table shows current stock levels, prices, and status. Items below the `low_stock_threshold` setting are highlighted with a warning icon. This helps staff make informed decisions when confirming orders.
+
+7. **Rider Statistics page** shows all riders ranked by completed deliveries. Each rider shows: name, email, current status (Available/Unavailable/On Delivery), completed count, pending count, and success rate. The "Show Info" button shows a dialog with full rider details (no password).
+
+8. **Cancellation Appeals** are shown in the Account Management page below the accounts table. Staff can approve (unflag customer, reset cancellation count) or deny (keep flagged, add admin notes) appeals.
+
+9. **All tables render max 50 items per page** with pagination.
+
+10. **Every AJAX call** uses `ajaxPost()`/`ajaxGet()` from `global.js` with automatic CSRF token attachment and `.catch()` error handling.
+
+11. **Dark mode support** via CSS variables only — never hardcode colors in page-specific CSS.
+
+12. **All date/time** formatted for Philippines Manila timezone.
+
+13. **Glass card effect** used for: stat cards, preview sections, settings sections, rider statistics table wrapper. Subtle, not overused.
+
+14. **Staff settings page** is simple: Profile (cannot change username) + Password change. No system settings, no addresses, no appeals, no availability.
+
+15. **The `rider-select-item` class** used in the assign rider dialog needs CSS styling:
+```css
+.rider-select-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  margin-bottom: 8px; cursor: pointer; transition: var(--transition);
+}
+.rider-select-item:hover { background: var(--surface); }
+.rider-select-item.selected { border-color: var(--primary); background: rgba(21,101,192,0.05); }
+.rider-select-info { display: flex; flex-direction: column; gap: 2px; }
+```
+Add this to `manage_orders.css`.
+
+16. **Success rate bar** in rider statistics:
+```css
+.success-rate-cell { position: relative; min-width: 80px; }
+.success-rate-bar { position: absolute; left: 0; top: 0; bottom: 0; background: var(--success); opacity: 0.15; border-radius: var(--radius-sm); }
+.success-rate-cell span { position: relative; z-index: 1; font-weight: 600; }
+```
+Add this to `rider_statistics.css`.
+
+17. **Rank circles** for rider statistics:
+```css
+.rank-number { display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border-radius: 50%; font-weight: 700; font-size: 0.85em; color: white; }
+.rank-1 { background: #FFD700; } /* Gold */
+.rank-2 { background: #C0C0C0; } /* Silver */
+.rank-3 { background: #CD7F32; } /* Bronze */
+.rank-default { background: var(--text-muted); }
+```
+Add this to `rider_statistics.css`.
+
+---
+
+**Now generate ALL 21 files for the staff role (`staff/` folder) with complete, production-ready code. Every PHP file must include proper auth checks, logging, and the HTML template pattern. Every CSS file must include all styles described including responsive breakpoints and dark mode support via CSS variables. Every JS file must include all interactivity, AJAX calls, SweetAlert2 dialogs, order grouping logic, rider assignment dialogs, bulk actions, and error handling as described. Do not use placeholders or TODO comments.**

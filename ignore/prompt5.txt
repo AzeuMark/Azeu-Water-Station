@@ -1,0 +1,2426 @@
+# PROMPT #5 — ADMIN ROLE (All Pages, CSS, JS)
+
+You are completing the final role of **"Azeu Water Station"** — a Philippine-based Water Refilling Station management web application. In previous prompts, the entire foundation was built: config files (`database.php`, `session.php`, `constants.php`, `functions.php`, `AESCrypt.php`, `logger.php`), all shared assets (`global.css`, `auth.css`, `components.css`, `layout.css`, `receipt.css`, `global.js`, `auth.js`, `components.js`, `sidebar.js`, `receipt.js`), all includes (`header.php`, `sidebar.php`, `footer.php`, `auth_check.php`), ALL API endpoints (`api/` folder — auth, orders, accounts, inventory, riders, addresses, appeals, notifications, settings, analytics), public pages (`index.php`, `register.php`, `forgot_password.php`, `reset_password.php`, `receipt.php`, `maintenance.php`), error pages, logging system, and the complete customer role (`customer/` folder — 5 pages + CSS + JS), rider role (`rider/` folder — 4 pages + CSS + JS), and staff role (`staff/` folder — 7 pages + CSS + JS).
+
+**This prompt covers the ADMIN role (including Super Admin) — the final role.** Generate ALL files inside the `admin/` folder.
+
+---
+
+## PROJECT CONTEXT RECAP
+
+Azeu Water Station is a web-based order and delivery management system for a water refilling station in the Philippines. It has 4 roles: Customer, Rider, Staff, Admin (with Super Admin). The tech stack is pure PHP (no frameworks), MySQL on XAMPP (database name: `station_azeu`), and hand-written HTML/CSS/JS. No frameworks, no Bootstrap, no Tailwind.
+
+**Admin** is the highest operational authority. There are two admin sub-types:
+
+1. **Admin** (`role='admin'`) — Created by Super Admin only. Has full access to everything except modifying the Super Admin account.
+2. **Super Admin** (`role='super_admin'`) — Seeded into the database on system initialization. Only ONE exists. Cannot be deleted. Can modify itself and create other Admin accounts. Default credentials: username `admin`, password `admin`.
+
+Both Admin and Super Admin share the same frontend pages inside the `admin/` folder. The PHP auth check allows both: `require_role([ROLE_ADMIN, ROLE_SUPER_ADMIN])`. Differences in permissions are enforced by the API endpoints (e.g., only super_admin can create admin accounts, only super_admin can modify itself, normal admin cannot modify super_admin).
+
+**Admin capabilities (everything Staff can do PLUS):**
+- Full inventory CRUD (add, edit, restock, remove items, upload item icons)
+- Account Management with full authority: see ALL roles (customer, rider, staff, admin), create Staff and Admin accounts (Super Admin only for Admin creation), edit/delete any account except Super Admin (only Super Admin can edit itself)
+- Analytics dashboard with charts (daily sales trends, order distribution, revenue, top customers, top riders, popular items)
+- Session logs viewer (login/logout/failed login tracking with timestamps, roles, IPs)
+- Full system settings: station name, delivery fee, max cancellations, pending expiry, low stock threshold, maintenance mode, password encryption toggle, auto-assign toggle, timezone, force dark mode, UI color customization (primary/secondary/accent/surface colors via color pickers), max login attempts, default item list management
+- Export analytics reports as downloadable documents
+
+**Admin CANNOT:**
+- Place orders (only customers can)
+- Set rider availability (only riders can)
+- Register through the public registration form (must be created by Super Admin)
+
+---
+
+## ADMIN FILES TO GENERATE
+
+```
+admin/
+├── dashboard.php
+├── inventory.php
+├── account_management.php
+├── manage_orders.php
+├── order_history.php
+├── rider_statistics.php
+├── analytics.php
+├── session_logs.php
+├── settings.php
+├── css/
+│   ├── dashboard.css
+│   ├── inventory.css
+│   ├── account_management.css
+│   ├── manage_orders.css
+│   ├── order_history.css
+│   ├── rider_statistics.css
+│   ├── analytics.css
+│   ├── session_logs.css
+│   └── settings.css
+└── js/
+    ├── dashboard.js
+    ├── inventory.js
+    ├── account_management.js
+    ├── manage_orders.js
+    ├── order_history.js
+    ├── rider_statistics.js
+    ├── analytics.js
+    ├── session_logs.js
+    └── settings.js
+```
+
+Generate ALL 27 files above with complete, production-ready code.
+
+---
+
+## SHARED INFRASTRUCTURE ALREADY BUILT (Reference Only — Do NOT Regenerate)
+
+### PHP Includes Available
+
+Every admin page starts with:
+```php
+<?php
+require_once __DIR__ . '/../includes/auth_check.php';
+require_role([ROLE_ADMIN, ROLE_SUPER_ADMIN]);
+?>
+```
+
+Then uses these includes for layout:
+```php
+<?php include __DIR__ . '/../includes/header.php'; ?>
+<?php include __DIR__ . '/../includes/sidebar.php'; ?>
+<!-- page content -->
+<?php include __DIR__ . '/../includes/footer.php'; ?>
+```
+
+### PHP Functions Available (from `config/functions.php`)
+
+```
+sanitize($input)
+redirect($url)
+format_date($datetime)           → 'Jun 30, 2025 02:30 PM'
+format_currency($amount)         → '₱275.00'
+generate_token($length)
+time_ago($datetime)              → '2 minutes ago'
+get_setting($key)                → fetches from settings table
+update_setting($key, $value)     → updates a setting
+get_status_badge_class($status)  → returns CSS class like 'badge-pending'
+get_role_badge_class($role)      → returns CSS class like 'badge-customer'
+get_status_label($status)        → 'On Delivery', 'Ready for Pickup', etc.
+json_response($data, $code)
+validate_email($email)
+get_user_by_id($id)
+create_notification($user_id, $title, $message, $type, $reference_id)
+get_client_ip()
+```
+
+### PHP Database Functions Available (from `config/database.php`)
+
+```
+db_query($sql, $params)    → PDOStatement
+db_fetch($sql, $params)    → single row assoc array
+db_fetch_all($sql, $params) → all rows
+db_insert($sql, $params)   → lastInsertId
+db_update($sql, $params)   → affected rows
+db_delete($sql, $params)   → affected rows
+```
+
+### PHP Logger Functions Available (from `config/logger.php`)
+
+```
+logger_trace($msg, $ctx)
+logger_debug($msg, $ctx)
+logger_info($msg, $ctx)
+logger_warning($msg, $ctx)
+logger_error($msg, $ctx)
+logger_critical($msg, $ctx)
+logger_function_entry($params)
+logger_function_exit($result)
+logger_query($sql, $params, $duration)
+logger_exception($exception)
+```
+
+### PHP Constants Available (from `config/constants.php`)
+
+```
+ROLE_CUSTOMER, ROLE_RIDER, ROLE_STAFF, ROLE_ADMIN, ROLE_SUPER_ADMIN
+STATUS_PENDING, STATUS_CONFIRMED, STATUS_ASSIGNED, STATUS_ON_DELIVERY,
+STATUS_DELIVERED, STATUS_ACCEPTED, STATUS_READY_FOR_PICKUP,
+STATUS_PICKED_UP, STATUS_CANCELLED
+ACCOUNT_PENDING, ACCOUNT_ACTIVE, ACCOUNT_FLAGGED, ACCOUNT_DELETED
+PAY_COD, PAY_PICKUP, PAY_ONLINE
+DEL_DELIVERY, DEL_PICKUP
+INV_ACTIVE, INV_INACTIVE, INV_OUT_OF_STOCK
+ITEMS_PER_PAGE (50), ORDER_ITEMS_PER_PAGE (20)
+CSRF_TOKEN_NAME
+ENCRYPTION_KEY
+DEBUG_MODE
+```
+
+### PHP Session Variables Available
+
+```
+$_SESSION['user_id']
+$_SESSION['username']
+$_SESSION['role']              → 'admin' or 'super_admin'
+$_SESSION['full_name']
+$_SESSION['status']            → always 'active' for admin
+$_SESSION['dark_mode']         → 0 or 1
+$_SESSION['system_settings']   → array of all settings
+$_SESSION[CSRF_TOKEN_NAME]     → CSRF token string
+```
+
+### CSS Classes Available (from `components.css`, `layout.css`, `global.css`)
+
+```
+Layout: .app-wrapper, .sidebar, .sidebar.collapsed, .main-content, .main-header
+Cards: .glass-card, .stat-card, .item-card, .item-card.selected
+Tables: .data-table, .data-table-wrapper
+Badges: .badge, .badge-pending, .badge-confirmed, .badge-assigned, .badge-on-delivery,
+        .badge-delivered, .badge-accepted, .badge-ready-for-pickup, .badge-picked-up,
+        .badge-cancelled, .badge-customer, .badge-rider, .badge-staff, .badge-admin,
+        .badge-super-admin, .badge-active, .badge-flagged, .badge-deleted
+Inputs: .float-input-group, .float-input, .float-label
+Buttons: .btn, .btn-primary, .btn-success, .btn-danger, .btn-warning, .btn-info,
+         .btn-outline, .btn-sm, .btn-icon, .btn-lg
+Modals: .modal-overlay, .modal, .modal-header, .modal-body, .modal-footer
+Misc: .toggle-switch, .toggle-slider, .qty-control, .qty-btn, .qty-input,
+      .filter-bar, .filter-btn, .search-bar, .search-input, .pagination, .page-btn,
+      .empty-state, .spinner, .spinner-overlay, .quick-actions, .quick-action-btn,
+      .preview-section, .preview-header, .toast, .notif-bell, .notif-badge,
+      .notif-dropdown, .custom-checkbox, .drag-handle, .color-picker-group
+```
+
+### JS Functions Available (from `components.js`, `global.js`)
+
+```
+toggleTheme()
+getCsrfToken()
+ajaxPost(url, data)                          → fetch POST with CSRF
+ajaxGet(url, params)                         → fetch GET
+getRoleIcon(role)
+applyAdminColors(settings)
+showToast(message, type, duration)
+initPagination(tableId, itemsPerPage)
+initNotificationBell()
+openModal(modalId)
+closeModal(modalId)
+initFilterBar(filterBarId, tableId, filterColumn)
+initSearch(searchInputId, tableId, searchColumns)
+initBulkSelect(tableId)
+getSelectedIds(tableId)
+```
+
+### API Endpoints Available (ALL — Admin Has Full Access)
+
+```
+# Accounts
+GET  api/accounts/get_accounts.php     → ?filter_role=&filter_status=&search=&page=&user_id=
+POST api/accounts/approve.php          → {user_id}
+POST api/accounts/create.php           → {full_name, username, email, phone, password, role, full_address}
+POST api/accounts/update.php           → {user_id, full_name, email, phone, password}
+POST api/accounts/delete.php           → {user_id}
+
+# Orders
+GET  api/orders/get_orders.php         → ?status=&search=&page=&date_from=&date_to=&scope=
+POST api/orders/update_status.php      → {order_id, new_status, comment}
+POST api/orders/cancel_order.php       → {order_id, reason}
+POST api/orders/assign_rider.php       → {order_id, rider_id}
+POST api/orders/bulk_update.php        → {order_ids, action, reason, rider_id}
+
+# Inventory (Full CRUD)
+GET  api/inventory/get_items.php       → ?status_filter=&search=&page=
+POST api/inventory/add_item.php        → {item_name, stock_count, price, item_icon(file)}
+POST api/inventory/update_item.php     → {item_id, item_name, price, status, item_icon(file)}
+POST api/inventory/restock.php         → {item_id, add_quantity}
+POST api/inventory/delete_item.php     → {item_id}
+POST api/inventory/upload_icon.php     → {item_id, icon(file)}
+GET  api/inventory/check_stock.php     → ?item_ids=1,2,3
+
+# Riders
+GET  api/riders/get_available.php
+GET  api/riders/get_statistics.php     → ?page=&self=
+
+# Appeals
+GET  api/appeals/get.php              → ?status_filter=&page=
+POST api/appeals/review.php           → {appeal_id, decision, admin_notes}
+
+# Notifications
+GET  api/notifications/get.php        → ?page=&limit=
+POST api/notifications/mark_read.php  → {notification_id} or {all: true}
+GET  api/notifications/count_unread.php
+
+# Settings
+POST api/settings/update_profile.php   → {full_name, email, phone}
+POST api/settings/change_password.php  → {current_password, new_password, confirm_password}
+POST api/settings/update_system.php    → {key-value pairs of system settings}
+POST api/settings/update_preferences.php → {dark_mode}
+POST api/settings/manage_default_items.php → {action, item_id, item_name}
+GET  api/settings/get_settings.php     → ?scope=system|preferences
+
+# Analytics
+GET  api/analytics/get_dashboard_stats.php
+GET  api/analytics/get_sales.php       → ?period=&date_from=&date_to=
+GET  api/analytics/get_order_stats.php
+GET  api/analytics/export_report.php   → ?period=
+```
+
+### External Libraries Available via CDN
+
+```
+SweetAlert2      — Swal.fire() for dialogs
+Material Icons   — <span class="material-icons">icon_name</span>
+Chart.js         — new Chart(ctx, config) for analytics charts
+html2pdf.js      — html2pdf().from(element).save() for report export
+html2canvas      — Available for image export
+Inter Font       — Applied globally
+Sortable.js      — Available but not used on admin pages
+```
+
+**Chart.js CDN:** `https://cdn.jsdelivr.net/npm/chart.js@4`
+**html2pdf.js CDN:** `https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js`
+
+These MUST be loaded on the `analytics.php` page.
+
+---
+
+## DATABASE TABLES REFERENCE (Admin Has Access to ALL Tables)
+
+### `users`
+```
+id, username, password, full_name, email, phone,
+role ENUM('customer','rider','staff','admin','super_admin'),
+status ENUM('pending','active','flagged','deleted'),
+is_available (riders), cancellation_count, cancellation_reset_date,
+login_attempts, login_locked_until,
+created_at, updated_at, deleted_at
+```
+
+### `user_preferences`
+```
+id, user_id, dark_mode
+```
+
+### `customer_addresses`
+```
+id, customer_id, label, full_address, is_default
+```
+
+### `inventory`
+```
+id, item_name, item_icon, stock_count, price,
+status ENUM('active','inactive','out_of_stock'),
+last_restocked_at, created_at, updated_at
+```
+
+### `orders`
+```
+id, customer_id, rider_id, payment_type, delivery_type,
+status, delivery_address, order_notes, delivery_fee,
+subtotal, total_amount, expected_delivery_date,
+cancellation_reason, cancelled_by, staff_comment,
+customer_confirmed, customer_confirmed_at, receipt_token,
+order_date, delivered_at, created_at, updated_at
+```
+
+### `order_items`
+```
+id, order_id, inventory_id, item_name, item_icon, item_price, quantity, subtotal
+```
+
+### `notifications`
+```
+id, user_id, title, message, type, reference_id, is_read, created_at
+```
+
+### `session_logs`
+```
+id, user_id, username (snapshot), role (snapshot),
+action ENUM('login','logout','failed_login'),
+ip_address, created_at
+```
+
+### `settings`
+```
+id, setting_key (UNIQUE), setting_value, updated_at
+```
+
+**Default settings keys:**
+```
+station_name, station_address, max_cancellation, pending_expiry_days,
+low_stock_threshold, maintenance_mode, encrypt_passwords, auto_assign_orders,
+timezone, force_dark_mode, primary_color, secondary_color, accent_color,
+surface_color, max_login_attempts, delivery_fee, login_lockout_minutes
+```
+
+### `default_items`
+```
+id, item_name, created_at
+```
+
+### `cancellation_appeals`
+```
+id, customer_id, reason, status, reviewed_by, admin_notes, reviewed_at, created_at
+```
+
+### `delivery_priority`
+```
+id, rider_id, order_id, priority_order, updated_at
+```
+
+### `password_resets`
+```
+id, email, token, expires_at, used, created_at
+```
+
+---
+
+## ADMIN SIDEBAR NAVIGATION
+
+```
+Dashboard              → admin/dashboard.php              icon: dashboard
+Inventory              → admin/inventory.php              icon: inventory_2
+Account Management     → admin/account_management.php     icon: people
+Manage Orders          → admin/manage_orders.php          icon: list_alt
+Order History          → admin/order_history.php          icon: history
+Rider Statistics       → admin/rider_statistics.php       icon: bar_chart
+Analytics              → admin/analytics.php              icon: analytics
+Session Logs           → admin/session_logs.php           icon: security
+Settings               → admin/settings.php               icon: settings
+```
+
+---
+
+## ADMIN PERMISSION DETAILS
+
+### Account Management Scope
+
+| Logged-in As | Can See | Can Create | Can Edit | Can Delete |
+|---|---|---|---|---|
+| Admin | Customer, Rider, Staff | Customer, Rider, Staff | Customer, Rider, Staff (NOT super_admin) | Customer, Rider, Staff (NOT super_admin) |
+| Super Admin | Customer, Rider, Staff, Admin | Customer, Rider, Staff, Admin | ALL including self | ALL except self (super_admin cannot be deleted) |
+
+### System Settings Access
+
+Only Admin and Super Admin can access system settings. All setting changes apply system-wide.
+
+**Critical setting behaviors:**
+
+1. **Maintenance Mode** — When ON, all non-admin users see `maintenance.php` on login. Current sessions of lower roles still function until they navigate/refresh. Admins see a warning banner on their dashboard but can operate normally.
+
+2. **Encrypt DB Passwords** — Toggle triggers a migration:
+   - Turning ON: All plaintext passwords in `users` table are encrypted using AESCrypt
+   - Turning OFF: All encrypted passwords are decrypted back to plaintext
+   - Show a confirmation warning before toggling
+   - Log every password migration action
+
+3. **Auto Assign Every Order** — When ON, after Staff/Admin confirms an order, the system automatically runs the auto-assign rider algorithm. If no rider available, order stays at Confirmed with auto-generated staff comment "Auto-assign: No riders available."
+
+4. **Force Dark Mode** — When ON, all users see dark mode regardless of individual preference. The theme toggle button is disabled/hidden for all users.
+
+5. **UI Colors** — Primary, secondary, accent, and surface colors can be customized via color pickers. Changes apply system-wide immediately via CSS custom properties injected by PHP on the `<html>` element's `style` attribute.
+
+---
+
+## PAGE-BY-PAGE SPECIFICATIONS
+
+---
+
+### 1. `admin/dashboard.php`
+
+**PHP Logic (top of file):**
+```
+1. Include auth_check, require_role([ROLE_ADMIN, ROLE_SUPER_ADMIN])
+2. Fetch dashboard stats:
+   - Pending orders: SELECT COUNT(*) FROM orders WHERE status='pending'
+   - Total accounts: SELECT COUNT(*) FROM users WHERE status != 'deleted'
+   - Pending accounts: SELECT COUNT(*) FROM users WHERE status='pending'
+   - Low stock items: SELECT COUNT(*) FROM inventory WHERE stock_count <= {low_stock_threshold} AND status != 'inactive'
+3. Fetch preview data:
+   - Pending accounts (max 3, newest first, all roles visible)
+   - Pending orders (max 3, newest first)
+   - Low stock items (max 3, sorted by stock_count ASC)
+4. Check maintenance mode — if ON, show a warning banner
+5. Include header, sidebar
+```
+
+**HTML Structure:**
+```html
+<div class="main-content">
+  <div class="page-header">
+    <h1>Dashboard</h1>
+  </div>
+
+  <!-- Maintenance Mode Warning Banner (if ON) -->
+  <?php if (get_setting('maintenance_mode') == '1'): ?>
+  <div class="alert-banner warning">
+    <span class="material-icons">engineering</span>
+    <div>
+      <strong>Maintenance Mode is ON</strong>
+      <p>Non-admin users cannot access the system. <a href="settings.php">Go to Settings to disable.</a></p>
+    </div>
+  </div>
+  <?php endif; ?>
+
+  <!-- Greeting -->
+  <div class="greeting">
+    <h2>Welcome back, {Full Name}! 👋</h2>
+    <p class="text-muted">System overview and quick actions.</p>
+  </div>
+
+  <!-- Quick Action Buttons — ALL sidebar items -->
+  <div class="quick-actions">
+    <a href="inventory.php" class="quick-action-btn">
+      <span class="material-icons">inventory_2</span><span>Inventory</span>
+    </a>
+    <a href="account_management.php" class="quick-action-btn">
+      <span class="material-icons">people</span><span>Accounts</span>
+    </a>
+    <a href="manage_orders.php" class="quick-action-btn">
+      <span class="material-icons">list_alt</span><span>Orders</span>
+    </a>
+    <a href="order_history.php" class="quick-action-btn">
+      <span class="material-icons">history</span><span>History</span>
+    </a>
+    <a href="rider_statistics.php" class="quick-action-btn">
+      <span class="material-icons">bar_chart</span><span>Riders</span>
+    </a>
+    <a href="analytics.php" class="quick-action-btn">
+      <span class="material-icons">analytics</span><span>Analytics</span>
+    </a>
+    <a href="session_logs.php" class="quick-action-btn">
+      <span class="material-icons">security</span><span>Logs</span>
+    </a>
+    <a href="settings.php" class="quick-action-btn">
+      <span class="material-icons">settings</span><span>Settings</span>
+    </a>
+  </div>
+
+  <!-- Stat Cards -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:var(--warning)">
+        <span class="material-icons">pending_actions</span>
+      </div>
+      <div class="stat-info">
+        <span class="stat-number">{pending_orders}</span>
+        <span class="stat-label">Pending Orders</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:var(--primary)">
+        <span class="material-icons">people</span>
+      </div>
+      <div class="stat-info">
+        <span class="stat-number">{total_accounts}</span>
+        <span class="stat-label">Total Accounts</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:var(--danger)">
+        <span class="material-icons">person_add</span>
+      </div>
+      <div class="stat-info">
+        <span class="stat-number">{pending_accounts}</span>
+        <span class="stat-label">Pending Accounts</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:var(--warning)">
+        <span class="material-icons">warning</span>
+      </div>
+      <div class="stat-info">
+        <span class="stat-number">{low_stock_items}</span>
+        <span class="stat-label">Low Stock Items</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Three-column preview grid -->
+  <div class="preview-grid three-cols">
+    <!-- Pending Accounts Preview -->
+    <div class="preview-section glass-card">
+      <div class="preview-header">
+        <h3><span class="material-icons">person_add</span> Pending Accounts</h3>
+        <a href="account_management.php" class="btn btn-outline btn-sm">View All</a>
+      </div>
+      <!-- Table or empty state — same pattern as staff dashboard -->
+      <!-- Preview max 3 accounts with Approve/Delete quick actions -->
+    </div>
+
+    <!-- Pending Orders Preview -->
+    <div class="preview-section glass-card">
+      <div class="preview-header">
+        <h3><span class="material-icons">pending_actions</span> Pending Orders</h3>
+        <a href="manage_orders.php" class="btn btn-outline btn-sm">View All</a>
+      </div>
+      <!-- Preview max 3 orders with Confirm/Cancel quick actions -->
+    </div>
+
+    <!-- Low Stock Items Preview -->
+    <div class="preview-section glass-card">
+      <div class="preview-header">
+        <h3><span class="material-icons">warning</span> Low Stock Items</h3>
+        <a href="inventory.php" class="btn btn-outline btn-sm">View All</a>
+      </div>
+      <!-- IF NO LOW STOCK -->
+      <div class="empty-state mini" style="display:{if none}">
+        <span class="material-icons">check_circle</span>
+        <p>All items sufficiently stocked</p>
+      </div>
+      <!-- IF LOW STOCK EXISTS -->
+      <div class="data-table-wrapper" style="display:{if exist}">
+        <table class="data-table compact">
+          <thead>
+            <tr><th>Item</th><th>Stock</th><th>Action</th></tr>
+          </thead>
+          <tbody>
+            <!-- For each low stock item (max 3): -->
+            <tr class="low-stock-row">
+              <td class="item-with-icon">
+                <img src="{icon or default}" class="item-icon-sm"> {item_name}
+              </td>
+              <td><strong class="text-danger">{stock_count}</strong></td>
+              <td>
+                <button class="btn btn-sm btn-success" onclick="quickRestock({item_id}, '{item_name}')">
+                  <span class="material-icons">add</span> Restock
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+```
+
+### `admin/css/dashboard.css`
+
+```
+.alert-banner:
+  - Flex row, align center, gap 12px, padding 16px 20px
+  - Border-radius: var(--radius)
+  - Margin-bottom: 20px
+  - .warning: background rgba(255,167,38,0.1), border-left 4px solid var(--warning), color var(--text-primary)
+  - .material-icons: font-size 28px, color var(--warning)
+  - a: color var(--primary), text-decoration underline
+
+.stats-grid:
+  - CSS Grid: 4 columns desktop, 2 tablet, 1 mobile
+  - Gap: 16px, margin-bottom: 24px
+
+.preview-grid.three-cols:
+  - CSS Grid: 3 columns desktop, 1 column mobile
+  - Gap: 20px
+
+.preview-section:
+  - Padding 20px
+  - .preview-header: flex, space-between, align center, margin-bottom 16px
+    h3: flex, align center, gap 8px
+
+.low-stock-row:
+  - Background: rgba(255,167,38,0.05), border-left 3px solid var(--warning)
+
+.data-table.compact:
+  - Smaller cell padding (8px 12px), font-size 0.9em
+
+Responsive:
+  @media (max-width: 1200px): preview-grid 2 columns
+  @media (max-width: 768px): preview-grid 1 column, stats-grid 2 columns
+  @media (max-width: 480px): stats-grid 1 column
+```
+
+### `admin/js/dashboard.js`
+
+```javascript
+document.addEventListener('DOMContentLoaded', function() {
+
+  // Quick Approve/Delete Account (same as staff dashboard)
+  window.quickApprove = function(userId, username) {
+    Swal.fire({
+      title: 'Approve Account?',
+      text: `Approve "${username}"?`,
+      icon: 'question', showCancelButton: true,
+      confirmButtonText: 'Yes, Approve', confirmButtonColor: 'var(--success)'
+    }).then(r => {
+      if (r.isConfirmed) {
+        ajaxPost('/api/accounts/approve.php', { user_id: userId })
+          .then(d => { if(d.success) { showToast('Approved!','success'); location.reload(); } else showToast(d.message||'Failed','error'); })
+          .catch(() => showToast('Error','error'));
+      }
+    });
+  };
+
+  window.quickDelete = function(userId, username) {
+    Swal.fire({
+      title: 'Delete Account?',
+      text: `Delete "${username}"?`,
+      icon: 'warning', showCancelButton: true,
+      confirmButtonText: 'Delete', confirmButtonColor: '#EF5350'
+    }).then(r => {
+      if (r.isConfirmed) {
+        ajaxPost('/api/accounts/delete.php', { user_id: userId })
+          .then(d => { if(d.success) { showToast('Deleted','success'); location.reload(); } else showToast(d.message||'Failed','error'); })
+          .catch(() => showToast('Error','error'));
+      }
+    });
+  };
+
+  // Quick Confirm/Cancel Order (same as staff dashboard)
+  window.quickConfirm = function(orderId) {
+    Swal.fire({
+      title: 'Confirm Order #'+orderId+'?',
+      html: '<p>Stock will be decremented.</p>',
+      icon: 'question', showCancelButton: true,
+      confirmButtonText: 'Confirm', confirmButtonColor: 'var(--success)'
+    }).then(r => {
+      if (r.isConfirmed) {
+        ajaxPost('/api/orders/update_status.php', { order_id: orderId, new_status: 'confirmed' })
+          .then(d => {
+            if(d.success) {
+              Swal.fire({ title:'Confirmed!', text:'Assign rider now?', icon:'success',
+                showDenyButton:true, confirmButtonText:'Yes', denyButtonText:'Later',
+                confirmButtonColor:'var(--primary)'
+              }).then(r2 => {
+                if(r2.isConfirmed) window.location.href='manage_orders.php?highlight='+orderId;
+                else location.reload();
+              });
+            } else showToast(d.message||'Failed','error');
+          }).catch(() => showToast('Error','error'));
+      }
+    });
+  };
+
+  window.quickCancelOrder = function(orderId) {
+    Swal.fire({
+      title: 'Cancel Order #'+orderId+'?',
+      html: '<textarea id="cancelReason" class="swal2-textarea" placeholder="Reason (required)" rows="3"></textarea>',
+      icon: 'warning', showCancelButton: true,
+      confirmButtonText: 'Cancel Order', confirmButtonColor: '#EF5350',
+      preConfirm: () => {
+        const r = document.getElementById('cancelReason').value.trim();
+        if(!r) { Swal.showValidationMessage('Reason required'); return false; }
+        return r;
+      }
+    }).then(r => {
+      if (r.isConfirmed) {
+        ajaxPost('/api/orders/cancel_order.php', { order_id: orderId, reason: r.value })
+          .then(d => { if(d.success) { showToast('Cancelled','success'); location.reload(); } else showToast(d.message||'Failed','error'); })
+          .catch(() => showToast('Error','error'));
+      }
+    });
+  };
+
+  // Quick Restock from low stock preview
+  window.quickRestock = function(itemId, itemName) {
+    Swal.fire({
+      title: 'Restock: ' + itemName,
+      html: '<input type="number" id="restockQty" class="swal2-input" placeholder="Quantity to add" min="1" step="1">',
+      showCancelButton: true,
+      confirmButtonText: 'Restock', confirmButtonColor: 'var(--success)',
+      preConfirm: () => {
+        const qty = parseInt(document.getElementById('restockQty').value);
+        if (!qty || qty < 1) { Swal.showValidationMessage('Enter a valid quantity'); return false; }
+        return qty;
+      }
+    }).then(r => {
+      if (r.isConfirmed) {
+        ajaxPost('/api/inventory/restock.php', { item_id: itemId, add_quantity: r.value })
+          .then(d => { if(d.success) { showToast('Restocked!','success'); location.reload(); } else showToast(d.message||'Failed','error'); })
+          .catch(() => showToast('Error','error'));
+      }
+    });
+  };
+
+});
+```
+
+---
+
+### 2. `admin/inventory.php` (FULL CRUD)
+
+**PHP Logic:** auth_check, require_role. Data loaded via AJAX.
+
+**HTML Structure:**
+```html
+<div class="main-content">
+  <div class="page-header">
+    <div class="page-header-left">
+      <h1>Inventory</h1>
+      <p class="text-muted">Manage station items, stock levels, and pricing.</p>
+    </div>
+    <div class="page-header-right">
+      <button class="btn btn-primary" id="addItemBtn">
+        <span class="material-icons">add</span> Add Item
+      </button>
+    </div>
+  </div>
+
+  <div class="toolbar-row">
+    <div class="search-bar">
+      <span class="material-icons search-icon">search</span>
+      <input type="text" id="inventorySearch" class="search-input" placeholder="Search items...">
+    </div>
+    <div class="filter-bar" id="inventoryFilters">
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="active">Active</button>
+      <button class="filter-btn" data-filter="inactive">Inactive</button>
+      <button class="filter-btn" data-filter="out_of_stock">Out of Stock</button>
+      <button class="filter-btn" data-filter="low_stock">Low Stock</button>
+    </div>
+  </div>
+
+  <div class="data-table-wrapper">
+    <table class="data-table" id="inventoryTable">
+      <thead>
+        <tr>
+          <th>Item</th>
+          <th>Stock Count</th>
+          <th>Price</th>
+          <th>Low Stock Alert</th>
+          <th>Last Restocked</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="inventoryBody">
+        <tr class="loading-row"><td colspan="7"><div class="spinner"></div></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="pagination" id="inventoryPagination"></div>
+  <div class="empty-state" id="emptyInventory" style="display:none;">
+    <span class="material-icons">inventory_2</span>
+    <p>No inventory items found.</p>
+    <button class="btn btn-primary" onclick="document.getElementById('addItemBtn').click()">Add First Item</button>
+  </div>
+</div>
+```
+
+### `admin/css/inventory.css`
+
+```
+.page-header: flex row, space-between, align center, flex wrap, gap 16px
+.toolbar-row: flex row, space-between, gap 12px, margin-bottom 16px, flex wrap
+
+Item cell:
+  - Flex row, align center, gap 12px
+  - .item-icon: 48x48px, border-radius 8px, object-fit cover, background var(--surface)
+  - .item-name: font-weight 600
+
+Stock count:
+  - Font-weight 700
+  - If below threshold: color var(--danger), with warning icon before number
+  - If zero: "0" in red bold
+
+Price: formatted ₱XX.XX, color var(--primary)
+
+Low Stock Alert column:
+  - If stock <= low_stock_threshold: ⚠️ warning icon in orange
+  - If stock > threshold: ✓ green check "OK"
+
+Status: badge (active/inactive/out_of_stock)
+
+Actions: btn-icon buttons — Edit (blue), Restock (green), Remove (red)
+
+.low-stock-row: background rgba(255,167,38,0.04), border-left 3px solid var(--warning)
+
+Responsive: table horizontal scroll on mobile, page-header column layout
+```
+
+### `admin/js/inventory.js`
+
+```javascript
+document.addEventListener('DOMContentLoaded', function() {
+
+  let currentFilter = 'all';
+  let currentPage = 1;
+  let searchText = '';
+  const perPage = 50;
+  const lowStockThreshold = parseInt('<?= get_setting("low_stock_threshold") ?>') || 10;
+
+  loadInventory();
+
+  // Filters
+  document.querySelectorAll('#inventoryFilters .filter-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('#inventoryFilters .filter-btn').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      currentFilter = this.dataset.filter;
+      currentPage = 1;
+      loadInventory();
+    });
+  });
+
+  // Search
+  let searchTimeout;
+  document.getElementById('inventorySearch').addEventListener('input', function() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => { searchText = this.value.trim(); currentPage = 1; loadInventory(); }, 300);
+  });
+
+  function loadInventory() {
+    const params = {
+      status_filter: ['active','inactive','out_of_stock'].includes(currentFilter) ? currentFilter : '',
+      low_stock: currentFilter === 'low_stock' ? '1' : '',
+      search: searchText, page: currentPage
+    };
+    document.getElementById('inventoryBody').innerHTML = '<tr class="loading-row"><td colspan="7"><div class="spinner"></div></td></tr>';
+    document.getElementById('emptyInventory').style.display = 'none';
+
+    ajaxGet('/api/inventory/get_items.php', params).then(data => {
+      if (!data.items || data.items.length === 0) {
+        document.getElementById('inventoryBody').innerHTML = '';
+        document.getElementById('emptyInventory').style.display = 'flex';
+        document.getElementById('inventoryPagination').innerHTML = '';
+        return;
+      }
+      document.getElementById('emptyInventory').style.display = 'none';
+      renderInventory(data.items);
+      renderPagination(data.total, data.page, data.per_page);
+    }).catch(() => showToast('Failed to load inventory', 'error'));
+  }
+
+  function renderInventory(items) {
+    const tbody = document.getElementById('inventoryBody');
+    tbody.innerHTML = '';
+    items.forEach(item => {
+      const isLow = parseInt(item.stock_count) <= lowStockThreshold;
+      const isZero = parseInt(item.stock_count) === 0;
+      const tr = document.createElement('tr');
+      if (isLow) tr.classList.add('low-stock-row');
+
+      const statusLabels = { active: 'Active', inactive: 'Inactive', out_of_stock: 'Out of Stock' };
+
+      tr.innerHTML = `
+        <td class="item-cell">
+          <img src="${item.item_icon || '/assets/images/default-item.png'}" class="item-icon" alt="">
+          <span class="item-name">${escapeHtml(item.item_name)}</span>
+        </td>
+        <td class="${isLow ? 'text-danger' : ''}" style="font-weight:700;">
+          ${isLow ? '<span class="material-icons" style="font-size:16px;vertical-align:middle;color:var(--warning);">warning</span> ' : ''}
+          ${item.stock_count}
+        </td>
+        <td style="color:var(--primary);font-weight:600;">₱${parseFloat(item.price).toFixed(2)}</td>
+        <td>
+          ${isLow
+            ? '<span style="color:var(--warning);"><span class="material-icons" style="font-size:16px;vertical-align:middle;">warning</span> Low Stock</span>'
+            : '<span style="color:var(--success);"><span class="material-icons" style="font-size:16px;vertical-align:middle;">check_circle</span> OK</span>'}
+        </td>
+        <td>${item.last_restocked_at ? formatDate(item.last_restocked_at) : '<span class="text-muted">Never</span>'}</td>
+        <td><span class="badge badge-${item.status === 'out_of_stock' ? 'cancelled' : item.status === 'active' ? 'confirmed' : 'pending'}">${statusLabels[item.status]}</span></td>
+        <td class="actions-cell">
+          <button class="btn-icon btn-info" title="Edit" onclick="editItem(${item.id})"><span class="material-icons">edit</span></button>
+          <button class="btn-icon btn-success" title="Restock" onclick="restockItem(${item.id}, '${escapeHtml(item.item_name)}')"><span class="material-icons">add_box</span></button>
+          <button class="btn-icon btn-danger" title="Remove" onclick="removeItem(${item.id}, '${escapeHtml(item.item_name)}')"><span class="material-icons">delete</span></button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  // ADD ITEM
+  document.getElementById('addItemBtn').addEventListener('click', function() {
+    // Fetch default items for dropdown
+    ajaxGet('/api/settings/get_settings.php', { scope: 'default_items' }).then(data => {
+      const defaultItems = data.default_items || [];
+      const optionsHtml = defaultItems.map(d => `<option value="${escapeHtml(d.item_name)}">${escapeHtml(d.item_name)}</option>`).join('');
+
+      Swal.fire({
+        title: 'Add New Item',
+        html: `
+          <div style="text-align:left;">
+            <label style="font-weight:500;display:block;margin-bottom:4px;">Item Name</label>
+            <select id="addItemSelect" class="swal2-select" style="width:100%;margin-bottom:8px;">
+              <option value="">— Select or type custom —</option>
+              ${optionsHtml}
+              <option value="__custom__">Custom name...</option>
+            </select>
+            <input type="text" id="addItemCustomName" class="swal2-input" placeholder="Custom item name" style="display:none;">
+            <input type="number" id="addItemStock" class="swal2-input" placeholder="Stock Count" min="0" step="1">
+            <input type="number" id="addItemPrice" class="swal2-input" placeholder="Price (₱)" min="0" step="0.01">
+            <label style="font-weight:500;display:block;margin-top:12px;margin-bottom:4px;">Item Icon (optional)</label>
+            <input type="file" id="addItemIcon" class="swal2-file" accept="image/*">
+          </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'Add Item', confirmButtonColor: 'var(--primary)',
+        didOpen: () => {
+          document.getElementById('addItemSelect').addEventListener('change', function() {
+            document.getElementById('addItemCustomName').style.display = this.value === '__custom__' ? 'block' : 'none';
+          });
+        },
+        preConfirm: () => {
+          const select = document.getElementById('addItemSelect').value;
+          const custom = document.getElementById('addItemCustomName').value.trim();
+          const itemName = select === '__custom__' ? custom : select;
+          const stock = document.getElementById('addItemStock').value;
+          const price = document.getElementById('addItemPrice').value;
+          const iconFile = document.getElementById('addItemIcon').files[0];
+
+          if (!itemName) { Swal.showValidationMessage('Item name is required'); return false; }
+          if (!stock || parseInt(stock) < 0) { Swal.showValidationMessage('Valid stock count required'); return false; }
+          if (!price || parseFloat(price) < 0) { Swal.showValidationMessage('Valid price required'); return false; }
+
+          return { item_name: itemName, stock_count: stock, price: price, icon: iconFile };
+        }
+      }).then(result => {
+        if (result.isConfirmed) {
+          const formData = new FormData();
+          formData.append('item_name', result.value.item_name);
+          formData.append('stock_count', result.value.stock_count);
+          formData.append('price', result.value.price);
+          formData.append('csrf_token', getCsrfToken());
+          if (result.value.icon) formData.append('item_icon', result.value.icon);
+
+          fetch('/api/inventory/add_item.php', { method: 'POST', body: formData })
+            .then(r => r.json())
+            .then(d => { if(d.success) { showToast('Item added!','success'); loadInventory(); } else showToast(d.message||'Failed','error'); })
+            .catch(() => showToast('Error','error'));
+        }
+      });
+    });
+  });
+
+  // EDIT ITEM
+  window.editItem = function(itemId) {
+    ajaxGet('/api/inventory/get_items.php', { item_id: itemId }).then(data => {
+      const item = data.items?.find(i => i.id === itemId) || data.item;
+      if (!item) { showToast('Item not found','error'); return; }
+
+      Swal.fire({
+        title: 'Edit Item',
+        html: `
+          <div style="text-align:left;">
+            <input type="text" id="editItemName" class="swal2-input" value="${escapeHtml(item.item_name)}" placeholder="Item Name">
+            <input type="number" id="editItemPrice" class="swal2-input" value="${item.price}" placeholder="Price" step="0.01">
+            <label style="font-weight:500;display:block;margin-top:12px;">Status</label>
+            <select id="editItemStatus" class="swal2-select" style="width:100%;">
+              <option value="active" ${item.status==='active'?'selected':''}>Active</option>
+              <option value="inactive" ${item.status==='inactive'?'selected':''}>Inactive</option>
+              <option value="out_of_stock" ${item.status==='out_of_stock'?'selected':''}>Out of Stock</option>
+            </select>
+            <label style="font-weight:500;display:block;margin-top:12px;">Replace Icon (optional)</label>
+            <input type="file" id="editItemIcon" class="swal2-file" accept="image/*">
+          </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'Save Changes', confirmButtonColor: 'var(--primary)',
+        preConfirm: () => {
+          const name = document.getElementById('editItemName').value.trim();
+          const price = document.getElementById('editItemPrice').value;
+          if (!name) { Swal.showValidationMessage('Name required'); return false; }
+          if (!price || parseFloat(price)<0) { Swal.showValidationMessage('Valid price required'); return false; }
+          return {
+            item_name: name, price: price,
+            status: document.getElementById('editItemStatus').value,
+            icon: document.getElementById('editItemIcon').files[0]
+          };
+        }
+      }).then(result => {
+        if (result.isConfirmed) {
+          const formData = new FormData();
+          formData.append('item_id', itemId);
+          formData.append('item_name', result.value.item_name);
+          formData.append('price', result.value.price);
+          formData.append('status', result.value.status);
+          formData.append('csrf_token', getCsrfToken());
+          if (result.value.icon) formData.append('item_icon', result.value.icon);
+
+          fetch('/api/inventory/update_item.php', { method: 'POST', body: formData })
+            .then(r => r.json())
+            .then(d => { if(d.success) { showToast('Updated!','success'); loadInventory(); } else showToast(d.message||'Failed','error'); })
+            .catch(() => showToast('Error','error'));
+        }
+      });
+    });
+  };
+
+  // RESTOCK
+  window.restockItem = function(itemId, itemName) {
+    Swal.fire({
+      title: 'Restock: ' + itemName,
+      html: '<input type="number" id="restockQty" class="swal2-input" placeholder="Quantity to add" min="1">',
+      showCancelButton: true, confirmButtonText: 'Restock', confirmButtonColor: 'var(--success)',
+      preConfirm: () => {
+        const qty = parseInt(document.getElementById('restockQty').value);
+        if (!qty || qty < 1) { Swal.showValidationMessage('Enter valid quantity'); return false; }
+        return qty;
+      }
+    }).then(r => {
+      if (r.isConfirmed) {
+        ajaxPost('/api/inventory/restock.php', { item_id: itemId, add_quantity: r.value })
+          .then(d => { if(d.success) { showToast('Restocked!','success'); loadInventory(); } else showToast(d.message||'Failed','error'); })
+          .catch(() => showToast('Error','error'));
+      }
+    });
+  };
+
+  // REMOVE
+  window.removeItem = function(itemId, itemName) {
+    Swal.fire({
+      title: 'Remove Item?',
+      text: `Are you sure you want to delete "${itemName}"?`,
+      icon: 'warning', showCancelButton: true,
+      confirmButtonText: 'Yes, Remove', confirmButtonColor: '#EF5350'
+    }).then(r => {
+      if (r.isConfirmed) {
+        ajaxPost('/api/inventory/delete_item.php', { item_id: itemId })
+          .then(d => { if(d.success) { showToast('Removed','success'); loadInventory(); } else showToast(d.message||'Failed','error'); })
+          .catch(() => showToast('Error','error'));
+      }
+    });
+  };
+
+  // HELPERS
+  function escapeHtml(t) { const d=document.createElement('div'); d.textContent=t||''; return d.innerHTML; }
+  function formatDate(d) { if(!d) return '—'; return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }
+
+  function renderPagination(total, page, perPage) {
+    const totalPages = Math.ceil(total / perPage);
+    const c = document.getElementById('inventoryPagination'); c.innerHTML = '';
+    if (totalPages <= 1) return;
+    const prev = document.createElement('button'); prev.className='page-btn'; prev.textContent='Previous'; prev.disabled=page<=1;
+    prev.addEventListener('click',()=>{currentPage--;loadInventory();}); c.appendChild(prev);
+    for(let i=Math.max(1,page-2);i<=Math.min(totalPages,page+2);i++){
+      const pb=document.createElement('button');pb.className=`page-btn ${i===page?'active':''}`;pb.textContent=i;
+      pb.addEventListener('click',()=>{currentPage=i;loadInventory();});c.appendChild(pb);
+    }
+    const next=document.createElement('button');next.className='page-btn';next.textContent='Next';next.disabled=page>=totalPages;
+    next.addEventListener('click',()=>{currentPage++;loadInventory();});c.appendChild(next);
+    const info=document.createElement('span');info.className='pagination-info';
+    info.textContent=`Showing ${(page-1)*perPage+1}–${Math.min(page*perPage,total)} of ${total}`;c.appendChild(info);
+  }
+
+});
+```
+
+---
+
+### 3. `admin/account_management.php`
+
+**Identical to `staff/account_management.php` but with expanded permissions:**
+- Shows ALL roles: Customer, Rider, Staff, Admin (Super Admin only sees other admins; normal Admin does not see Super Admin)
+- "Add Account" dialog role selection includes: Customer, Rider, Staff. Super Admin also sees "Admin" option.
+- PHP checks `$_SESSION['role'] === ROLE_SUPER_ADMIN` to determine if Admin creation is allowed
+- Delete protection: Super Admin account cannot be deleted by anyone. Normal Admin cannot edit/delete Super Admin.
+
+### `admin/css/account_management.css` — Same as staff version
+
+### `admin/js/account_management.js`
+
+Same as staff version but:
+- Role filter buttons include: All, Pending, Active, Flagged, Customers, Riders, Staff, Admins
+- Add Account role dropdown populated based on `$_SESSION['role']` (injected via PHP into a JS variable):
+  ```javascript
+  const isSuperAdmin = <?= ($_SESSION['role'] === ROLE_SUPER_ADMIN) ? 'true' : 'false' ?>;
+  ```
+  If `isSuperAdmin`, add "Admin" option to role select. Otherwise only Customer, Rider, Staff.
+- Edit/Delete buttons hidden for Super Admin rows (unless current user IS super admin editing self, but super admin cannot delete self)
+- Show `[Super Admin]` badge differently — purple with lock icon
+
+---
+
+### 4. `admin/manage_orders.php`
+
+**Identical to `staff/manage_orders.php`** — same HTML structure, same CSS, same JS. Admin has the exact same order management capabilities as Staff. Duplicate the staff version completely.
+
+### `admin/css/manage_orders.css` — Same as staff version
+### `admin/js/manage_orders.js` — Same as staff version
+
+---
+
+### 5. `admin/order_history.php`
+
+**Identical to `staff/order_history.php`** — same structure, same capabilities. Duplicate completely.
+
+### `admin/css/order_history.css` — Same as staff version
+### `admin/js/order_history.js` — Same as staff version
+
+---
+
+### 6. `admin/rider_statistics.php`
+
+**Identical to `staff/rider_statistics.php`** — same structure, same capabilities. Duplicate completely.
+
+### `admin/css/rider_statistics.css` — Same as staff version
+### `admin/js/rider_statistics.js` — Same as staff version
+
+---
+
+### 7. `admin/analytics.php` (ADMIN-ONLY)
+
+**PHP Logic:** auth_check, require_role([ROLE_ADMIN, ROLE_SUPER_ADMIN]). Data loaded via AJAX.
+
+**HTML Structure:**
+```html
+<div class="main-content">
+  <div class="page-header">
+    <div class="page-header-left">
+      <h1>Analytics</h1>
+      <p class="text-muted">Station performance and insights.</p>
+    </div>
+    <div class="page-header-right">
+      <button class="btn btn-primary" id="exportReportBtn">
+        <span class="material-icons">download</span> Export Report
+      </button>
+    </div>
+  </div>
+
+  <!-- Period Selector -->
+  <div class="period-selector">
+    <button class="period-btn active" data-period="week">This Week</button>
+    <button class="period-btn" data-period="month">This Month</button>
+    <button class="period-btn" data-period="year">This Year</button>
+    <button class="period-btn" data-period="custom">Custom</button>
+    <div class="custom-date-range" id="customDateRange" style="display:none;">
+      <input type="date" id="analyticsFrom" class="float-input">
+      <span class="text-muted">to</span>
+      <input type="date" id="analyticsTo" class="float-input">
+      <button class="btn btn-sm btn-primary" id="applyCustomRange">Apply</button>
+    </div>
+  </div>
+
+  <!-- Report Container (for PDF export) -->
+  <div id="reportContainer">
+
+    <!-- Summary Stat Cards -->
+    <div class="stats-grid five-cols">
+      <div class="stat-card">
+        <div class="stat-icon" style="background:var(--success)">
+          <span class="material-icons">payments</span>
+        </div>
+        <div class="stat-info">
+          <span class="stat-number" id="totalRevenue">₱0.00</span>
+          <span class="stat-label">Total Revenue</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:var(--primary)">
+          <span class="material-icons">receipt_long</span>
+        </div>
+        <div class="stat-info">
+          <span class="stat-number" id="totalOrders">0</span>
+          <span class="stat-label">Total Orders</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:var(--info)">
+          <span class="material-icons">trending_up</span>
+        </div>
+        <div class="stat-info">
+          <span class="stat-number" id="avgOrderValue">₱0.00</span>
+          <span class="stat-label">Avg Order Value</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:var(--teal)">
+          <span class="material-icons">today</span>
+        </div>
+        <div class="stat-info">
+          <span class="stat-number" id="ordersToday">0</span>
+          <span class="stat-label">Orders Today</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:var(--danger)">
+          <span class="material-icons">cancel</span>
+        </div>
+        <div class="stat-info">
+          <span class="stat-number" id="cancellationRate">0%</span>
+          <span class="stat-label">Cancellation Rate</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts Grid -->
+    <div class="charts-grid">
+      <!-- Daily Sales Trend (Line Chart) -->
+      <div class="chart-card glass-card">
+        <h3>Daily Sales Trend</h3>
+        <canvas id="salesTrendChart"></canvas>
+      </div>
+
+      <!-- Order Status Distribution (Doughnut Chart) -->
+      <div class="chart-card glass-card">
+        <h3>Order Status Distribution</h3>
+        <canvas id="statusDistChart"></canvas>
+      </div>
+
+      <!-- Orders Per Day (Bar Chart) -->
+      <div class="chart-card glass-card">
+        <h3>Orders Per Day</h3>
+        <canvas id="ordersPerDayChart"></canvas>
+      </div>
+
+      <!-- Revenue by Payment Type (Pie Chart) -->
+      <div class="chart-card glass-card">
+        <h3>Revenue by Payment Type</h3>
+        <canvas id="paymentTypeChart"></canvas>
+      </div>
+
+      <!-- Top Items by Quantity (Horizontal Bar) -->
+      <div class="chart-card glass-card full-width">
+        <h3>Top 5 Items by Quantity Sold</h3>
+        <canvas id="topItemsChart"></canvas>
+      </div>
+
+      <!-- Monthly Comparison (Bar Chart) -->
+      <div class="chart-card glass-card full-width">
+        <h3>Monthly Comparison (This Month vs Last Month)</h3>
+        <canvas id="monthlyCompChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Data Tables Section -->
+    <div class="analytics-tables">
+      <!-- Top Customers -->
+      <div class="analytics-table-card glass-card">
+        <h3>Top 10 Customers</h3>
+        <table class="data-table compact" id="topCustomersTable">
+          <thead>
+            <tr><th>Customer</th><th>Orders</th><th>Total Spent</th><th>Last Order</th></tr>
+          </thead>
+          <tbody id="topCustomersBody"></tbody>
+        </table>
+      </div>
+
+      <!-- Top Riders -->
+      <div class="analytics-table-card glass-card">
+        <h3>Top 5 Riders</h3>
+        <table class="data-table compact" id="topRidersTable">
+          <thead>
+            <tr><th>Rider</th><th>Deliveries</th><th>Success Rate</th></tr>
+          </thead>
+          <tbody id="topRidersBody"></tbody>
+        </table>
+      </div>
+
+      <!-- Popular Items -->
+      <div class="analytics-table-card glass-card">
+        <h3>Popular Items</h3>
+        <table class="data-table compact" id="popularItemsTable">
+          <thead>
+            <tr><th>Item</th><th>Qty Sold</th><th>Revenue</th></tr>
+          </thead>
+          <tbody id="popularItemsBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- #reportContainer -->
+</div>
+```
+
+Load Chart.js and html2pdf.js on this page:
+```html
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
+```
+
+### `admin/css/analytics.css`
+
+```
+.period-selector:
+  - Flex row, gap 8px, align center, flex wrap, margin-bottom 24px
+  - .period-btn: pill shape, padding 8px 16px, border 1px solid var(--border), cursor pointer, transition
+  - .period-btn.active: background var(--primary), color white, border-color var(--primary)
+  - .custom-date-range: flex row, gap 8px, align center, margin-left 12px
+
+.stats-grid.five-cols:
+  - Grid: 5 columns desktop, 3 tablet, 2 mobile, 1 small mobile
+  - Gap: 16px, margin-bottom: 24px
+
+.charts-grid:
+  - CSS Grid: 2 columns desktop, 1 mobile
+  - Gap: 20px, margin-bottom: 24px
+
+.chart-card:
+  - Padding: 20px
+  - h3: margin-bottom 16px, font-size 1.05em, font-weight 600
+  - canvas: max-height 300px, width 100%
+  - &.full-width: grid-column: span 2 (on desktop), span 1 (on mobile)
+
+.analytics-tables:
+  - CSS Grid: 3 columns desktop, 1 mobile
+  - Gap: 20px
+
+.analytics-table-card:
+  - Padding: 20px
+  - h3: margin-bottom 12px
+
+Responsive:
+  @media (max-width: 1200px): charts-grid 1 column, .full-width span 1, analytics-tables 2 columns
+  @media (max-width: 768px): stats-grid 2 columns, analytics-tables 1 column
+  @media (max-width: 480px): stats-grid 1 column
+```
+
+### `admin/js/analytics.js`
+
+```javascript
+document.addEventListener('DOMContentLoaded', function() {
+
+  let currentPeriod = 'week';
+  let dateFrom = '';
+  let dateTo = '';
+  let charts = {}; // Store chart instances for cleanup
+
+  loadAnalytics();
+
+  // Period buttons
+  document.querySelectorAll('.period-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      currentPeriod = this.dataset.period;
+      document.getElementById('customDateRange').style.display = currentPeriod === 'custom' ? 'flex' : 'none';
+      if (currentPeriod !== 'custom') loadAnalytics();
+    });
+  });
+
+  document.getElementById('applyCustomRange').addEventListener('click', function() {
+    dateFrom = document.getElementById('analyticsFrom').value;
+    dateTo = document.getElementById('analyticsTo').value;
+    if (!dateFrom || !dateTo) { showToast('Select both dates','warning'); return; }
+    loadAnalytics();
+  });
+
+  function loadAnalytics() {
+    const params = { period: currentPeriod, date_from: dateFrom, date_to: dateTo };
+
+    // Fetch sales data
+    ajaxGet('/api/analytics/get_sales.php', params).then(data => {
+      // Update stat cards
+      document.getElementById('totalRevenue').textContent = '₱' + parseFloat(data.total_revenue || 0).toFixed(2);
+      document.getElementById('totalOrders').textContent = data.total_orders || 0;
+      document.getElementById('avgOrderValue').textContent = '₱' + parseFloat(data.avg_order_value || 0).toFixed(2);
+      document.getElementById('ordersToday').textContent = data.orders_today || 0;
+      document.getElementById('cancellationRate').textContent = (parseFloat(data.cancellation_rate || 0)).toFixed(1) + '%';
+
+      // Daily Sales Trend (Line)
+      renderChart('salesTrendChart', 'line', {
+        labels: data.daily_labels || [],
+        datasets: [{
+          label: 'Revenue (₱)',
+          data: data.daily_revenue || [],
+          borderColor: getComputedStyle(document.documentElement).getPropertyValue('--primary').trim(),
+          backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() + '20',
+          fill: true, tension: 0.4
+        }]
+      });
+
+      // Orders Per Day (Bar)
+      renderChart('ordersPerDayChart', 'bar', {
+        labels: data.daily_labels || [],
+        datasets: [{
+          label: 'Orders',
+          data: data.daily_orders || [],
+          backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--accent').trim(),
+          borderRadius: 6
+        }]
+      });
+
+      // Revenue by Payment (Pie)
+      renderChart('paymentTypeChart', 'pie', {
+        labels: ['Cash on Delivery', 'Pickup at Store'],
+        datasets: [{
+          data: [data.revenue_cod || 0, data.revenue_pickup || 0],
+          backgroundColor: ['#42A5F5', '#26A69A']
+        }]
+      });
+
+      // Top Items (Horizontal Bar)
+      renderChart('topItemsChart', 'bar', {
+        labels: (data.top_items || []).map(i => i.item_name),
+        datasets: [{
+          label: 'Qty Sold',
+          data: (data.top_items || []).map(i => i.total_qty),
+          backgroundColor: '#7E57C2', borderRadius: 6
+        }]
+      }, { indexAxis: 'y' });
+
+      // Monthly Comparison (Bar)
+      renderChart('monthlyCompChart', 'bar', {
+        labels: ['Orders', 'Revenue (₱)', 'Cancellations'],
+        datasets: [
+          { label: 'Last Month', data: [data.last_month_orders||0, data.last_month_revenue||0, data.last_month_cancellations||0], backgroundColor: '#90CAF9', borderRadius: 6 },
+          { label: 'This Month', data: [data.this_month_orders||0, data.this_month_revenue||0, data.this_month_cancellations||0], backgroundColor: '#1565C0', borderRadius: 6 }
+        ]
+      });
+
+      // Top Customers table
+      renderTableRows('topCustomersBody', (data.top_customers || []).map(c =>
+        `<td>${esc(c.full_name)}</td><td>${c.order_count}</td><td>₱${parseFloat(c.total_spent).toFixed(2)}</td><td>${formatDate(c.last_order)}</td>`
+      ));
+
+      // Top Riders table
+      renderTableRows('topRidersBody', (data.top_riders || []).map(r =>
+        `<td>${esc(r.full_name)}</td><td>${r.deliveries}</td><td>${r.success_rate}%</td>`
+      ));
+
+      // Popular Items table
+      renderTableRows('popularItemsBody', (data.popular_items || []).map(i =>
+        `<td>${esc(i.item_name)}</td><td>${i.total_qty}</td><td>₱${parseFloat(i.total_revenue).toFixed(2)}</td>`
+      ));
+    }).catch(() => showToast('Failed to load analytics','error'));
+
+    // Order Status Distribution (Doughnut)
+    ajaxGet('/api/analytics/get_order_stats.php', params).then(data => {
+      const statuses = data.status_distribution || [];
+      renderChart('statusDistChart', 'doughnut', {
+        labels: statuses.map(s => formatStatus(s.status)),
+        datasets: [{
+          data: statuses.map(s => s.count),
+          backgroundColor: statuses.map(s => getStatusColor(s.status))
+        }]
+      });
+    });
+  }
+
+  function renderChart(canvasId, type, data, extraOptions = {}) {
+    if (charts[canvasId]) charts[canvasId].destroy();
+    const ctx = document.getElementById(canvasId).getContext('2d');
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    charts[canvasId] = new Chart(ctx, {
+      type: type,
+      data: data,
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+          legend: { labels: { color: isDark ? '#E8E8F0' : '#1A1A2E' } }
+        },
+        scales: type === 'pie' || type === 'doughnut' ? {} : {
+          x: { ticks: { color: isDark ? '#A8A8C0' : '#4A4A6A' }, grid: { color: isDark ? '#2A2A40' : '#E0E4EC' } },
+          y: { ticks: { color: isDark ? '#A8A8C0' : '#4A4A6A' }, grid: { color: isDark ? '#2A2A40' : '#E0E4EC' } }
+        },
+        ...extraOptions
+      }
+    });
+  }
+
+  function getStatusColor(status) {
+    const colors = { pending:'#FFA726', confirmed:'#42A5F5', assigned:'#7E57C2', on_delivery:'#26A69A', delivered:'#66BB6A', accepted:'#2E7D32', ready_for_pickup:'#29B6F6', picked_up:'#4CAF50', cancelled:'#EF5350' };
+    return colors[status] || '#999';
+  }
+
+  function renderTableRows(tbodyId, rowsHtml) {
+    const tbody = document.getElementById(tbodyId);
+    if (!rowsHtml.length) { tbody.innerHTML = '<tr><td colspan="10" class="text-muted text-center">No data</td></tr>'; return; }
+    tbody.innerHTML = rowsHtml.map(h => `<tr>${h}</tr>`).join('');
+  }
+
+  // EXPORT REPORT
+  document.getElementById('exportReportBtn').addEventListener('click', function() {
+    showToast('Generating report...','info');
+    const element = document.getElementById('reportContainer');
+    const opt = {
+      margin: 10,
+      filename: `Azeu_Analytics_Report_${new Date().toISOString().split('T')[0]}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+    };
+    html2pdf().set(opt).from(element).save().then(() => showToast('Report downloaded!','success'));
+  });
+
+  function formatStatus(s) {
+    const l = { pending:'Pending', confirmed:'Confirmed', assigned:'Assigned', on_delivery:'On Delivery', delivered:'Delivered', accepted:'Accepted', ready_for_pickup:'Ready for Pickup', picked_up:'Picked Up', cancelled:'Cancelled' };
+    return l[s]||s;
+  }
+  function formatDate(d) { if(!d) return '—'; return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }
+  function esc(t) { const d=document.createElement('div'); d.textContent=t||''; return d.innerHTML; }
+
+});
+```
+
+---
+
+### 8. `admin/session_logs.php` (ADMIN-ONLY)
+
+**PHP Logic:** auth_check, require_role([ROLE_ADMIN, ROLE_SUPER_ADMIN]). Data loaded via AJAX or PHP-rendered.
+
+**HTML Structure:**
+```html
+<div class="main-content">
+  <div class="page-header">
+    <h1>Session Logs</h1>
+    <p class="text-muted">Login, logout, and failed login tracking.</p>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="filter-bar" id="logFilters">
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="login">Login</button>
+      <button class="filter-btn" data-filter="logout">Logout</button>
+      <button class="filter-btn" data-filter="failed_login">Failed Login</button>
+    </div>
+    <div class="toolbar-right">
+      <div class="search-bar">
+        <span class="material-icons search-icon">search</span>
+        <input type="text" id="logSearch" class="search-input" placeholder="Search username, IP...">
+      </div>
+      <select id="roleFilter" class="float-input" style="min-width:140px;">
+        <option value="">All Roles</option>
+        <option value="customer">Customer</option>
+        <option value="rider">Rider</option>
+        <option value="staff">Staff</option>
+        <option value="admin">Admin</option>
+        <option value="super_admin">Super Admin</option>
+      </select>
+      <div class="date-range">
+        <input type="date" id="logDateFrom" class="float-input">
+        <span class="text-muted">to</span>
+        <input type="date" id="logDateTo" class="float-input">
+      </div>
+    </div>
+  </div>
+
+  <!-- Logs Table -->
+  <div class="data-table-wrapper">
+    <table class="data-table" id="logsTable">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Timestamp</th>
+          <th>Role</th>
+          <th>Username</th>
+          <th>Action</th>
+          <th>IP Address</th>
+        </tr>
+      </thead>
+      <tbody id="logsBody">
+        <tr class="loading-row"><td colspan="6"><div class="spinner"></div></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="pagination" id="logsPagination"></div>
+  <div class="empty-state" id="emptyLogs" style="display:none;">
+    <span class="material-icons">security</span>
+    <p>No session logs found.</p>
+  </div>
+</div>
+```
+
+### `admin/css/session_logs.css`
+
+```
+.toolbar:
+  - Flex row, space-between, flex wrap, gap 12px, margin-bottom 16px
+.toolbar-right:
+  - Flex row, gap 12px, align center, flex wrap
+
+Action column badges:
+  - login: badge-confirmed (blue) with login icon
+  - logout: badge-pending (orange) with logout icon
+  - failed_login: badge-cancelled (red) with error icon
+
+IP Address: font-family monospace, font-size 0.9em
+
+Role column: role badge colored per role
+
+Timestamp: formatted datetime, font-size 0.9em
+
+# column: auto-incrementing row number (visual only, from pagination offset)
+
+tr.failed-row: background rgba(239,83,80,0.04), border-left 3px solid var(--danger)
+
+Responsive: table horizontal scroll, toolbar stacks
+```
+
+### `admin/js/session_logs.js`
+
+```javascript
+document.addEventListener('DOMContentLoaded', function() {
+
+  let currentFilter = 'all';
+  let currentPage = 1;
+  let searchText = '';
+  let roleFilter = '';
+  let dateFrom = '';
+  let dateTo = '';
+  const perPage = 50;
+
+  loadLogs();
+
+  // Filters
+  document.querySelectorAll('#logFilters .filter-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('#logFilters .filter-btn').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      currentFilter = this.dataset.filter;
+      currentPage = 1;
+      loadLogs();
+    });
+  });
+
+  // Search
+  let searchTimeout;
+  document.getElementById('logSearch').addEventListener('input', function() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => { searchText = this.value.trim(); currentPage = 1; loadLogs(); }, 300);
+  });
+
+  // Role filter
+  document.getElementById('roleFilter').addEventListener('change', function() {
+    roleFilter = this.value; currentPage = 1; loadLogs();
+  });
+
+  // Date range
+  document.getElementById('logDateFrom').addEventListener('change', function() { dateFrom = this.value; currentPage = 1; loadLogs(); });
+  document.getElementById('logDateTo').addEventListener('change', function() { dateTo = this.value; currentPage = 1; loadLogs(); });
+
+  function loadLogs() {
+    // Session logs are fetched from the session_logs table
+    // The API endpoint would be something like api/analytics/get_session_logs.php
+    // or a dedicated endpoint — for simplicity, we can fetch from a generic endpoint
+    const params = {
+      action_filter: currentFilter === 'all' ? '' : currentFilter,
+      role_filter: roleFilter,
+      search: searchText,
+      date_from: dateFrom,
+      date_to: dateTo,
+      page: currentPage
+    };
+
+    document.getElementById('logsBody').innerHTML = '<tr class="loading-row"><td colspan="6"><div class="spinner"></div></td></tr>';
+    document.getElementById('emptyLogs').style.display = 'none';
+
+    // Since there's no dedicated session_logs API endpoint in the original API list,
+    // this data can also be loaded via PHP server-side rendering or via a new endpoint.
+    // For consistency, use AJAX to an endpoint that returns session_logs data.
+    // Assume: GET api/analytics/get_session_logs.php exists or session logs are handled via get_dashboard_stats
+    ajaxGet('/api/settings/get_settings.php', { scope: 'session_logs', ...params })
+      .then(data => {
+        if (!data.logs || data.logs.length === 0) {
+          document.getElementById('logsBody').innerHTML = '';
+          document.getElementById('emptyLogs').style.display = 'flex';
+          document.getElementById('logsPagination').innerHTML = '';
+          return;
+        }
+        document.getElementById('emptyLogs').style.display = 'none';
+        renderLogs(data.logs, data.page, data.per_page);
+        renderPagination(data.total, data.page, data.per_page);
+      })
+      .catch(() => showToast('Failed to load session logs', 'error'));
+  }
+
+  function renderLogs(logs, page, perPage) {
+    const tbody = document.getElementById('logsBody');
+    tbody.innerHTML = '';
+
+    const actionLabels = { login: 'Login', logout: 'Logout', failed_login: 'Failed Login' };
+    const actionBadges = { login: 'badge-confirmed', logout: 'badge-pending', failed_login: 'badge-cancelled' };
+    const actionIcons = { login: 'login', logout: 'logout', failed_login: 'error' };
+
+    logs.forEach((log, index) => {
+      const tr = document.createElement('tr');
+      if (log.action === 'failed_login') tr.classList.add('failed-row');
+
+      const rowNum = (page - 1) * perPage + index + 1;
+      const roleLabel = log.role.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+
+      tr.innerHTML = `
+        <td>${rowNum}</td>
+        <td>${formatDate(log.created_at)}</td>
+        <td><span class="badge badge-${log.role.replace('_','-')}">${roleLabel}</span></td>
+        <td><strong>${escapeHtml(log.username)}</strong></td>
+        <td>
+          <span class="badge ${actionBadges[log.action]}">
+            <span class="material-icons" style="font-size:14px;vertical-align:middle;margin-right:4px;">${actionIcons[log.action]}</span>
+            ${actionLabels[log.action]}
+          </span>
+        </td>
+        <td><code>${escapeHtml(log.ip_address)}</code></td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function escapeHtml(t) { const d=document.createElement('div'); d.textContent=t||''; return d.innerHTML; }
+  function formatDate(d) {
+    if(!d) return '—';
+    return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})
+      + ' ' + new Date(d).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  }
+
+  function renderPagination(total, page, perPage) {
+    const totalPages = Math.ceil(total / perPage);
+    const c = document.getElementById('logsPagination'); c.innerHTML = '';
+    if (totalPages <= 1) return;
+    const prev = document.createElement('button'); prev.className='page-btn'; prev.textContent='Previous'; prev.disabled=page<=1;
+    prev.addEventListener('click',()=>{currentPage--;loadLogs();}); c.appendChild(prev);
+    for(let i=Math.max(1,page-2);i<=Math.min(totalPages,page+2);i++){
+      const pb=document.createElement('button');pb.className=`page-btn ${i===page?'active':''}`;pb.textContent=i;
+      pb.addEventListener('click',()=>{currentPage=i;loadLogs();});c.appendChild(pb);
+    }
+    const next=document.createElement('button');next.className='page-btn';next.textContent='Next';next.disabled=page>=totalPages;
+    next.addEventListener('click',()=>{currentPage++;loadLogs();});c.appendChild(next);
+    const info=document.createElement('span');info.className='pagination-info';
+    info.textContent=`Showing ${(page-1)*perPage+1}–${Math.min(page*perPage,total)} of ${total}`;c.appendChild(info);
+  }
+
+});
+```
+
+**NOTE:** Since the original API list doesn't include a dedicated `api/analytics/get_session_logs.php` endpoint, add this query logic inside `api/settings/get_settings.php` when `scope=session_logs` is passed, OR create the session logs query directly in the PHP page using server-side rendering. Choose whichever approach works — the JS above assumes AJAX loading. If creating a new API file is needed, embed the logic as a direct PHP query at the top of `session_logs.php` and render the initial page data server-side, then use JS only for filtering/pagination/search.
+
+---
+
+### 9. `admin/settings.php` (FULL SYSTEM SETTINGS)
+
+This is the most feature-rich settings page in the system.
+
+**PHP Logic:**
+```
+1. auth_check, require_role([ROLE_ADMIN, ROLE_SUPER_ADMIN])
+2. Fetch own user data from DB
+3. Fetch ALL system settings from settings table
+4. Fetch default_items list
+5. Determine if current user is super_admin (for showing certain options)
+6. Include header, sidebar
+```
+
+**HTML Structure:**
+```html
+<div class="main-content">
+  <div class="page-header">
+    <h1>Settings</h1>
+    <p class="text-muted">System configuration and profile management.</p>
+  </div>
+
+  <!-- STATION SETTINGS -->
+  <div class="settings-section glass-card">
+    <h2><span class="material-icons">store</span> Station Settings</h2>
+    <form id="stationForm">
+      <div class="form-grid">
+        <div class="float-input-group">
+          <input type="text" id="stationName" class="float-input" value="<?= sanitize(get_setting('station_name')) ?>" placeholder=" ">
+          <label class="float-label">Station Name</label>
+        </div>
+        <div class="float-input-group">
+          <input type="text" id="stationAddress" class="float-input" value="<?= sanitize(get_setting('station_address')) ?>" placeholder=" ">
+          <label class="float-label">Station Address</label>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary"><span class="material-icons">save</span> Save Station Settings</button>
+    </form>
+  </div>
+
+  <!-- ORDER SETTINGS -->
+  <div class="settings-section glass-card">
+    <h2><span class="material-icons">shopping_cart</span> Order Settings</h2>
+    <form id="orderSettingsForm">
+      <div class="form-grid">
+        <div class="float-input-group">
+          <input type="number" id="maxCancellation" class="float-input" value="<?= get_setting('max_cancellation') ?>" placeholder=" " min="1">
+          <label class="float-label">Max Cancellations Per Customer (Monthly)</label>
+        </div>
+        <div class="float-input-group">
+          <input type="number" id="pendingExpiry" class="float-input" value="<?= get_setting('pending_expiry_days') ?>" placeholder=" " min="1">
+          <label class="float-label">Pending Account Expiry (Days)</label>
+        </div>
+        <div class="float-input-group">
+          <input type="number" id="lowStockThreshold" class="float-input" value="<?= get_setting('low_stock_threshold') ?>" placeholder=" " min="0">
+          <label class="float-label">Low Stock Threshold (Global)</label>
+        </div>
+        <div class="float-input-group">
+          <input type="number" id="deliveryFee" class="float-input" value="<?= get_setting('delivery_fee') ?>" placeholder=" " min="0" step="0.01">
+          <label class="float-label">Delivery Fee (₱)</label>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary"><span class="material-icons">save</span> Save Order Settings</button>
+    </form>
+  </div>
+
+  <!-- TOGGLE SWITCHES -->
+  <div class="settings-section glass-card">
+    <h2><span class="material-icons">toggle_on</span> System Toggles</h2>
+
+    <div class="toggle-row">
+      <div class="toggle-info">
+        <strong>Maintenance Mode</strong>
+        <small class="text-muted">Non-admin users cannot access the system when enabled.</small>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="maintenanceMode" <?= get_setting('maintenance_mode') == '1' ? 'checked' : '' ?>>
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+
+    <div class="toggle-row">
+      <div class="toggle-info">
+        <strong>Encrypt Database Passwords</strong>
+        <small class="text-muted">When ON, all passwords are AES encrypted. When OFF, stored as plain text. Toggling triggers a migration of all existing passwords.</small>
+        <small class="text-danger">⚠️ Changing this affects ALL user passwords immediately.</small>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="encryptPasswords" <?= get_setting('encrypt_passwords') == '1' ? 'checked' : '' ?>>
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+
+    <div class="toggle-row">
+      <div class="toggle-info">
+        <strong>Auto Assign Every Order</strong>
+        <small class="text-muted">Automatically assign the least-loaded available rider after staff confirms an order.</small>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="autoAssign" <?= get_setting('auto_assign_orders') == '1' ? 'checked' : '' ?>>
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+  </div>
+
+  <!-- UI SETTINGS -->
+  <div class="settings-section glass-card">
+    <h2><span class="material-icons">palette</span> UI & Appearance</h2>
+
+    <div class="form-grid">
+      <div class="float-input-group">
+        <select id="timezone" class="float-input">
+          <option value="Asia/Manila" <?= get_setting('timezone')==='Asia/Manila'?'selected':'' ?>>Asia/Manila</option>
+          <option value="Asia/Singapore" <?= get_setting('timezone')==='Asia/Singapore'?'selected':'' ?>>Asia/Singapore</option>
+          <option value="Asia/Tokyo" <?= get_setting('timezone')==='Asia/Tokyo'?'selected':'' ?>>Asia/Tokyo</option>
+          <option value="UTC" <?= get_setting('timezone')==='UTC'?'selected':'' ?>>UTC</option>
+        </select>
+        <label class="float-label">Timezone</label>
+      </div>
+    </div>
+
+    <div class="toggle-row">
+      <div class="toggle-info">
+        <strong>Force Dark Mode (All Users)</strong>
+        <small class="text-muted">Override all user preferences and force dark mode system-wide.</small>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="forceDarkMode" <?= get_setting('force_dark_mode') == '1' ? 'checked' : '' ?>>
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+
+    <h3 style="margin-top:20px;margin-bottom:12px;">Color Theme</h3>
+    <div class="color-grid">
+      <div class="color-picker-group">
+        <label>Primary Color</label>
+        <div class="color-picker-wrap">
+          <input type="color" id="primaryColor" value="<?= get_setting('primary_color') ?>" class="color-picker-input">
+          <input type="text" class="color-hex-input" value="<?= get_setting('primary_color') ?>" data-for="primaryColor">
+        </div>
+      </div>
+      <div class="color-picker-group">
+        <label>Secondary Color</label>
+        <div class="color-picker-wrap">
+          <input type="color" id="secondaryColor" value="<?= get_setting('secondary_color') ?>" class="color-picker-input">
+          <input type="text" class="color-hex-input" value="<?= get_setting('secondary_color') ?>" data-for="secondaryColor">
+        </div>
+      </div>
+      <div class="color-picker-group">
+        <label>Accent Color</label>
+        <div class="color-picker-wrap">
+          <input type="color" id="accentColor" value="<?= get_setting('accent_color') ?>" class="color-picker-input">
+          <input type="text" class="color-hex-input" value="<?= get_setting('accent_color') ?>" data-for="accentColor">
+        </div>
+      </div>
+      <div class="color-picker-group">
+        <label>Surface Color</label>
+        <div class="color-picker-wrap">
+          <input type="color" id="surfaceColor" value="<?= get_setting('surface_color') ?>" class="color-picker-input">
+          <input type="text" class="color-hex-input" value="<?= get_setting('surface_color') ?>" data-for="surfaceColor">
+        </div>
+      </div>
+    </div>
+    <button class="btn btn-primary" id="saveUIBtn"><span class="material-icons">save</span> Save UI Settings</button>
+  </div>
+
+  <!-- SECURITY SETTINGS -->
+  <div class="settings-section glass-card">
+    <h2><span class="material-icons">security</span> Security</h2>
+    <div class="form-grid">
+      <div class="float-input-group">
+        <input type="number" id="maxLoginAttempts" class="float-input" value="<?= get_setting('max_login_attempts') ?>" placeholder=" " min="1">
+        <label class="float-label">Max Login Attempts Before Lockout</label>
+      </div>
+      <div class="float-input-group">
+        <input type="number" id="lockoutMinutes" class="float-input" value="<?= get_setting('login_lockout_minutes') ?>" placeholder=" " min="1">
+        <label class="float-label">Lockout Duration (Minutes)</label>
+      </div>
+    </div>
+    <button class="btn btn-primary" id="saveSecurityBtn"><span class="material-icons">save</span> Save Security Settings</button>
+  </div>
+
+  <!-- DEFAULT ITEM LIST -->
+  <div class="settings-section glass-card">
+    <h2><span class="material-icons">list</span> Default Item List</h2>
+    <p class="text-muted" style="margin-bottom:16px;">Pre-defined item names shown in the dropdown when adding inventory items.</p>
+
+    <div class="default-items-list" id="defaultItemsList">
+      <!-- Rendered by PHP -->
+      <?php foreach ($default_items as $di): ?>
+      <div class="default-item-row" data-id="<?= $di['id'] ?>">
+        <span class="default-item-name"><?= sanitize($di['item_name']) ?></span>
+        <div class="default-item-actions">
+          <button class="btn-icon btn-info btn-sm" title="Edit" onclick="editDefaultItem(<?= $di['id'] ?>, '<?= sanitize($di['item_name']) ?>')">
+            <span class="material-icons">edit</span>
+          </button>
+          <button class="btn-icon btn-danger btn-sm" title="Remove" onclick="removeDefaultItem(<?= $di['id'] ?>, '<?= sanitize($di['item_name']) ?>')">
+            <span class="material-icons">delete</span>
+          </button>
+        </div>
+      </div>
+      <?php endforeach; ?>
+    </div>
+    <button class="btn btn-outline" id="addDefaultItemBtn">
+      <span class="material-icons">add</span> Add Default Item
+    </button>
+  </div>
+
+  <!-- PROFILE SETTINGS (same as other roles) -->
+  <div class="settings-section glass-card">
+    <h2><span class="material-icons">person</span> Profile Information</h2>
+    <form id="profileForm">
+      <div class="form-grid">
+        <div class="float-input-group">
+          <input type="text" class="float-input" value="<?= sanitize($user['username']) ?>" disabled style="opacity:0.6;">
+          <label class="float-label">Username (cannot be changed)</label>
+        </div>
+        <div class="float-input-group">
+          <input type="text" id="profileFullName" class="float-input" value="<?= sanitize($user['full_name']) ?>" placeholder=" " required>
+          <label class="float-label">Full Name</label>
+        </div>
+        <div class="float-input-group">
+          <input type="email" id="profileEmail" class="float-input" value="<?= sanitize($user['email']) ?>" placeholder=" " required>
+          <label class="float-label">Email</label>
+        </div>
+        <div class="float-input-group">
+          <input type="tel" id="profilePhone" class="float-input" value="<?= sanitize($user['phone']) ?>" placeholder=" " required>
+          <label class="float-label">Phone Number</label>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary"><span class="material-icons">save</span> Save Profile</button>
+    </form>
+  </div>
+
+  <!-- PASSWORD -->
+  <div class="settings-section glass-card">
+    <h2><span class="material-icons">lock</span> Change Password</h2>
+    <form id="passwordForm">
+      <div class="form-grid">
+        <div class="float-input-group">
+          <input type="password" id="currentPassword" class="float-input" placeholder=" " required>
+          <label class="float-label">Current Password</label>
+        </div>
+        <div class="float-input-group">
+          <input type="password" id="newPassword" class="float-input" placeholder=" " required>
+          <label class="float-label">New Password (min. 6 characters)</label>
+        </div>
+        <div class="float-input-group">
+          <input type="password" id="confirmPassword" class="float-input" placeholder=" " required>
+          <label class="float-label">Confirm New Password</label>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-warning"><span class="material-icons">lock_reset</span> Change Password</button>
+    </form>
+  </div>
+</div>
+```
+
+### `admin/css/settings.css`
+
+```
+.settings-section:
+  - Margin-bottom: 24px, padding: 24px
+  - h2: flex row, align center, gap 8px, margin-bottom 20px, font-weight 600, font-size 1.2em
+
+.form-grid: CSS Grid 2 columns desktop, 1 mobile, gap 16px, margin-bottom 20px
+
+.toggle-row:
+  - Flex row, space-between, align center, padding 16px 0
+  - Border-bottom: 1px solid var(--border)
+  - &:last-child: border-bottom none
+  - .toggle-info: flex column, flex 1, margin-right 20px
+    strong: font-size 1em
+    small: margin-top 4px, font-size 0.85em
+  - .text-danger: color var(--danger)
+
+.color-grid:
+  - CSS Grid: 4 columns desktop, 2 tablet, 1 mobile
+  - Gap: 16px, margin-bottom: 20px
+
+.color-picker-group:
+  - label: display block, font-weight 500, margin-bottom 6px, font-size 0.9em
+  - .color-picker-wrap: flex row, gap 8px, align center
+  - .color-picker-input: width 48px, height 48px, border none, cursor pointer, border-radius var(--radius-sm), padding 0
+  - .color-hex-input: width 100px, padding 8px, border 1px solid var(--border), border-radius var(--radius-sm), font-family monospace, text-transform uppercase
+
+.default-items-list:
+  - Flex column, gap 8px, margin-bottom 16px, max-height 300px, overflow-y auto
+
+.default-item-row:
+  - Flex row, space-between, align center, padding 10px 14px
+  - Border: 1px solid var(--border), border-radius var(--radius-sm)
+  - .default-item-name: font-weight 500
+  - .default-item-actions: flex row, gap 4px
+
+Responsive:
+  @media (max-width: 768px):
+    - form-grid 1 column
+    - color-grid 2 columns
+    - toggle-row: flex column, align start, gap 12px
+  @media (max-width: 480px):
+    - color-grid 1 column
+```
+
+### `admin/js/settings.js`
+
+```javascript
+document.addEventListener('DOMContentLoaded', function() {
+
+  // ===== STATION SETTINGS =====
+  document.getElementById('stationForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    ajaxPost('/api/settings/update_system.php', {
+      station_name: document.getElementById('stationName').value.trim(),
+      station_address: document.getElementById('stationAddress').value.trim()
+    }).then(d => {
+      if(d.success) { showToast('Station settings saved','success'); location.reload(); }
+      else showToast(d.message||'Failed','error');
+    }).catch(() => showToast('Error','error'));
+  });
+
+  // ===== ORDER SETTINGS =====
+  document.getElementById('orderSettingsForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    ajaxPost('/api/settings/update_system.php', {
+      max_cancellation: document.getElementById('maxCancellation').value,
+      pending_expiry_days: document.getElementById('pendingExpiry').value,
+      low_stock_threshold: document.getElementById('lowStockThreshold').value,
+      delivery_fee: document.getElementById('deliveryFee').value
+    }).then(d => {
+      if(d.success) showToast('Order settings saved','success');
+      else showToast(d.message||'Failed','error');
+    }).catch(() => showToast('Error','error'));
+  });
+
+  // ===== TOGGLE SWITCHES =====
+
+  // Maintenance Mode
+  document.getElementById('maintenanceMode').addEventListener('change', function() {
+    const val = this.checked ? '1' : '0';
+    const msg = this.checked
+      ? 'Enable maintenance mode? Non-admin users will be locked out.'
+      : 'Disable maintenance mode? All users will regain access.';
+    Swal.fire({
+      title: this.checked ? 'Enable Maintenance?' : 'Disable Maintenance?',
+      text: msg, icon: 'warning', showCancelButton: true,
+      confirmButtonText: 'Yes', confirmButtonColor: this.checked ? 'var(--warning)' : 'var(--success)'
+    }).then(r => {
+      if (r.isConfirmed) {
+        ajaxPost('/api/settings/update_system.php', { maintenance_mode: val })
+          .then(d => { if(d.success) showToast('Maintenance mode ' + (val==='1'?'enabled':'disabled'), 'success'); else { this.checked = !this.checked; showToast(d.message||'Failed','error'); }})
+          .catch(() => { this.checked = !this.checked; showToast('Error','error'); });
+      } else { this.checked = !this.checked; }
+    });
+  });
+
+  // Encrypt Passwords
+  document.getElementById('encryptPasswords').addEventListener('change', function() {
+    const val = this.checked ? '1' : '0';
+    const action = this.checked ? 'encrypt' : 'decrypt';
+    Swal.fire({
+      title: `${this.checked ? 'Encrypt' : 'Decrypt'} All Passwords?`,
+      html: `<p>This will <strong>${action}</strong> ALL user passwords in the database.</p>
+             <p style="color:var(--danger);margin-top:8px;"><strong>⚠️ This operation cannot be easily undone. Make sure you understand the implications.</strong></p>`,
+      icon: 'warning', showCancelButton: true,
+      confirmButtonText: `Yes, ${action.charAt(0).toUpperCase()+action.slice(1)} All`,
+      confirmButtonColor: '#EF5350'
+    }).then(r => {
+      if (r.isConfirmed) {
+        ajaxPost('/api/settings/update_system.php', { encrypt_passwords: val })
+          .then(d => { if(d.success) showToast(`Passwords ${action}ed successfully`, 'success'); else { this.checked = !this.checked; showToast(d.message||'Failed','error'); }})
+          .catch(() => { this.checked = !this.checked; showToast('Error','error'); });
+      } else { this.checked = !this.checked; }
+    });
+  });
+
+  // Auto Assign
+  document.getElementById('autoAssign').addEventListener('change', function() {
+    const val = this.checked ? '1' : '0';
+    ajaxPost('/api/settings/update_system.php', { auto_assign_orders: val })
+      .then(d => { if(d.success) showToast('Auto-assign ' + (val==='1'?'enabled':'disabled'), 'success'); else { this.checked = !this.checked; showToast(d.message||'Failed','error'); }})
+      .catch(() => { this.checked = !this.checked; showToast('Error','error'); });
+  });
+
+  // Force Dark Mode
+  document.getElementById('forceDarkMode').addEventListener('change', function() {
+    const val = this.checked ? '1' : '0';
+    ajaxPost('/api/settings/update_system.php', { force_dark_mode: val })
+      .then(d => {
+        if(d.success) {
+          showToast('Force dark mode ' + (val==='1'?'enabled':'disabled'), 'success');
+          if (val === '1') document.documentElement.setAttribute('data-theme', 'dark');
+        } else { this.checked = !this.checked; showToast(d.message||'Failed','error'); }
+      }).catch(() => { this.checked = !this.checked; showToast('Error','error'); });
+  });
+
+  // ===== UI COLORS =====
+  // Sync color picker with hex input
+  document.querySelectorAll('.color-picker-input').forEach(picker => {
+    picker.addEventListener('input', function() {
+      const hexInput = document.querySelector(`.color-hex-input[data-for="${this.id}"]`);
+      if (hexInput) hexInput.value = this.value;
+      // Live preview
+      applyColorPreview();
+    });
+  });
+  document.querySelectorAll('.color-hex-input').forEach(input => {
+    input.addEventListener('input', function() {
+      const picker = document.getElementById(this.dataset.for);
+      if (picker && /^#[0-9A-Fa-f]{6}$/.test(this.value)) {
+        picker.value = this.value;
+        applyColorPreview();
+      }
+    });
+  });
+
+  function applyColorPreview() {
+    document.documentElement.style.setProperty('--primary', document.getElementById('primaryColor').value);
+    document.documentElement.style.setProperty('--secondary', document.getElementById('secondaryColor').value);
+    document.documentElement.style.setProperty('--accent', document.getElementById('accentColor').value);
+    if (document.documentElement.getAttribute('data-theme') !== 'dark') {
+      document.documentElement.style.setProperty('--surface', document.getElementById('surfaceColor').value);
+    }
+  }
+
+  document.getElementById('saveUIBtn').addEventListener('click', function() {
+    ajaxPost('/api/settings/update_system.php', {
+      timezone: document.getElementById('timezone').value,
+      primary_color: document.getElementById('primaryColor').value,
+      secondary_color: document.getElementById('secondaryColor').value,
+      accent_color: document.getElementById('accentColor').value,
+      surface_color: document.getElementById('surfaceColor').value
+    }).then(d => {
+      if(d.success) showToast('UI settings saved','success');
+      else showToast(d.message||'Failed','error');
+    }).catch(() => showToast('Error','error'));
+  });
+
+  // ===== SECURITY SETTINGS =====
+  document.getElementById('saveSecurityBtn').addEventListener('click', function() {
+    ajaxPost('/api/settings/update_system.php', {
+      max_login_attempts: document.getElementById('maxLoginAttempts').value,
+      login_lockout_minutes: document.getElementById('lockoutMinutes').value
+    }).then(d => {
+      if(d.success) showToast('Security settings saved','success');
+      else showToast(d.message||'Failed','error');
+    }).catch(() => showToast('Error','error'));
+  });
+
+  // ===== DEFAULT ITEM LIST =====
+  document.getElementById('addDefaultItemBtn').addEventListener('click', function() {
+    Swal.fire({
+      title: 'Add Default Item Name',
+      input: 'text', inputPlaceholder: 'e.g., 30L Water Refill',
+      showCancelButton: true, confirmButtonText: 'Add', confirmButtonColor: 'var(--primary)',
+      inputValidator: v => { if (!v || !v.trim()) return 'Name required'; }
+    }).then(r => {
+      if (r.isConfirmed) {
+        ajaxPost('/api/settings/manage_default_items.php', { action: 'add', item_name: r.value.trim() })
+          .then(d => { if(d.success) { showToast('Added','success'); location.reload(); } else showToast(d.message||'Failed','error'); })
+          .catch(() => showToast('Error','error'));
+      }
+    });
+  });
+
+  window.editDefaultItem = function(id, currentName) {
+    Swal.fire({
+      title: 'Edit Default Item',
+      input: 'text', inputValue: currentName, showCancelButton: true,
+      confirmButtonText: 'Save', confirmButtonColor: 'var(--primary)',
+      inputValidator: v => { if (!v || !v.trim()) return 'Name required'; }
+    }).then(r => {
+      if (r.isConfirmed) {
+        ajaxPost('/api/settings/manage_default_items.php', { action: 'edit', item_id: id, item_name: r.value.trim() })
+          .then(d => { if(d.success) { showToast('Updated','success'); location.reload(); } else showToast(d.message||'Failed','error'); })
+          .catch(() => showToast('Error','error'));
+      }
+    });
+  };
+
+  window.removeDefaultItem = function(id, name) {
+    Swal.fire({
+      title: 'Remove "' + name + '"?',
+      icon: 'warning', showCancelButton: true,
+      confirmButtonText: 'Remove', confirmButtonColor: '#EF5350'
+    }).then(r => {
+      if (r.isConfirmed) {
+        ajaxPost('/api/settings/manage_default_items.php', { action: 'delete', item_id: id })
+          .then(d => { if(d.success) { showToast('Removed','success'); location.reload(); } else showToast(d.message||'Failed','error'); })
+          .catch(() => showToast('Error','error'));
+      }
+    });
+  };
+
+  // ===== PROFILE FORM =====
+  document.getElementById('profileForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const data = {
+      full_name: document.getElementById('profileFullName').value.trim(),
+      email: document.getElementById('profileEmail').value.trim(),
+      phone: document.getElementById('profilePhone').value.trim()
+    };
+    if (!data.full_name || !data.email || !data.phone) { showToast('All fields required','warning'); return; }
+    ajaxPost('/api/settings/update_profile.php', data)
+      .then(d => { if(d.success) showToast('Profile updated','success'); else showToast(d.message||'Failed','error'); })
+      .catch(() => showToast('Error','error'));
+  });
+
+  // ===== PASSWORD FORM =====
+  document.getElementById('passwordForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const cur = document.getElementById('currentPassword').value;
+    const np = document.getElementById('newPassword').value;
+    const cp = document.getElementById('confirmPassword').value;
+    if (!cur || !np || !cp) { showToast('All fields required','warning'); return; }
+    if (np.length < 6) { showToast('Min 6 characters','warning'); return; }
+    if (np !== cp) { showToast('Passwords don\'t match','warning'); return; }
+    ajaxPost('/api/settings/change_password.php', { current_password: cur, new_password: np, confirm_password: cp })
+      .then(d => { if(d.success) { showToast('Password changed','success'); this.reset(); } else showToast(d.message||'Failed','error'); })
+      .catch(() => showToast('Error','error'));
+  });
+
+});
+```
+
+---
+
+## HTML PAGE TEMPLATE PATTERN
+
+Every admin PHP page follows this pattern:
+
+```php
+<?php
+$page_title = 'Dashboard';
+$page_css = 'css/dashboard.css';
+$page_js = 'js/dashboard.js';
+
+require_once __DIR__ . '/../includes/auth_check.php';
+require_role([ROLE_ADMIN, ROLE_SUPER_ADMIN]);
+
+// Page-specific PHP logic
+// ...
+
+logger_function_entry(['page' => 'admin/dashboard']);
+?>
+<!DOCTYPE html>
+<html lang="en" data-theme="<?= $_SESSION['dark_mode'] ? 'dark' : 'light' ?>"
+  style="--primary: <?= get_setting('primary_color') ?>; --secondary: <?= get_setting('secondary_color') ?>; --accent: <?= get_setting('accent_color') ?>; --surface: <?= ($_SESSION['dark_mode'] ? '#1A1A2E' : get_setting('surface_color')) ?>;">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><?= $page_title ?> — <?= get_setting('station_name') ?></title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/global.css">
+  <link rel="stylesheet" href="/assets/css/layout.css">
+  <link rel="stylesheet" href="/assets/css/components.css">
+  <link rel="stylesheet" href="<?= $page_css ?>">
+  <meta name="csrf-token" content="<?= $_SESSION[CSRF_TOKEN_NAME] ?>">
+</head>
+<body>
+  <?php include __DIR__ . '/../includes/header.php'; ?>
+  <div class="app-wrapper">
+    <?php include __DIR__ . '/../includes/sidebar.php'; ?>
+    <div class="main-content">
+      <!-- PAGE CONTENT -->
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="/assets/js/global.js"></script>
+  <script src="/assets/js/components.js"></script>
+  <script src="/assets/js/sidebar.js"></script>
+  <!-- Page-specific extra libraries (Chart.js, html2pdf on analytics page) -->
+  <script src="<?= $page_js ?>"></script>
+  <?php logger_function_exit(['page' => 'admin/dashboard']); ?>
+</body>
+</html>
+```
+
+**For `analytics.php` specifically**, add before page JS:
+```html
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
+```
+
+---
+
+## IMPORTANT IMPLEMENTATION NOTES FOR ADMIN PAGES
+
+1. **`require_role([ROLE_ADMIN, ROLE_SUPER_ADMIN])`** — Both admin and super_admin can access all admin pages. The API endpoints handle the permission differences (e.g., only super_admin can create admin accounts).
+
+2. **Pages duplicated from Staff** (`manage_orders`, `order_history`, `rider_statistics`): These are functionally identical to the staff versions. Duplicate the code entirely into the admin folder. The only difference is the `require_role()` call at the top. This follows the project requirement of duplicating code per role folder for easier independent maintenance.
+
+3. **Account Management differences from Staff version:**
+   - Admin sees ALL roles: customer, rider, staff, admin (not super_admin unless the viewer IS super_admin)
+   - Admin can create staff accounts. Super Admin can also create admin accounts.
+   - Inject a PHP variable into JS: `const isSuperAdmin = <?= json_encode($_SESSION['role'] === ROLE_SUPER_ADMIN) ?>;`
+   - Use this variable to show/hide the "Admin" option in role dropdowns
+   - Super Admin row in the table (if current user is super_admin viewing accounts) should show a lock icon and no delete button
+
+4. **Inventory page** is the FULL CRUD version:
+   - Add item (with optional icon upload, default item name dropdown from `default_items` table)
+   - Edit item (name, price, status, replace icon)
+   - Restock (add quantity, update last_restocked_at)
+   - Remove item (with protection against items in active orders)
+   - File uploads use `FormData` and `fetch()` instead of `ajaxPost()` because file uploads need `multipart/form-data`
+   - CSRF token is included in the FormData manually
+
+5. **Analytics page** uses Chart.js for all charts:
+   - 6 charts: Daily Sales Trend (line), Order Status Distribution (doughnut), Orders Per Day (bar), Revenue by Payment Type (pie), Top Items (horizontal bar), Monthly Comparison (grouped bar)
+   - Charts must be theme-aware: read the current theme's text/grid colors from CSS custom properties
+   - Old chart instances must be destroyed before creating new ones (on period change)
+   - Export button generates a PDF of the entire `#reportContainer` div using `html2pdf.js`
+   - Period selector: This Week, This Month, This Year, Custom (with date range inputs)
+
+6. **Session Logs page** displays the `session_logs` table:
+   - Columns: row number (visual), Timestamp, Role (badge), Username, Action (login/logout/failed_login badge), IP Address (monospace)
+   - Filters: All, Login, Logout, Failed Login
+   - Search: by username, IP address
+   - Role dropdown filter
+   - Date range filter
+   - Failed login rows have a subtle red highlight
+   - Paginated at 50 per page
+   - Note: Since the original API list doesn't have a dedicated `get_session_logs` endpoint, either create a new endpoint OR handle session log queries directly in the PHP page with server-side rendering and use JS only for client-side filtering. Choose the approach that's simplest.
+
+7. **Settings page** is the largest single page:
+   - Station settings (name, address)
+   - Order settings (max cancellation, pending expiry, low stock threshold, delivery fee)
+   - System toggles (maintenance, encrypt passwords, auto-assign) — each toggle shows a SweetAlert confirmation
+   - UI settings (timezone, force dark mode toggle, 4 color pickers with live preview)
+   - Security (max login attempts, lockout minutes)
+   - Default item list management (list, add, edit, remove)
+   - Profile management (same as other roles)
+   - Password change (same as other roles)
+   - **Color pickers** sync bidirectionally with hex text inputs. Changing either updates the other and applies a live preview to the page via CSS custom properties. The preview is not saved until "Save UI Settings" is clicked.
+   - **Encrypt Passwords toggle** shows a serious warning before proceeding, as it triggers a migration affecting all user accounts.
+
+8. **All date/time** formatted for Philippines Manila timezone.
+
+9. **Every AJAX call** uses `ajaxPost()`/`ajaxGet()` from `global.js` except file uploads which use `fetch()` with `FormData`.
+
+10. **Dark mode** is handled entirely via CSS variables. All admin page CSS must use CSS custom properties for colors.
+
+11. **Tables render max 50 items per page** with standard pagination pattern.
+
+12. **Glass card effect** used for settings sections, chart cards, analytics table cards, preview sections. Professional, not overused.
+
+13. **Every page-specific JS file** wrapped in `document.addEventListener('DOMContentLoaded', ...)`.
+
+14. **Every `.catch()` on AJAX calls** shows a toast error message.
+
+15. **Logging:** Every page logs entry/exit with `logger_function_entry()` and `logger_function_exit()`.
+
+---
+
+**Now generate ALL 27 files for the admin role (`admin/` folder) with complete, production-ready code. Every PHP file must include proper auth checks (allowing both ROLE_ADMIN and ROLE_SUPER_ADMIN), logging, and the HTML template pattern. Every CSS file must include all styles described including responsive breakpoints and dark mode support via CSS variables. Every JS file must include all interactivity, AJAX calls, SweetAlert2 dialogs, Chart.js charts (on analytics), html2pdf export, color picker sync, toggle switch confirmations, file upload handling, and error handling as described. For pages duplicated from staff (manage_orders, order_history, rider_statistics), duplicate the full code with the admin auth check. Do not use placeholders or TODO comments.**

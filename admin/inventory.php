@@ -1,0 +1,405 @@
+<?php
+/**
+ * ============================================================================
+ * AZEU WATER STATION - INVENTORY MANAGEMENT
+ * ============================================================================
+ * 
+ * Purpose: Manage inventory items and stock
+ * Role: STAFF, ADMIN
+ * Status: ✅ IMPLEMENTED
+ * ============================================================================
+ */
+
+$page_title = "Inventory";
+$page_css = "main.css";
+$page_js = "inventory.js";
+
+require_once __DIR__ . '/../includes/auth_check.php';
+require_role([ROLE_STAFF, ROLE_ADMIN, ROLE_SUPER_ADMIN]);
+
+require_once __DIR__ . '/../includes/header.php';
+require_once __DIR__ . '/../includes/sidebar.php';
+?>
+
+<main class="main-content">
+    <div class="content-header">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h1 class="content-title">Inventory</h1>
+            <button class="btn btn-primary" onclick="showAddItem()">
+                <span class="material-icons">add</span> Add Item
+            </button>
+        </div>
+    </div>
+    
+    <div class="glass-card" style="margin-bottom: 24px;">
+        <div class="filter-bar">
+            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; flex: 1;">
+                <div style="display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-weight: 500; font-size: 14px; white-space: nowrap;">
+                    <span class="material-icons" style="font-size: 20px;">sort</span>
+                    Sort by:
+                </div>
+                <button class="filter-btn active" data-sort="name" onclick="applySortFilter(this, 'name')">Name (A-Z)</button>
+                <button class="filter-btn" data-sort="stock-asc" onclick="applySortFilter(this, 'stock-asc')">Stock ↑</button>
+                <button class="filter-btn" data-sort="stock-desc" onclick="applySortFilter(this, 'stock-desc')">Stock ↓</button>
+                <button class="filter-btn" data-sort="price-asc" onclick="applySortFilter(this, 'price-asc')">Price ↑</button>
+                <button class="filter-btn" data-sort="price-desc" onclick="applySortFilter(this, 'price-desc')">Price ↓</button>
+                <button class="filter-btn" data-sort="status" onclick="applySortFilter(this, 'status')">Status</button>
+            </div>
+            <div class="pagination-controls">
+                <button class="btn-icon" onclick="previousPage()" id="prev-btn" title="Previous Page">
+                    <span class="material-icons">chevron_left</span>
+                </button>
+                <span class="page-info" id="page-info">Page 1 of 1</span>
+                <button class="btn-icon" onclick="nextPage()" id="next-btn" title="Next Page">
+                    <span class="material-icons">chevron_right</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="glass-card">
+        <div class="data-table-wrapper">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Price</th>
+                        <th>Stock</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="inventory-tbody">
+                    <tr><td colspan="5" style="text-align: center; padding: 40px;"><div class="spinner"></div></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<!-- Add/Edit Item Modal -->
+<div class="modal-overlay" id="item-modal" style="display: none;">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 id="item-modal-title">Add Item</h3>
+            <button class="modal-close" onclick="closeModal('item-modal')">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
+        <form id="item-form">
+            <div class="modal-body">
+                <input type="hidden" id="item-id">
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">Item Name</label>
+                    <div class="custom-select-wrapper">
+                        <div class="custom-select-trigger" id="item-select-trigger">
+                            <span class="selected-text">Select an item...</span>
+                            <span class="material-icons arrow">expand_more</span>
+                        </div>
+                        <div class="custom-select-options" id="item-select-options">
+                            <!-- Dynamic options loaded from default_items -->
+                        </div>
+                    </div>
+                    <input type="hidden" id="item-name-select" name="item-name" required>
+                </div>
+                <div class="form-group" id="custom-item-name-group" style="margin-bottom: 16px; display: none;">
+                    <label>Custom Item Name</label>
+                    <input type="text" id="item-name-custom" class="form-select" placeholder="Enter custom item name">
+                </div>
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label>Price</label>
+                    <input type="number" id="item-price" class="form-select" step="0.01" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label>Stock</label>
+                    <input type="number" id="item-stock" class="form-select" min="0" step="1" onkeypress="return event.charCode >= 48 && event.charCode <= 57" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="closeModal('item-modal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Restock Modal -->
+<div class="modal-overlay" id="restock-modal" style="display: none;">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>Restock Item</h3>
+            <button class="modal-close" onclick="closeModal('restock-modal')">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
+        <form id="restock-form">
+            <div class="modal-body">
+                <input type="hidden" id="restock-item-id">
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label>Quantity to Add</label>
+                    <input type="number" id="restock-qty" class="form-select" min="1" step="1" onkeypress="return event.charCode >= 48 && event.charCode <= 57" oninput="this.value = this.value.replace(/[^0-9]/g, '') || ''" required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="closeModal('restock-modal')">Cancel</button>
+                <button type="submit" class="btn btn-success">Restock</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+/* Pagination Controls */
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-left: auto;
+    white-space: nowrap;
+}
+
+.page-info {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    padding: 0 8px;
+    min-width: 100px;
+    text-align: center;
+}
+
+/* Beautiful Custom Select Box */
+.custom-select-wrapper {
+    position: relative;
+    width: 100%;
+    user-select: none;
+}
+
+.custom-select-trigger {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-primary);
+    background: var(--surface-card);
+    border: 2px solid #e0e6ed;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.custom-select-trigger:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 12px rgba(21, 101, 192, 0.15);
+    transform: translateY(-1px);
+}
+
+.custom-select-trigger.active {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(21, 101, 192, 0.1);
+}
+
+.custom-select-trigger .selected-text {
+    flex: 1;
+    color: var(--text-primary);
+}
+
+.custom-select-trigger .selected-text.placeholder {
+    color: #9ca3af;
+}
+
+.custom-select-trigger .arrow {
+    font-size: 24px;
+    color: #6b7280;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.custom-select-trigger.active .arrow {
+    transform: rotate(180deg);
+    color: var(--primary-color);
+}
+
+.custom-select-options {
+    position: absolute;
+    top: calc(100% + 1px);
+    left: 0;
+    right: 0;
+    background: var(--surface);
+    border: 1px solid #e0e6ed;
+    border-radius: 10px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.05);
+    max-height: 190px;
+    overflow-y: auto;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.custom-select-options.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.custom-select-option {
+    padding: 12px 16px;
+    font-size: 15px;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.custom-select-option:first-child {
+    border-radius: 10px 10px 0 0;
+}
+
+.custom-select-option:last-child {
+    border-radius: 0 0 10px 10px;
+}
+
+.custom-select-option:hover {
+    background: linear-gradient(90deg, rgba(21, 101, 192, 0.08) 0%, rgba(21, 101, 192, 0.04) 100%);
+    padding-left: 20px;
+}
+
+.custom-select-option.selected {
+    background: linear-gradient(90deg, rgba(21, 101, 192, 0.12) 0%, rgba(21, 101, 192, 0.06) 100%);
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.custom-select-option.selected::before {
+    /* content: '✓'; */
+    font-weight: bold;
+    margin-right: 8px;
+    color: var(--primary-color);
+}
+
+.custom-select-option.custom-option {
+    border-top: 1px solid #e0e6ed;
+    margin-top: 4px;
+    font-style: italic;
+    color: var(--primary-color);
+}
+
+.custom-select-option.custom-option::before {
+    content: '✏️';
+    margin-right: 8px;
+}
+
+/* Custom Scrollbar */
+.custom-select-options::-webkit-scrollbar {
+    width: 6px;
+}
+
+.custom-select-options::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 10px;
+}
+
+.custom-select-options::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+
+.custom-select-options::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Dark Mode */
+body.dark-mode .custom-select-trigger {
+    background: var(--surface);
+    border-color: #374151;
+}
+
+body.dark-mode .custom-select-options {
+    background: var(--surface);
+    border-color: #374151;
+}
+
+body.dark-mode .custom-select-option:hover {
+    background: linear-gradient(90deg, rgba(66, 153, 225, 0.15) 0%, rgba(66, 153, 225, 0.08) 100%);
+}
+</style>
+
+<script>
+// Custom Select Box JavaScript
+document.addEventListener('DOMContentLoaded', function() {
+    const trigger = document.getElementById('item-select-trigger');
+    const optionsContainer = document.getElementById('item-select-options');
+    const hiddenInput = document.getElementById('item-name-select');
+    const selectedText = trigger.querySelector('.selected-text');
+    
+    // Toggle dropdown
+    trigger.addEventListener('click', function(e) {
+        e.stopPropagation();
+        trigger.classList.toggle('active');
+        optionsContainer.classList.toggle('active');
+    });
+    
+    // Close when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!trigger.contains(e.target) && !optionsContainer.contains(e.target)) {
+            trigger.classList.remove('active');
+            optionsContainer.classList.remove('active');
+        }
+    });
+    
+    // Handle option selection (delegated event)
+    optionsContainer.addEventListener('click', function(e) {
+        const option = e.target.closest('.custom-select-option');
+        if (!option) return;
+        
+        const value = option.dataset.value;
+        const text = option.textContent.trim();
+        
+        // Remove selected class from all options
+        optionsContainer.querySelectorAll('.custom-select-option').forEach(opt => {
+            opt.classList.remove('selected');
+        });
+        
+        // Add selected class to clicked option
+        option.classList.add('selected');
+        
+        // Update selected text and hidden input
+        selectedText.textContent = text;
+        selectedText.classList.remove('placeholder');
+        hiddenInput.value = value;
+        
+        // Close dropdown
+        trigger.classList.remove('active');
+        optionsContainer.classList.remove('active');
+        
+        // Trigger custom change event
+        toggleCustomItemName();
+    });
+});
+
+// Make toggleCustomItemName global
+function toggleCustomItemName() {
+    const hiddenInput = document.getElementById('item-name-select');
+    const customGroup = document.getElementById('custom-item-name-group');
+    const customInput = document.getElementById('item-name-custom');
+    
+    if (hiddenInput.value === '__custom__') {
+        customGroup.style.display = 'block';
+        customInput.required = true;
+        hiddenInput.required = false;
+    } else {
+        customGroup.style.display = 'none';
+        customInput.required = false;
+        customInput.value = '';
+        hiddenInput.required = true;
+    }
+}
+</script>
+
+<?php require_once __DIR__ . '/../includes/footer.php'; ?>

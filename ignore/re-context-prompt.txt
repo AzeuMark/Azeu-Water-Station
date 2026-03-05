@@ -1,0 +1,3 @@
+I want you to analyze this project folder, know it's flow, algorithm, functionality and everything about this system project. 
+Know every context in this system, read the codes and everything. 
+To gain more knowledge and context about this system project, read the all the md files and everything.
