@@ -34,7 +34,7 @@ require_once __DIR__ . '/../includes/sidebar.php';
                         <th>Phone</th>
                         <th>Available</th>
                         <th>Total Deliveries</th>
-                        <th>Active</th>
+                        <th>Assigned</th>
                         <th>Completed</th>
                     </tr>
                 </thead>
@@ -69,7 +69,7 @@ async function loadRiders() {
                             </span>
                         </td>
                         <td>${rider.total_deliveries}</td>
-                        <td>${rider.active_deliveries}</td>
+                        <td>${rider.assigned_deliveries}</td>
                         <td>${rider.completed_deliveries}</td>
                     </tr>
                 `;

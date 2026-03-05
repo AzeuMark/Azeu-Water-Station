@@ -62,14 +62,14 @@ try {
         $stats = db_fetch(
             "SELECT 
              COUNT(*) as total_deliveries,
-             SUM(CASE WHEN status IN ('assigned', 'on_delivery') THEN 1 ELSE 0 END) as active_deliveries,
+             SUM(CASE WHEN status = 'assigned' THEN 1 ELSE 0 END) as assigned_deliveries,
              SUM(CASE WHEN status IN ('delivered', 'accepted') THEN 1 ELSE 0 END) as completed_deliveries
              FROM orders WHERE rider_id = ?",
             [$rider['id']]
         );
         
         $rider['total_deliveries'] = $stats['total_deliveries'];
-        $rider['active_deliveries'] = $stats['active_deliveries'];
+        $rider['assigned_deliveries'] = $stats['assigned_deliveries'];
         $rider['completed_deliveries'] = $stats['completed_deliveries'];
     }
     

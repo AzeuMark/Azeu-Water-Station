@@ -68,8 +68,8 @@ async function loadRiderStats() {
                                 <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">Total</div>
                             </div>
                             <div style="text-align: center; padding: 16px; background: var(--surface); border-radius: var(--radius-sm);">
-                                <div style="font-size: 2rem; font-weight: 700; color: var(--warning);">${rider.active_deliveries}</div>
-                                <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">Active</div>
+                                <div style="font-size: 2rem; font-weight: 700; color: var(--warning);">${rider.assigned_deliveries}</div>
+                                <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">Assigned</div>
                             </div>
                             <div style="text-align: center; padding: 16px; background: var(--surface); border-radius: var(--radius-sm);">
                                 <div style="font-size: 2rem; font-weight: 700; color: var(--success);">${rider.completed_deliveries}</div>

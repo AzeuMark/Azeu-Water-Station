@@ -201,6 +201,9 @@ function applySortFilter(button, sortBy) {
         case 'name':
             sortedItems.sort((a, b) => a.item_name.localeCompare(b.item_name));
             break;
+        case 'name-desc':
+            sortedItems.sort((a, b) => b.item_name.localeCompare(a.item_name));
+            break;
         case 'stock-asc':
             sortedItems.sort((a, b) => a.stock_count - b.stock_count);
             break;

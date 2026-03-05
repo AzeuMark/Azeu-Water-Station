@@ -40,6 +40,7 @@ require_once __DIR__ . '/../includes/sidebar.php';
                     Filter:
                 </div>
                 <button class="filter-btn active" data-sort="name" onclick="applySortFilter(this, 'name')">Name (A-Z)</button>
+                <button class="filter-btn" data-sort="name-desc" onclick="applySortFilter(this, 'name-desc')">Name (Z-A)</button>
                 <button class="filter-btn" data-sort="stock-asc" onclick="applySortFilter(this, 'stock-asc')">Stock ↑</button>
                 <button class="filter-btn" data-sort="stock-desc" onclick="applySortFilter(this, 'stock-desc')">Stock ↓</button>
                 <button class="filter-btn" data-sort="price-asc" onclick="applySortFilter(this, 'price-asc')">Price ↑</button>
@@ -60,6 +61,7 @@ require_once __DIR__ . '/../includes/sidebar.php';
                 </div>
                 <div class="custom-select-options" id="mobile-filter-options">
                     <div class="custom-select-option selected" data-sort="name">Name (A-Z)</div>
+                    <div class="custom-select-option" data-sort="name-desc">Name (Z-A)</div>
                     <div class="custom-select-option" data-sort="stock-asc">Stock (Low to High)</div>
                     <div class="custom-select-option" data-sort="stock-desc">Stock (High to Low)</div>
                     <div class="custom-select-option" data-sort="price-asc">Price (Low to High)</div>
