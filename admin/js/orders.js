@@ -9,6 +9,9 @@
 
 let currentFilter = '';
 let currentOrderId = null;
+let allOrders = [];
+let currentPage = 1;
+let itemsPerPage = 20;
 
 document.addEventListener('DOMContentLoaded', function() {
     loadOrders();
@@ -36,25 +39,36 @@ async function loadOrders() {
         const data = await response.json();
         
         if (data.success) {
-            renderOrders(data.orders);
+            allOrders = data.orders;
+            currentPage = 1;
+            renderOrders();
         }
     } catch (error) {
         console.error('Failed to load orders:', error);
     }
 }
 
-function renderOrders(orders) {
+function renderOrders() {
     const tbody = document.getElementById('orders-tbody');
     
-    if (orders.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><p>No orders found</p></div></td></tr>';
+    if (allOrders.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><p>No orders found</p></div></td></tr>';
+        updatePaginationControls(0);
         return;
     }
     
+    // Pagination
+    const totalPages = Math.ceil(allOrders.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedOrders = allOrders.slice(startIndex, endIndex);
+    
     let html = '';
-    orders.forEach(order => {
+    paginatedOrders.forEach((order, index) => {
+        const rowNumber = startIndex + index + 1;
         html += `
             <tr>
+                <td style="text-align: center; color: var(--text-secondary); font-weight: 600;">${rowNumber}</td>
                 <td><strong>#${order.id}</strong></td>
                 <td>${order.customer_name}</td>
                 <td>${formatDate(order.order_date)}</td>
@@ -71,6 +85,43 @@ function renderOrders(orders) {
     });
     
     tbody.innerHTML = html;
+    updatePaginationControls(totalPages);
+}
+
+function updatePaginationControls(totalPages) {
+    const pageInfo = document.getElementById('page-info');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const paginationWrapper = document.getElementById('pagination-wrapper');
+    
+    if (!pageInfo) return;
+    
+    // Hide pagination if only 1 page or no pages
+    if (totalPages <= 1) {
+        if (paginationWrapper) paginationWrapper.style.display = 'none';
+        return;
+    }
+    
+    if (paginationWrapper) paginationWrapper.style.display = 'flex';
+    pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+    
+    if (prevBtn) prevBtn.disabled = currentPage <= 1;
+    if (nextBtn) nextBtn.disabled = currentPage >= totalPages;
+}
+
+function previousPage() {
+    if (currentPage > 1) {
+        currentPage--;
+        renderOrders();
+    }
+}
+
+function nextPage() {
+    const totalPages = Math.ceil(allOrders.length / itemsPerPage);
+    if (currentPage < totalPages) {
+        currentPage++;
+        renderOrders();
+    }
 }
 
 async function viewOrder(orderId) {

@@ -36,8 +36,8 @@ require_once __DIR__ . '/../includes/sidebar.php';
         <div class="filter-bar">
             <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; flex: 1;">
                 <div style="display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-weight: 500; font-size: 14px; white-space: nowrap;">
-                    <span class="material-icons" style="font-size: 20px;">sort</span>
-                    Sort by:
+                    <span class="material-icons" style="font-size: 20px;">filter_list</span>
+                    Filter:
                 </div>
                 <button class="filter-btn active" data-sort="name" onclick="applySortFilter(this, 'name')">Name (A-Z)</button>
                 <button class="filter-btn" data-sort="stock-asc" onclick="applySortFilter(this, 'stock-asc')">Stock ↑</button>
@@ -54,7 +54,7 @@ require_once __DIR__ . '/../includes/sidebar.php';
         <div style="padding: 16px;">
             <div class="custom-select-wrapper">
                 <div class="custom-select-trigger" id="mobile-filter-trigger">
-                    <span class="material-icons" style="margin-right: 8px; font-size: 20px;">sort</span>
+                    <span class="material-icons" style="margin-right: 8px; font-size: 20px;">filter_list</span>
                     <span class="selected-text">Name (A-Z)</span>
                     <span class="material-icons arrow">expand_more</span>
                 </div>
@@ -90,7 +90,7 @@ require_once __DIR__ . '/../includes/sidebar.php';
         </div>
         
         <!-- Pagination Controls (moved inside table card) -->
-        <div class="pagination-controls-wrapper">
+        <div class="pagination-controls-wrapper" id="pagination-wrapper" style="display: none;">
             <div class="pagination-controls">
                 <button class="btn-icon" onclick="previousPage()" id="prev-btn" title="Previous Page">
                     <span class="material-icons">chevron_left</span>

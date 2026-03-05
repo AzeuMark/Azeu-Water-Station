@@ -105,12 +105,21 @@ function renderInventory(items) {
     const endIndex = startIndex + itemsPerPage;
     const paginatedItems = items.slice(startIndex, endIndex);
     
-    // Update pagination info
-    document.getElementById('page-info').textContent = `Page ${currentPage} of ${totalPages || 1}`;
+    // Update pagination controls
+    const pageInfo = document.getElementById('page-info');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const paginationWrapper = document.getElementById('pagination-wrapper');
     
-    // Enable/disable buttons
-    document.getElementById('prev-btn').disabled = currentPage === 1;
-    document.getElementById('next-btn').disabled = currentPage >= totalPages;
+    // Hide pagination if only 1 page or no pages
+    if (totalPages <= 1) {
+        if (paginationWrapper) paginationWrapper.style.display = 'none';
+    } else {
+        if (paginationWrapper) paginationWrapper.style.display = 'flex';
+        if (pageInfo) pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+        if (prevBtn) prevBtn.disabled = currentPage === 1;
+        if (nextBtn) nextBtn.disabled = currentPage >= totalPages;
+    }
     
     if (paginatedItems.length > 0) {
         let html = '';

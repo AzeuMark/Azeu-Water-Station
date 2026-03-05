@@ -29,12 +29,38 @@ require_once __DIR__ . '/../includes/sidebar.php';
         <h1 class="content-title">Manage Accounts</h1>
     </div>
     
-    <div class="glass-card" style="margin-bottom: 24px;">
+    <!-- Desktop Filter Bar -->
+    <div class="glass-card filter-bar-desktop" style="margin-bottom: 24px;">
         <div class="filter-bar">
-            <button class="filter-btn active" data-role="">All Roles</button>
-            <button class="filter-btn" data-role="customer">Customers</button>
-            <button class="filter-btn" data-role="rider">Riders</button>
-            <button class="filter-btn" data-role="staff">Staff</button>
+            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; flex: 1;">
+                <div style="display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-weight: 500; font-size: 14px; white-space: nowrap;">
+                    <span class="material-icons" style="font-size: 20px;">filter_list</span>
+                    Filter:
+                </div>
+                <button class="filter-btn active" data-role="">All Roles</button>
+                <button class="filter-btn" data-role="customer">Customers</button>
+                <button class="filter-btn" data-role="rider">Riders</button>
+                <button class="filter-btn" data-role="staff">Staff</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Mobile Filter Dropdown -->
+    <div class="glass-card filter-bar-mobile" style="margin-bottom: 24px; display: none;">
+        <div style="padding: 16px;">
+            <div class="custom-select-wrapper">
+                <div class="custom-select-trigger" id="mobile-filter-trigger">
+                    <span class="material-icons" style="margin-right: 8px; font-size: 20px;">filter_list</span>
+                    <span class="selected-text">All Roles</span>
+                    <span class="material-icons arrow">expand_more</span>
+                </div>
+                <div class="custom-select-options" id="mobile-filter-options">
+                    <div class="custom-select-option selected" data-role="">All Roles</div>
+                    <div class="custom-select-option" data-role="customer">Customers</div>
+                    <div class="custom-select-option" data-role="rider">Riders</div>
+                    <div class="custom-select-option" data-role="staff">Staff</div>
+                </div>
+            </div>
         </div>
     </div>
     
@@ -43,6 +69,7 @@ require_once __DIR__ . '/../includes/sidebar.php';
             <table class="data-table">
                 <thead>
                     <tr>
+                        <th style="width: 60px; text-align: center;">No</th>
                         <th>Name</th>
                         <th>Username</th>
                         <th>Email</th>
@@ -52,9 +79,22 @@ require_once __DIR__ . '/../includes/sidebar.php';
                     </tr>
                 </thead>
                 <tbody id="accounts-tbody">
-                    <tr><td colspan="6" style="text-align: center; padding: 40px;"><div class="spinner"></div></td></tr>
+                    <tr><td colspan="7" style="text-align: center; padding: 40px;"><div class="spinner"></div></td></tr>
                 </tbody>
             </table>
+        </div>
+        
+        <!-- Pagination Controls -->
+        <div class="pagination-controls-wrapper" id="pagination-wrapper" style="display: none;">
+            <div class="pagination-controls">
+                <button class="btn-icon" onclick="previousPage()" id="prev-btn" title="Previous Page">
+                    <span class="material-icons">chevron_left</span>
+                </button>
+                <span class="page-info" id="page-info">Page 1 of 1</span>
+                <button class="btn-icon" onclick="nextPage()" id="next-btn" title="Next Page">
+                    <span class="material-icons">chevron_right</span>
+                </button>
+            </div>
         </div>
     </div>
 </main>
@@ -136,9 +176,159 @@ require_once __DIR__ . '/../includes/sidebar.php';
     </div>
 </div>
 
+<style>
+/* Pagination Controls - Bottom Center */
+.pagination-controls-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: 0 0 var(--radius) var(--radius);
+}
+
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    white-space: nowrap;
+}
+
+.page-info {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    padding: 0 8px;
+    min-width: 100px;
+    text-align: center;
+}
+
+/* Filter Bar Responsive */
+.filter-bar-desktop {
+    display: block;
+}
+
+.filter-bar-mobile {
+    display: none;
+    position: relative;
+    z-index: 100;
+}
+
+/* Custom Select Styles */
+.custom-select-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.custom-select-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.custom-select-trigger:hover {
+    border-color: var(--primary);
+}
+
+.custom-select-trigger.active {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(21, 101, 192, 0.1);
+}
+
+.custom-select-trigger .arrow {
+    transition: transform 0.3s ease;
+}
+
+.custom-select-trigger.active .arrow {
+    transform: rotate(180deg);
+}
+
+.custom-select-options {
+    position: absolute;
+    top: calc(100% + 1px);
+    left: 0;
+    right: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.05);
+    max-height: 190px;
+    overflow-y: auto;
+    z-index: 1001;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.custom-select-options.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.custom-select-option {
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: background 0.2s;
+    color: var(--text-primary);
+}
+
+.custom-select-option:hover {
+    background: var(--hover);
+}
+
+.custom-select-option.selected {
+    background: var(--primary);
+    color: white;
+    font-weight: 600;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .filter-bar-desktop {
+        display: none;
+    }
+    
+    .filter-bar-mobile {
+        display: block !important;
+    }
+    
+    .pagination-controls-wrapper {
+        padding: 16px;
+    }
+    
+    .page-info {
+        font-size: 13px;
+        min-width: 90px;
+    }
+    
+    .btn-icon {
+        width: 32px;
+        height: 32px;
+    }
+    
+    .btn-icon .material-icons {
+        font-size: 20px;
+    }
+}
+</style>
+
 <script>
 let currentRoleFilter = '';
 const currentUserRole = '<?php echo $_SESSION['role']; ?>';
+let allAccounts = [];
+let currentPage = 1;
+let itemsPerPage = 20;
 
 document.addEventListener('DOMContentLoaded', function() {
     loadAccounts();
@@ -151,6 +341,49 @@ document.addEventListener('DOMContentLoaded', function() {
             loadAccounts();
         });
     });
+    
+    // Mobile Filter Dropdown Handler
+    const mobileTrigger = document.getElementById('mobile-filter-trigger');
+    const mobileOptions = document.getElementById('mobile-filter-options');
+    const mobileSelectedText = mobileTrigger?.querySelector('.selected-text');
+    
+    if (mobileTrigger && mobileOptions) {
+        mobileTrigger.addEventListener('click', function(e) {
+            e.stopPropagation();
+            mobileTrigger.classList.toggle('active');
+            mobileOptions.classList.toggle('active');
+        });
+        
+        document.addEventListener('click', function(e) {
+            if (!mobileTrigger.contains(e.target) && !mobileOptions.contains(e.target)) {
+                mobileTrigger.classList.remove('active');
+                mobileOptions.classList.remove('active');
+            }
+        });
+        
+        mobileOptions.addEventListener('click', function(e) {
+            const option = e.target.closest('.custom-select-option');
+            if (!option) return;
+            
+            const roleType = option.dataset.role;
+            const text = option.textContent.trim();
+            
+            mobileOptions.querySelectorAll('.custom-select-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            
+            option.classList.add('selected');
+            mobileSelectedText.textContent = text;
+            
+            mobileTrigger.classList.remove('active');
+            mobileOptions.classList.remove('active');
+            
+            const desktopButton = document.querySelector(`.filter-btn[data-role="${roleType}"]`);
+            if (desktopButton) {
+                desktopButton.click();
+            }
+        });
+    }
 });
 
 async function loadAccounts() {
@@ -162,10 +395,38 @@ async function loadAccounts() {
         const tbody = document.getElementById('accounts-tbody');
         
         if (data.success && data.accounts.length > 0) {
-            let html = '';
-            data.accounts.forEach(acc => {
+            allAccounts = data.accounts;
+            currentPage = 1;
+            renderAccounts();
+        } else {
+            tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><p>No accounts found</p></div></td></tr>';
+            updatePaginationControls(0);
+        }
+    } catch (error) {
+        console.error('Failed to load accounts:', error);
+    }
+}
+
+function renderAccounts() {
+    const tbody = document.getElementById('accounts-tbody');
+    
+    if (allAccounts.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><p>No accounts found</p></div></td></tr>';
+        updatePaginationControls(0);
+        return;
+    }
+    
+    const totalPages = Math.ceil(allAccounts.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedAccounts = allAccounts.slice(startIndex, endIndex);
+    
+    let html = '';
+    paginatedAccounts.forEach((acc, index) => {
+        const rowNumber = startIndex + index + 1;
                 html += `
                     <tr>
+                        <td style="text-align: center; color: var(--text-secondary); font-weight: 600;">${rowNumber}</td>
                         <td>${acc.full_name}</td>
                         <td>${acc.username}</td>
                         <td>${acc.email}</td>
@@ -207,12 +468,43 @@ async function loadAccounts() {
                     </tr>
                 `;
             });
-            tbody.innerHTML = html;
-        } else {
-            tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><p>No accounts found</p></div></td></tr>';
-        }
-    } catch (error) {
-        console.error('Failed to load accounts:', error);
+    tbody.innerHTML = html;
+    updatePaginationControls(totalPages);
+}
+
+function updatePaginationControls(totalPages) {
+    const pageInfo = document.getElementById('page-info');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const paginationWrapper = document.getElementById('pagination-wrapper');
+    
+    if (!pageInfo) return;
+    
+    // Hide pagination if only 1 page or no pages
+    if (totalPages <= 1) {
+        if (paginationWrapper) paginationWrapper.style.display = 'none';
+        return;
+    }
+    
+    if (paginationWrapper) paginationWrapper.style.display = 'flex';
+    pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+    
+    if (prevBtn) prevBtn.disabled = currentPage <= 1;
+    if (nextBtn) nextBtn.disabled = currentPage >= totalPages;
+}
+
+function previousPage() {
+    if (currentPage > 1) {
+        currentPage--;
+        renderAccounts();
+    }
+}
+
+function nextPage() {
+    const totalPages = Math.ceil(allAccounts.length / itemsPerPage);
+    if (currentPage < totalPages) {
+        currentPage++;
+        renderAccounts();
     }
 }
 
