@@ -6,7 +6,7 @@
 
 /**
  * Encrypt a plain text string using AES-256-CBC
- * 
+ *  
  * @param string $plainText The text to encrypt
  * @param string $key The encryption key
  * @return string Base64 encoded encrypted string with IV prepended

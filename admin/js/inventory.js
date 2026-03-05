@@ -88,7 +88,7 @@ async function loadInventory() {
             inventoryData = data.items; // Store data
             renderInventory(inventoryData); // Render
         } else {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px; color: var(--text-secondary);">No items found</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px; color: var(--text-secondary);">No items found</td></tr>';
         }
     } catch (error) {
         console.error('Error loading inventory:', error);
@@ -114,7 +114,10 @@ function renderInventory(items) {
     
     if (paginatedItems.length > 0) {
         let html = '';
-        paginatedItems.forEach(item => {
+        paginatedItems.forEach((item, index) => {
+            // Calculate row number based on current page and index
+            const rowNumber = startIndex + index + 1;
+            
             // Determine stock badge class
             const stockClass = item.stock_count === 0 ? 'danger' : (item.stock_count <= lowStockThreshold ? 'warning' : 'success');
             
@@ -132,6 +135,7 @@ function renderInventory(items) {
             
             html += `
                 <tr>
+                    <td style="text-align: center; color: var(--text-secondary); font-weight: 600;">${rowNumber}</td>
                     <td><strong>${item.item_name}</strong></td>
                     <td>${formatCurrency(item.price)}</td>
                         <td><span class="badge badge-${stockClass}">${item.stock_count}</span></td>
@@ -152,7 +156,7 @@ function renderInventory(items) {
         });
         tbody.innerHTML = html;
     } else {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px; color: var(--text-secondary);">No items found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px; color: var(--text-secondary);">No items found</td></tr>';
     }
 }
 

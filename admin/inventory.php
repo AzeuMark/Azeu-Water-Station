@@ -31,7 +31,8 @@ require_once __DIR__ . '/../includes/sidebar.php';
         </div>
     </div>
     
-    <div class="glass-card" style="margin-bottom: 24px;">
+    <!-- Desktop Filter Bar -->
+    <div class="glass-card filter-bar-desktop" style="margin-bottom: 24px;">
         <div class="filter-bar">
             <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; flex: 1;">
                 <div style="display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-weight: 500; font-size: 14px; white-space: nowrap;">
@@ -45,14 +46,26 @@ require_once __DIR__ . '/../includes/sidebar.php';
                 <button class="filter-btn" data-sort="price-desc" onclick="applySortFilter(this, 'price-desc')">Price ↓</button>
                 <button class="filter-btn" data-sort="status" onclick="applySortFilter(this, 'status')">Status</button>
             </div>
-            <div class="pagination-controls">
-                <button class="btn-icon" onclick="previousPage()" id="prev-btn" title="Previous Page">
-                    <span class="material-icons">chevron_left</span>
-                </button>
-                <span class="page-info" id="page-info">Page 1 of 1</span>
-                <button class="btn-icon" onclick="nextPage()" id="next-btn" title="Next Page">
-                    <span class="material-icons">chevron_right</span>
-                </button>
+        </div>
+    </div>
+    
+    <!-- Mobile Filter Dropdown -->
+    <div class="glass-card filter-bar-mobile" style="margin-bottom: 24px; display: none;">
+        <div style="padding: 16px;">
+            <div class="custom-select-wrapper">
+                <div class="custom-select-trigger" id="mobile-filter-trigger">
+                    <span class="material-icons" style="margin-right: 8px; font-size: 20px;">sort</span>
+                    <span class="selected-text">Name (A-Z)</span>
+                    <span class="material-icons arrow">expand_more</span>
+                </div>
+                <div class="custom-select-options" id="mobile-filter-options">
+                    <div class="custom-select-option selected" data-sort="name">Name (A-Z)</div>
+                    <div class="custom-select-option" data-sort="stock-asc">Stock (Low to High)</div>
+                    <div class="custom-select-option" data-sort="stock-desc">Stock (High to Low)</div>
+                    <div class="custom-select-option" data-sort="price-asc">Price (Low to High)</div>
+                    <div class="custom-select-option" data-sort="price-desc">Price (High to Low)</div>
+                    <div class="custom-select-option" data-sort="status">Status</div>
+                </div>
             </div>
         </div>
     </div>
@@ -62,6 +75,7 @@ require_once __DIR__ . '/../includes/sidebar.php';
             <table class="data-table">
                 <thead>
                     <tr>
+                        <th style="width: 60px; text-align: center;">No</th>
                         <th>Item</th>
                         <th>Price</th>
                         <th>Stock</th>
@@ -70,9 +84,22 @@ require_once __DIR__ . '/../includes/sidebar.php';
                     </tr>
                 </thead>
                 <tbody id="inventory-tbody">
-                    <tr><td colspan="5" style="text-align: center; padding: 40px;"><div class="spinner"></div></td></tr>
+                    <tr><td colspan="6" style="text-align: center; padding: 40px;"><div class="spinner"></div></td></tr>
                 </tbody>
             </table>
+        </div>
+        
+        <!-- Pagination Controls (moved inside table card) -->
+        <div class="pagination-controls-wrapper">
+            <div class="pagination-controls">
+                <button class="btn-icon" onclick="previousPage()" id="prev-btn" title="Previous Page">
+                    <span class="material-icons">chevron_left</span>
+                </button>
+                <span class="page-info" id="page-info">Page 1 of 1</span>
+                <button class="btn-icon" onclick="nextPage()" id="next-btn" title="Next Page">
+                    <span class="material-icons">chevron_right</span>
+                </button>
+            </div>
         </div>
     </div>
 </main>
@@ -149,12 +176,21 @@ require_once __DIR__ . '/../includes/sidebar.php';
 </div>
 
 <style>
-/* Pagination Controls */
+/* Pagination Controls - Now at bottom center */
+.pagination-controls-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: 0 0 var(--radius) var(--radius);
+}
+
 .pagination-controls {
     display: flex;
     align-items: center;
     gap: 12px;
-    margin-left: auto;
     white-space: nowrap;
 }
 
@@ -165,6 +201,48 @@ require_once __DIR__ . '/../includes/sidebar.php';
     padding: 0 8px;
     min-width: 100px;
     text-align: center;
+}
+
+/* Filter Bar Responsive */
+.filter-bar-desktop {
+    display: block;
+}
+
+.filter-bar-mobile {
+    display: none;
+    position: relative;
+    z-index: 100;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    /* Hide desktop filter bar, show mobile dropdown */
+    .filter-bar-desktop {
+        display: none;
+    }
+    
+    .filter-bar-mobile {
+        display: block !important;
+    }
+    
+    /* Adjust pagination for mobile */
+    .pagination-controls-wrapper {
+        padding: 16px;
+    }
+    
+    .page-info {
+        font-size: 13px;
+        min-width: 90px;
+    }
+    
+    .btn-icon {
+        width: 32px;
+        height: 32px;
+    }
+    
+    .btn-icon .material-icons {
+        font-size: 20px;
+    }
 }
 
 /* Beautiful Custom Select Box */
@@ -233,7 +311,7 @@ require_once __DIR__ . '/../includes/sidebar.php';
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.05);
     max-height: 190px;
     overflow-y: auto;
-    z-index: 1000;
+    z-index: 1001;
     opacity: 0;
     visibility: hidden;
     transform: translateY(-10px);
@@ -380,6 +458,58 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Trigger custom change event
         toggleCustomItemName();
+    });
+    
+    // ========================================
+    // MOBILE FILTER DROPDOWN
+    // ========================================
+    const mobileTrigger = document.getElementById('mobile-filter-trigger');
+    const mobileOptions = document.getElementById('mobile-filter-options');
+    const mobileSelectedText = mobileTrigger.querySelector('.selected-text');
+    
+    // Toggle mobile filter dropdown
+    mobileTrigger.addEventListener('click', function(e) {
+        e.stopPropagation();
+        mobileTrigger.classList.toggle('active');
+        mobileOptions.classList.toggle('active');
+    });
+    
+    // Close mobile dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!mobileTrigger.contains(e.target) && !mobileOptions.contains(e.target)) {
+            mobileTrigger.classList.remove('active');
+            mobileOptions.classList.remove('active');
+        }
+    });
+    
+    // Handle mobile filter option selection
+    mobileOptions.addEventListener('click', function(e) {
+        const option = e.target.closest('.custom-select-option');
+        if (!option) return;
+        
+        const sortType = option.dataset.sort;
+        const text = option.textContent.trim();
+        
+        // Remove selected class from all options
+        mobileOptions.querySelectorAll('.custom-select-option').forEach(opt => {
+            opt.classList.remove('selected');
+        });
+        
+        // Add selected class to clicked option
+        option.classList.add('selected');
+        
+        // Update selected text
+        mobileSelectedText.textContent = text;
+        
+        // Close dropdown
+        mobileTrigger.classList.remove('active');
+        mobileOptions.classList.remove('active');
+        
+        // Apply the sort filter (simulate click on desktop filter button)
+        const desktopButton = document.querySelector(`.filter-btn[data-sort="${sortType}"]`);
+        if (desktopButton) {
+            applySortFilter(desktopButton, sortType);
+        }
     });
 });
 
