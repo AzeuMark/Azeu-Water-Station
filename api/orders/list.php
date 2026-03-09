@@ -83,7 +83,8 @@ try {
     // Get orders
     $query = "SELECT o.*, 
               u.full_name as customer_name,
-              r.full_name as rider_name
+              r.full_name as rider_name,
+              (SELECT COUNT(*) FROM order_items WHERE order_id = o.id) as item_count
               FROM orders o
               JOIN users u ON o.customer_id = u.id
               LEFT JOIN users r ON o.rider_id = r.id

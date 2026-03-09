@@ -1,0 +1,318 @@
+[2026-03-10 00:31:02] [INFO] [database.php] [logger_info] — Database connection established | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/admin/orders.php?id=10' | method='GET'
+[2026-03-10 00:31:02] [INFO] [database.php] [logger_info] — Using database: station_azeu | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/admin/orders.php?id=10' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'users' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/admin/orders.php?id=10' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'user_preferences' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/admin/orders.php?id=10' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'customer_addresses' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/admin/orders.php?id=10' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'inventory' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/admin/orders.php?id=10' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'orders' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/admin/orders.php?id=10' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'order_items' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/admin/orders.php?id=10' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'notifications' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/admin/orders.php?id=10' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'session_logs' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/admin/orders.php?id=10' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'settings' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/admin/orders.php?id=10' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'default_items' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/admin/orders.php?id=10' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'cancellation_appeals' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/admin/orders.php?id=10' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'password_resets' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/admin/orders.php?id=10' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'delivery_priority' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/admin/orders.php?id=10' | method='GET'
+[2026-03-10 00:31:02] [INFO] [database.php] [logger_info] — All tables created/verified successfully | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/admin/orders.php?id=10' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [session.php] [logger_debug] — Cleanup tasks completed | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/admin/orders.php?id=10' | method='GET'
+[2026-03-10 00:31:02] [INFO] [request_logger.php] [logger_info] — REQUEST STARTED | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/admin/orders.php?id=10' | method='GET' | script='orders.php' | query_string='id=10' | user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36' | referer='http://localhost/Station_A/admin/orders.php' | get_params='{"id":"10"}'
+[2026-03-10 00:31:02] [INFO] [request_logger.php] [logger_info] — PAGE VIEW: orders.php | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/admin/orders.php?id=10' | method='GET' | session_active=true | logged_in=true
+[2026-03-10 00:31:02] [DEBUG] [request_logger.php] [logger_debug] — REQUEST COMPLETED | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/admin/orders.php?id=10' | method='GET' | total_duration_ms=53.31
+[2026-03-10 00:31:02] [INFO] [request_logger.php] [logger_info] — REQUEST STARTED | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/notifications/count_unread.php' | method='GET' | script='count_unread.php' | query_string='' | user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36' | referer='http://localhost/Station_A/admin/orders.php?id=10'
+[2026-03-10 00:31:02] [INFO] [request_logger.php] [logger_info] — API ENDPOINT: notifications/count_unread | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/notifications/count_unread.php' | method='GET'
+[2026-03-10 00:31:02] [INFO] [database.php] [logger_info] — Database connection established | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/notifications/count_unread.php' | method='GET'
+[2026-03-10 00:31:02] [INFO] [database.php] [logger_info] — Using database: station_azeu | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/notifications/count_unread.php' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'users' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/notifications/count_unread.php' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'user_preferences' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/notifications/count_unread.php' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'customer_addresses' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/notifications/count_unread.php' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'inventory' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/notifications/count_unread.php' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'orders' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/notifications/count_unread.php' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'order_items' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/notifications/count_unread.php' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'notifications' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/notifications/count_unread.php' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'session_logs' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/notifications/count_unread.php' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'settings' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/notifications/count_unread.php' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'default_items' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/notifications/count_unread.php' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'cancellation_appeals' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/notifications/count_unread.php' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'password_resets' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/notifications/count_unread.php' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'delivery_priority' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/notifications/count_unread.php' | method='GET'
+[2026-03-10 00:31:02] [INFO] [database.php] [logger_info] — All tables created/verified successfully | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/notifications/count_unread.php' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [logger.php] [logger_debug] — SQL QUERY | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/notifications/count_unread.php' | method='GET' | query='SELECT COUNT(*) as count FROM notifications WHERE user_id = ? AND is_read = 0' | params='[1]' | duration='0.42ms'
+[2026-03-10 00:31:02] [DEBUG] [request_logger.php] [logger_debug] — REQUEST COMPLETED | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/notifications/count_unread.php' | method='GET' | total_duration_ms=10.83
+[2026-03-10 00:31:02] [INFO] [request_logger.php] [logger_info] — REQUEST STARTED | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/riders/list.php?available_only=true' | method='GET' | script='list.php' | query_string='available_only=true' | user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36' | referer='http://localhost/Station_A/admin/orders.php?id=10' | get_params='{"available_only":"true"}'
+[2026-03-10 00:31:02] [INFO] [request_logger.php] [logger_info] — API ENDPOINT: riders/list | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/riders/list.php?available_only=true' | method='GET'
+[2026-03-10 00:31:02] [INFO] [database.php] [logger_info] — Database connection established | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/riders/list.php?available_only=true' | method='GET'
+[2026-03-10 00:31:02] [INFO] [database.php] [logger_info] — Using database: station_azeu | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/riders/list.php?available_only=true' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'users' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/riders/list.php?available_only=true' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'user_preferences' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/riders/list.php?available_only=true' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'customer_addresses' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/riders/list.php?available_only=true' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'inventory' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/riders/list.php?available_only=true' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'orders' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/riders/list.php?available_only=true' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'order_items' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/riders/list.php?available_only=true' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'notifications' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/riders/list.php?available_only=true' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'session_logs' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/riders/list.php?available_only=true' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'settings' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/riders/list.php?available_only=true' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'default_items' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/riders/list.php?available_only=true' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'cancellation_appeals' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/riders/list.php?available_only=true' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'password_resets' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/riders/list.php?available_only=true' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'delivery_priority' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/riders/list.php?available_only=true' | method='GET'
+[2026-03-10 00:31:02] [INFO] [database.php] [logger_info] — All tables created/verified successfully | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/riders/list.php?available_only=true' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [logger.php] [logger_debug] — SQL QUERY | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/riders/list.php?available_only=true' | method='GET' | query='SELECT id, username, full_name, email, phone, is_available, created_at FROM users WHERE role = \'rider\' AND status = \'active\' AND deleted_at IS NULL AND is_available = 1 ORDER BY full_name ASC' | params='[]' | duration='0.41ms'
+[2026-03-10 00:31:02] [DEBUG] [logger.php] [logger_debug] — SQL QUERY | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/riders/list.php?available_only=true' | method='GET' | query='SELECT 
+             COUNT(*) as total_deliveries,
+             SUM(CASE WHEN status = \'assigned\' THEN 1 ELSE 0 END) as assigned_deliveries,
+             SUM(CASE WHEN status IN (\'delivered\', \'accepted\') THEN 1 ELSE 0 END) as completed_deliveries
+             FROM orders WHERE rider_id = ?' | params='[5]' | duration='0.24ms'
+[2026-03-10 00:31:02] [DEBUG] [logger.php] [logger_debug] — SQL QUERY | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/riders/list.php?available_only=true' | method='GET' | query='SELECT 
+             COUNT(*) as total_deliveries,
+             SUM(CASE WHEN status = \'assigned\' THEN 1 ELSE 0 END) as assigned_deliveries,
+             SUM(CASE WHEN status IN (\'delivered\', \'accepted\') THEN 1 ELSE 0 END) as completed_deliveries
+             FROM orders WHERE rider_id = ?' | params='[4]' | duration='0.25ms'
+[2026-03-10 00:31:02] [DEBUG] [request_logger.php] [logger_debug] — REQUEST COMPLETED | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/riders/list.php?available_only=true' | method='GET' | total_duration_ms=11.58
+[2026-03-10 00:31:02] [INFO] [request_logger.php] [logger_info] — REQUEST STARTED | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/list.php' | method='GET' | script='list.php' | query_string='' | user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36' | referer='http://localhost/Station_A/admin/orders.php?id=10'
+[2026-03-10 00:31:02] [INFO] [request_logger.php] [logger_info] — API ENDPOINT: orders/list | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/list.php' | method='GET'
+[2026-03-10 00:31:02] [INFO] [database.php] [logger_info] — Database connection established | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/list.php' | method='GET'
+[2026-03-10 00:31:02] [INFO] [database.php] [logger_info] — Using database: station_azeu | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/list.php' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'users' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/list.php' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'user_preferences' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/list.php' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'customer_addresses' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/list.php' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'inventory' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/list.php' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'orders' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/list.php' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'order_items' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/list.php' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'notifications' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/list.php' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'session_logs' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/list.php' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'settings' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/list.php' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'default_items' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/list.php' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'cancellation_appeals' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/list.php' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'password_resets' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/list.php' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'delivery_priority' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/list.php' | method='GET'
+[2026-03-10 00:31:02] [INFO] [database.php] [logger_info] — All tables created/verified successfully | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/list.php' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [logger.php] [logger_debug] — SQL QUERY | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/list.php' | method='GET' | query='SELECT COUNT(*) as total FROM orders o WHERE 1=1' | params='[]' | duration='0.34ms'
+[2026-03-10 00:31:02] [DEBUG] [logger.php] [logger_debug] — SQL QUERY | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/list.php' | method='GET' | query='SELECT o.*, 
+              u.full_name as customer_name,
+              r.full_name as rider_name,
+              (SELECT COUNT(*) FROM order_items WHERE order_id = o.id) as item_count
+              FROM orders o
+              JOIN users u ON o.customer_id = u.id
+              LEFT JOIN users r ON o.rider_id = r.id
+              WHERE 1=1
+              ORDER BY o.created_at DESC
+              LIMIT ? OFFSET ?' | params='[20,0]' | duration='0.41ms'
+[2026-03-10 00:31:02] [DEBUG] [list.php] [logger_debug] — Orders list retrieved | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/list.php' | method='GET' | count=7 | total=7
+[2026-03-10 00:31:02] [DEBUG] [request_logger.php] [logger_debug] — REQUEST COMPLETED | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/list.php' | method='GET' | total_duration_ms=11.34
+[2026-03-10 00:31:02] [INFO] [request_logger.php] [logger_info] — REQUEST STARTED | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=2' | method='GET' | script='get.php' | query_string='id=2' | user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36' | referer='http://localhost/Station_A/admin/orders.php?id=10' | get_params='{"id":"2"}'
+[2026-03-10 00:31:02] [INFO] [request_logger.php] [logger_info] — API ENDPOINT: orders/get | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=2' | method='GET'
+[2026-03-10 00:31:02] [INFO] [database.php] [logger_info] — Database connection established | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=2' | method='GET'
+[2026-03-10 00:31:02] [INFO] [database.php] [logger_info] — Using database: station_azeu | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=2' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'users' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=2' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'user_preferences' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=2' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'customer_addresses' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=2' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'inventory' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=2' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'orders' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=2' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'order_items' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=2' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'notifications' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=2' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'session_logs' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=2' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'settings' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=2' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'default_items' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=2' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'cancellation_appeals' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=2' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'password_resets' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=2' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'delivery_priority' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=2' | method='GET'
+[2026-03-10 00:31:02] [INFO] [database.php] [logger_info] — All tables created/verified successfully | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=2' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [logger.php] [logger_debug] — SQL QUERY | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=2' | method='GET' | query='SELECT o.*, 
+              u.full_name as customer_name, 
+              u.email as customer_email, 
+              u.phone as customer_phone,
+              r.full_name as rider_name,
+              r.phone as rider_phone
+              FROM orders o
+              JOIN users u ON o.customer_id = u.id
+              LEFT JOIN users r ON o.rider_id = r.id
+              WHERE o.id = ?' | params='[2]' | duration='0.3ms'
+[2026-03-10 00:31:02] [DEBUG] [logger.php] [logger_debug] — SQL QUERY | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=2' | method='GET' | query='SELECT * FROM order_items WHERE order_id = ?' | params='[2]' | duration='0.18ms'
+[2026-03-10 00:31:02] [DEBUG] [get.php] [logger_debug] — Order details retrieved | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=2' | method='GET' | order_id=2
+[2026-03-10 00:31:02] [DEBUG] [request_logger.php] [logger_debug] — REQUEST COMPLETED | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=2' | method='GET' | total_duration_ms=11.36
+[2026-03-10 00:31:02] [INFO] [request_logger.php] [logger_info] — REQUEST STARTED | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=1' | method='GET' | script='get.php' | query_string='id=1' | user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36' | referer='http://localhost/Station_A/admin/orders.php?id=10' | get_params='{"id":"1"}'
+[2026-03-10 00:31:02] [INFO] [request_logger.php] [logger_info] — API ENDPOINT: orders/get | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=1' | method='GET'
+[2026-03-10 00:31:02] [INFO] [database.php] [logger_info] — Database connection established | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=1' | method='GET'
+[2026-03-10 00:31:02] [INFO] [database.php] [logger_info] — Using database: station_azeu | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=1' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'users' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=1' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'user_preferences' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=1' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'customer_addresses' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=1' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'inventory' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=1' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'orders' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=1' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'order_items' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=1' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'notifications' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=1' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'session_logs' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=1' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'settings' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=1' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'default_items' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=1' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'cancellation_appeals' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=1' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'password_resets' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=1' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'delivery_priority' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=1' | method='GET'
+[2026-03-10 00:31:02] [INFO] [database.php] [logger_info] — All tables created/verified successfully | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=1' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [logger.php] [logger_debug] — SQL QUERY | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=1' | method='GET' | query='SELECT o.*, 
+              u.full_name as customer_name, 
+              u.email as customer_email, 
+              u.phone as customer_phone,
+              r.full_name as rider_name,
+              r.phone as rider_phone
+              FROM orders o
+              JOIN users u ON o.customer_id = u.id
+              LEFT JOIN users r ON o.rider_id = r.id
+              WHERE o.id = ?' | params='[1]' | duration='0.27ms'
+[2026-03-10 00:31:02] [DEBUG] [logger.php] [logger_debug] — SQL QUERY | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=1' | method='GET' | query='SELECT * FROM order_items WHERE order_id = ?' | params='[1]' | duration='0.22ms'
+[2026-03-10 00:31:02] [DEBUG] [get.php] [logger_debug] — Order details retrieved | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=1' | method='GET' | order_id=1
+[2026-03-10 00:31:02] [DEBUG] [request_logger.php] [logger_debug] — REQUEST COMPLETED | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=1' | method='GET' | total_duration_ms=10.85
+[2026-03-10 00:31:02] [INFO] [request_logger.php] [logger_info] — REQUEST STARTED | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=3' | method='GET' | script='get.php' | query_string='id=3' | user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36' | referer='http://localhost/Station_A/admin/orders.php?id=10' | get_params='{"id":"3"}'
+[2026-03-10 00:31:02] [INFO] [request_logger.php] [logger_info] — API ENDPOINT: orders/get | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=3' | method='GET'
+[2026-03-10 00:31:02] [INFO] [database.php] [logger_info] — Database connection established | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=3' | method='GET'
+[2026-03-10 00:31:02] [INFO] [database.php] [logger_info] — Using database: station_azeu | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=3' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'users' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=3' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'user_preferences' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=3' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'customer_addresses' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=3' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'inventory' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=3' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'orders' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=3' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'order_items' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=3' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'notifications' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=3' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'session_logs' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=3' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'settings' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=3' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'default_items' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=3' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'cancellation_appeals' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=3' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'password_resets' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=3' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'delivery_priority' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=3' | method='GET'
+[2026-03-10 00:31:02] [INFO] [database.php] [logger_info] — All tables created/verified successfully | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=3' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [logger.php] [logger_debug] — SQL QUERY | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=3' | method='GET' | query='SELECT o.*, 
+              u.full_name as customer_name, 
+              u.email as customer_email, 
+              u.phone as customer_phone,
+              r.full_name as rider_name,
+              r.phone as rider_phone
+              FROM orders o
+              JOIN users u ON o.customer_id = u.id
+              LEFT JOIN users r ON o.rider_id = r.id
+              WHERE o.id = ?' | params='[3]' | duration='0.38ms'
+[2026-03-10 00:31:02] [DEBUG] [logger.php] [logger_debug] — SQL QUERY | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=3' | method='GET' | query='SELECT * FROM order_items WHERE order_id = ?' | params='[3]' | duration='0.25ms'
+[2026-03-10 00:31:02] [DEBUG] [get.php] [logger_debug] — Order details retrieved | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=3' | method='GET' | order_id=3
+[2026-03-10 00:31:02] [DEBUG] [request_logger.php] [logger_debug] — REQUEST COMPLETED | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=3' | method='GET' | total_duration_ms=13.05
+[2026-03-10 00:31:02] [INFO] [request_logger.php] [logger_info] — REQUEST STARTED | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=5' | method='GET' | script='get.php' | query_string='id=5' | user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36' | referer='http://localhost/Station_A/admin/orders.php?id=10' | get_params='{"id":"5"}'
+[2026-03-10 00:31:02] [INFO] [request_logger.php] [logger_info] — API ENDPOINT: orders/get | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=5' | method='GET'
+[2026-03-10 00:31:02] [INFO] [database.php] [logger_info] — Database connection established | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=5' | method='GET'
+[2026-03-10 00:31:02] [INFO] [database.php] [logger_info] — Using database: station_azeu | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=5' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'users' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=5' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'user_preferences' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=5' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'customer_addresses' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=5' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'inventory' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=5' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'orders' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=5' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'order_items' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=5' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'notifications' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=5' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'session_logs' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=5' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'settings' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=5' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'default_items' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=5' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'cancellation_appeals' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=5' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'password_resets' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=5' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'delivery_priority' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=5' | method='GET'
+[2026-03-10 00:31:02] [INFO] [database.php] [logger_info] — All tables created/verified successfully | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=5' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [logger.php] [logger_debug] — SQL QUERY | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=5' | method='GET' | query='SELECT o.*, 
+              u.full_name as customer_name, 
+              u.email as customer_email, 
+              u.phone as customer_phone,
+              r.full_name as rider_name,
+              r.phone as rider_phone
+              FROM orders o
+              JOIN users u ON o.customer_id = u.id
+              LEFT JOIN users r ON o.rider_id = r.id
+              WHERE o.id = ?' | params='[5]' | duration='0.57ms'
+[2026-03-10 00:31:02] [DEBUG] [logger.php] [logger_debug] — SQL QUERY | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=5' | method='GET' | query='SELECT * FROM order_items WHERE order_id = ?' | params='[5]' | duration='0.28ms'
+[2026-03-10 00:31:02] [DEBUG] [get.php] [logger_debug] — Order details retrieved | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=5' | method='GET' | order_id=5
+[2026-03-10 00:31:02] [DEBUG] [request_logger.php] [logger_debug] — REQUEST COMPLETED | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=5' | method='GET' | total_duration_ms=35.24
+[2026-03-10 00:31:02] [INFO] [request_logger.php] [logger_info] — REQUEST STARTED | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=4' | method='GET' | script='get.php' | query_string='id=4' | user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36' | referer='http://localhost/Station_A/admin/orders.php?id=10' | get_params='{"id":"4"}'
+[2026-03-10 00:31:02] [INFO] [request_logger.php] [logger_info] — API ENDPOINT: orders/get | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=4' | method='GET'
+[2026-03-10 00:31:02] [INFO] [database.php] [logger_info] — Database connection established | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=4' | method='GET'
+[2026-03-10 00:31:02] [INFO] [database.php] [logger_info] — Using database: station_azeu | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=4' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'users' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=4' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'user_preferences' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=4' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'customer_addresses' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=4' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'inventory' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=4' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'orders' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=4' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'order_items' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=4' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'notifications' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=4' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'session_logs' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=4' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'settings' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=4' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'default_items' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=4' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'cancellation_appeals' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=4' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'password_resets' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=4' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'delivery_priority' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=4' | method='GET'
+[2026-03-10 00:31:02] [INFO] [database.php] [logger_info] — All tables created/verified successfully | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=4' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [logger.php] [logger_debug] — SQL QUERY | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=4' | method='GET' | query='SELECT o.*, 
+              u.full_name as customer_name, 
+              u.email as customer_email, 
+              u.phone as customer_phone,
+              r.full_name as rider_name,
+              r.phone as rider_phone
+              FROM orders o
+              JOIN users u ON o.customer_id = u.id
+              LEFT JOIN users r ON o.rider_id = r.id
+              WHERE o.id = ?' | params='[4]' | duration='0.34ms'
+[2026-03-10 00:31:02] [DEBUG] [logger.php] [logger_debug] — SQL QUERY | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=4' | method='GET' | query='SELECT * FROM order_items WHERE order_id = ?' | params='[4]' | duration='0.22ms'
+[2026-03-10 00:31:02] [DEBUG] [get.php] [logger_debug] — Order details retrieved | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=4' | method='GET' | order_id=4
+[2026-03-10 00:31:02] [DEBUG] [request_logger.php] [logger_debug] — REQUEST COMPLETED | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=4' | method='GET' | total_duration_ms=12.31
+[2026-03-10 00:31:02] [INFO] [request_logger.php] [logger_info] — REQUEST STARTED | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=6' | method='GET' | script='get.php' | query_string='id=6' | user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36' | referer='http://localhost/Station_A/admin/orders.php?id=10' | get_params='{"id":"6"}'
+[2026-03-10 00:31:02] [INFO] [request_logger.php] [logger_info] — API ENDPOINT: orders/get | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=6' | method='GET'
+[2026-03-10 00:31:02] [INFO] [database.php] [logger_info] — Database connection established | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=6' | method='GET'
+[2026-03-10 00:31:02] [INFO] [database.php] [logger_info] — Using database: station_azeu | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=6' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'users' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=6' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'user_preferences' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=6' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'customer_addresses' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=6' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'inventory' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=6' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'orders' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=6' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'order_items' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=6' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'notifications' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=6' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'session_logs' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=6' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'settings' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=6' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'default_items' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=6' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'cancellation_appeals' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=6' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'password_resets' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=6' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'delivery_priority' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=6' | method='GET'
+[2026-03-10 00:31:02] [INFO] [database.php] [logger_info] — All tables created/verified successfully | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=6' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [logger.php] [logger_debug] — SQL QUERY | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=6' | method='GET' | query='SELECT o.*, 
+              u.full_name as customer_name, 
+              u.email as customer_email, 
+              u.phone as customer_phone,
+              r.full_name as rider_name,
+              r.phone as rider_phone
+              FROM orders o
+              JOIN users u ON o.customer_id = u.id
+              LEFT JOIN users r ON o.rider_id = r.id
+              WHERE o.id = ?' | params='[6]' | duration='0.29ms'
+[2026-03-10 00:31:02] [DEBUG] [logger.php] [logger_debug] — SQL QUERY | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=6' | method='GET' | query='SELECT * FROM order_items WHERE order_id = ?' | params='[6]' | duration='0.16ms'
+[2026-03-10 00:31:02] [DEBUG] [get.php] [logger_debug] — Order details retrieved | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=6' | method='GET' | order_id=6
+[2026-03-10 00:31:02] [DEBUG] [request_logger.php] [logger_debug] — REQUEST COMPLETED | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=6' | method='GET' | total_duration_ms=11.8
+[2026-03-10 00:31:02] [INFO] [request_logger.php] [logger_info] — REQUEST STARTED | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=7' | method='GET' | script='get.php' | query_string='id=7' | user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36' | referer='http://localhost/Station_A/admin/orders.php?id=10' | get_params='{"id":"7"}'
+[2026-03-10 00:31:02] [INFO] [request_logger.php] [logger_info] — API ENDPOINT: orders/get | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=7' | method='GET'
+[2026-03-10 00:31:02] [INFO] [database.php] [logger_info] — Database connection established | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=7' | method='GET'
+[2026-03-10 00:31:02] [INFO] [database.php] [logger_info] — Using database: station_azeu | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=7' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'users' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=7' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'user_preferences' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=7' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'customer_addresses' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=7' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'inventory' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=7' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'orders' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=7' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'order_items' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=7' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'notifications' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=7' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'session_logs' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=7' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'settings' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=7' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'default_items' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=7' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'cancellation_appeals' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=7' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'password_resets' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=7' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [database.php] [logger_debug] — Table 'delivery_priority' checked/created | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=7' | method='GET'
+[2026-03-10 00:31:02] [INFO] [database.php] [logger_info] — All tables created/verified successfully | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=7' | method='GET'
+[2026-03-10 00:31:02] [DEBUG] [logger.php] [logger_debug] — SQL QUERY | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=7' | method='GET' | query='SELECT o.*, 
+              u.full_name as customer_name, 
+              u.email as customer_email, 
+              u.phone as customer_phone,
+              r.full_name as rider_name,
+              r.phone as rider_phone
+              FROM orders o
+              JOIN users u ON o.customer_id = u.id
+              LEFT JOIN users r ON o.rider_id = r.id
+              WHERE o.id = ?' | params='[7]' | duration='0.29ms'
+[2026-03-10 00:31:02] [DEBUG] [logger.php] [logger_debug] — SQL QUERY | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=7' | method='GET' | query='SELECT * FROM order_items WHERE order_id = ?' | params='[7]' | duration='0.16ms'
+[2026-03-10 00:31:02] [DEBUG] [get.php] [logger_debug] — Order details retrieved | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=7' | method='GET' | order_id=7
+[2026-03-10 00:31:02] [DEBUG] [request_logger.php] [logger_debug] — REQUEST COMPLETED | user_id=1 | username='admin' | role='super_admin' | ip='::1' | uri='/Station_A/api/orders/get.php?id=7' | method='GET' | total_duration_ms=10.29

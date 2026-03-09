@@ -47,30 +47,110 @@ function renderOrders(orders) {
     const tbody = document.getElementById('orders-tbody');
     
     if (orders.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><p>No orders found</p></div></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><p>No orders found</p></div></td></tr>';
         return;
     }
     
     let html = '';
     orders.forEach(order => {
+        const actionButtons = getActionButtons(order);
+        
         html += `
             <tr>
                 <td><strong>#${order.id}</strong></td>
                 <td>${order.customer_name}</td>
+                <td>
+                    <div class="items-box" id="items-box-${order.id}">
+                        <div class="items-loading">Loading...</div>
+                    </div>
+                </td>
                 <td>${formatDate(order.order_date)}</td>
                 <td>${order.delivery_type === 'delivery' ? 'Delivery' : 'Pickup'}</td>
                 <td><strong>${formatCurrency(order.total_amount)}</strong></td>
                 <td><span class="badge badge-${order.status}">${order.status.replace(/_/g, ' ')}</span></td>
-                <td>
-                    <button class="btn-icon" onclick="viewOrder(${order.id})" title="View">
-                        <span class="material-icons">visibility</span>
-                    </button>
+                <td style="white-space: nowrap;">
+                    ${actionButtons}
                 </td>
             </tr>
         `;
     });
     
     tbody.innerHTML = html;
+    
+    // Load items for all visible orders
+    orders.forEach(order => {
+        loadOrderItems(order.id);
+    });
+}
+
+function getActionButtons(order) {
+    let buttons = `
+        <button class="btn-icon" onclick="viewOrder(${order.id})" title="View Details">
+            <span class="material-icons">visibility</span>
+        </button>
+    `;
+    
+    // Status-specific action buttons
+    if (order.status === 'pending') {
+        buttons += `
+            <button class="btn-icon" onclick="confirmOrder(${order.id})" title="Confirm Order" style="color: var(--success);">
+                <span class="material-icons">check_circle</span>
+            </button>
+            <button class="btn-icon" onclick="cancelOrder(${order.id})" title="Cancel Order" style="color: var(--danger);">
+                <span class="material-icons">cancel</span>
+            </button>
+        `;
+    } else if (order.status === 'confirmed') {
+        if (order.delivery_type === 'delivery') {
+            buttons += `
+                <button class="btn-icon" onclick="showAssignRider(${order.id})" title="Assign Rider" style="color: var(--primary);">
+                    <span class="material-icons">delivery_dining</span>
+                </button>
+            `;
+        } else {
+            buttons += `
+                <button class="btn-icon" onclick="markReadyForPickup(${order.id})" title="Ready for Pickup" style="color: var(--success);">
+                    <span class="material-icons">done_all</span>
+                </button>
+            `;
+        }
+    } else if (order.status === 'assigned' && order.delivery_type === 'delivery') {
+        buttons += `
+            <button class="btn-icon" onclick="showAssignRider(${order.id})" title="Reassign Rider" style="color: var(--warning);">
+                <span class="material-icons">swap_horiz</span>
+            </button>
+        `;
+    }
+    
+    return buttons;
+}
+
+async function loadOrderItems(orderId) {
+    const itemsBox = document.getElementById(`items-box-${orderId}`);
+    if (!itemsBox) return;
+    
+    try {
+        const response = await fetch(`../api/orders/get.php?id=${orderId}`);
+        const data = await response.json();
+        
+        if (data.success && data.items) {
+            let itemsHtml = '';
+            data.items.forEach((item, index) => {
+                itemsHtml += `
+                    <div class="item-entry">
+                        <span class="item-num">${index + 1}.</span>
+                        <span class="item-info">${item.item_name} × ${item.quantity}</span>
+                        <span class="item-amount">${formatCurrency(item.subtotal)}</span>
+                    </div>
+                `;
+            });
+            itemsBox.innerHTML = itemsHtml;
+        } else {
+            itemsBox.innerHTML = '<div class="items-error">No items</div>';
+        }
+    } catch (error) {
+        itemsBox.innerHTML = '<div class="items-error">Failed to load</div>';
+    }
 }
 
 async function viewOrder(orderId) {
@@ -143,33 +223,78 @@ function showOrderModal(order, items) {
 }
 
 async function confirmOrder(orderId) {
-    if (!confirm('Confirm this order?')) return;
+    const result = await Swal.fire({
+        title: 'Confirm Order',
+        text: 'Are you sure you want to confirm this order?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: 'var(--success)',
+        cancelButtonColor: 'var(--text-muted)',
+        confirmButtonText: 'Yes, Confirm',
+        cancelButtonText: 'Cancel'
+    });
+    
+    if (!result.isConfirmed) return;
     
     await updateOrderStatus(orderId, 'confirmed');
 }
 
 async function cancelOrder(orderId) {
-    const reason = prompt('Reason for cancellation:');
-    if (!reason) return;
+    const result = await Swal.fire({
+        title: 'Cancel Order',
+        text: 'Please provide a reason for cancellation:',
+        icon: 'warning',
+        input: 'textarea',
+        inputPlaceholder: 'Enter cancellation reason...',
+        inputAttributes: {
+            'aria-label': 'Enter cancellation reason'
+        },
+        showCancelButton: true,
+        confirmButtonColor: 'var(--danger)',
+        cancelButtonColor: 'var(--text-muted)',
+        confirmButtonText: 'Cancel Order',
+        cancelButtonText: 'Close',
+        inputValidator: (value) => {
+            if (!value) {
+                return 'You need to provide a reason!';
+            }
+        }
+    });
+    
+    if (!result.isConfirmed) return;
     
     try {
         const response = await fetch('../api/orders/cancel.php', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ order_id: orderId, reason, csrf_token: getCSRFToken() })
+            body: JSON.stringify({ order_id: orderId, reason: result.value, csrf_token: getCSRFToken() })
         });
         
         const data = await response.json();
         
         if (data.success) {
-            showToast('Order cancelled', 'success');
+            Swal.fire({
+                icon: 'success',
+                title: 'Order Cancelled',
+                text: 'The order has been cancelled successfully.',
+                timer: 2000,
+                showConfirmButton: false
+            });
             closeModal('order-modal');
             loadOrders();
         } else {
-            showToast(data.message || 'Failed', 'error');
+            Swal.fire({
+                icon: 'error',
+                title: 'Failed',
+                text: data.message || 'Failed to cancel order'
+            });
         }
     } catch (error) {
-        showToast('An error occurred', 'error');
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'An error occurred while cancelling the order'
+        });
     }
 }
 

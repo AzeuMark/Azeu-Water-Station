@@ -45,6 +45,7 @@ require_once __DIR__ . '/../includes/sidebar.php';
                     <tr>
                         <th>ID</th>
                         <th>Customer</th>
+                        <th>Items</th>
                         <th>Date</th>
                         <th>Type</th>
                         <th>Total</th>
@@ -53,7 +54,7 @@ require_once __DIR__ . '/../includes/sidebar.php';
                     </tr>
                 </thead>
                 <tbody id="orders-tbody">
-                    <tr><td colspan="7" style="text-align: center; padding: 40px;"><div class="spinner"></div></td></tr>
+                    <tr><td colspan="8" style="text-align: center; padding: 40px;"><div class="spinner"></div></td></tr>
                 </tbody>
             </table>
         </div>
