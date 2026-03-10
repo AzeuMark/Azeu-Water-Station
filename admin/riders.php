@@ -1,10 +1,10 @@
 <?php
 /**
  * ============================================================================
- * AZEU WATER STATION - RIDERS MANAGEMENT
+ * AZEU WATER STATION - RIDERS MANAGEMENT (CONSOLIDATED)
  * ============================================================================
  * 
- * Purpose: View and manage rider accounts
+ * Purpose: View rider list + statistics in one page
  * Role: STAFF, ADMIN
  * Status: ✅ IMPLEMENTED
  * ============================================================================
@@ -22,98 +22,32 @@ require_once __DIR__ . '/../includes/sidebar.php';
 
 <main class="main-content">
     <div class="content-header">
-        <h1 class="content-title">Riders</h1>
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+            <h1 class="content-title">Riders</h1>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <label style="font-size: 14px; font-weight: 500; color: var(--text-secondary);">Sort by:</label>
+                <select id="sort-select" class="form-select" style="width: auto; min-width: 180px; padding: 10px 14px;" onchange="sortRiders()">
+                    <option value="name">Name (A-Z)</option>
+                    <option value="total_desc">Most Deliveries</option>
+                    <option value="total_asc">Least Deliveries</option>
+                    <option value="completion_desc">Highest Completion %</option>
+                    <option value="completion_asc">Lowest Completion %</option>
+                    <option value="available">Available First</option>
+                </select>
+            </div>
+        </div>
     </div>
     
-    <div class="glass-card">
-        <div class="data-table-wrapper">
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th style="width: 60px; text-align: center;">No</th>
-                        <th>Name</th>
-                        <th>Phone</th>
-                        <th>Available</th>
-                        <th>Total Deliveries</th>
-                        <th>Assigned</th>
-                        <th>Completed</th>
-                    </tr>
-                </thead>
-                <tbody id="riders-tbody">
-                    <tr><td colspan="7" style="text-align: center; padding: 40px;"><div class="spinner"></div></td></tr>
-                </tbody>
-            </table>
-        </div>
-        
-        <!-- Pagination Controls -->
-        <div class="pagination-controls-wrapper" id="pagination-wrapper" style="display: none;">
-            <div class="pagination-controls">
-                <button class="btn-icon" onclick="previousPage()" id="prev-btn" title="Previous Page">
-                    <span class="material-icons">chevron_left</span>
-                </button>
-                <span class="page-info" id="page-info">Page 1 of 1</span>
-                <button class="btn-icon" onclick="nextPage()" id="next-btn" title="Next Page">
-                    <span class="material-icons">chevron_right</span>
-                </button>
-            </div>
+    <!-- Rider Cards with Stats -->
+    <div id="riders-container" style="display: grid; gap: 20px;">
+        <div style="text-align: center; padding: 60px;">
+            <div class="spinner"></div>
         </div>
     </div>
 </main>
 
-<style>
-/* Pagination Controls - Bottom Center */
-.pagination-controls-wrapper {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 20px;
-    border-top: 1px solid var(--border);
-    background: var(--surface);
-    border-radius: 0 0 var(--radius) var(--radius);
-}
-
-.pagination-controls {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    white-space: nowrap;
-}
-
-.page-info {
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--text-primary);
-    padding: 0 8px;
-    min-width: 100px;
-    text-align: center;
-}
-
-/* Mobile Responsive */
-@media (max-width: 768px) {
-    .pagination-controls-wrapper {
-        padding: 16px;
-    }
-    
-    .page-info {
-        font-size: 13px;
-        min-width: 90px;
-    }
-    
-    .btn-icon {
-        width: 32px;
-        height: 32px;
-    }
-    
-    .btn-icon .material-icons {
-        font-size: 20px;
-    }
-}
-</style>
-
 <script>
 let allRiders = [];
-let currentPage = 1;
-let itemsPerPage = 20;
 
 document.addEventListener('DOMContentLoaded', loadRiders);
 
@@ -124,82 +58,102 @@ async function loadRiders() {
         
         if (data.success && data.riders.length > 0) {
             allRiders = data.riders;
-            currentPage = 1;
-            renderRiders();
+            sortRiders();
         } else {
-            const tbody = document.getElementById('riders-tbody');
-            tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><p>No riders</p></div></td></tr>';
-            updatePaginationControls(0);
+            document.getElementById('riders-container').innerHTML = '<div class="glass-card"><div class="empty-state"><span class="material-icons empty-icon">directions_bike</span><p class="empty-title">No riders found</p></div></div>';
         }
     } catch (error) {
         console.error('Error:', error);
     }
 }
 
-function renderRiders() {
-    const tbody = document.getElementById('riders-tbody');
+function sortRiders() {
+    const sortBy = document.getElementById('sort-select').value;
+    let sorted = [...allRiders];
     
-    if (allRiders.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><p>No riders</p></div></td></tr>';
-        updatePaginationControls(0);
-        return;
+    switch (sortBy) {
+        case 'name':
+            sorted.sort((a, b) => a.full_name.localeCompare(b.full_name));
+            break;
+        case 'total_desc':
+            sorted.sort((a, b) => b.total_deliveries - a.total_deliveries);
+            break;
+        case 'total_asc':
+            sorted.sort((a, b) => a.total_deliveries - b.total_deliveries);
+            break;
+        case 'completion_desc':
+            sorted.sort((a, b) => getCompletionRate(b) - getCompletionRate(a));
+            break;
+        case 'completion_asc':
+            sorted.sort((a, b) => getCompletionRate(a) - getCompletionRate(b));
+            break;
+        case 'available':
+            sorted.sort((a, b) => (b.is_available ? 1 : 0) - (a.is_available ? 1 : 0));
+            break;
     }
     
-    const totalPages = Math.ceil(allRiders.length / itemsPerPage);
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    const paginatedRiders = allRiders.slice(startIndex, endIndex);
+    renderRiders(sorted);
+}
+
+function getCompletionRate(rider) {
+    return rider.total_deliveries > 0 
+        ? Math.round((rider.completed_deliveries / rider.total_deliveries) * 100) 
+        : 0;
+}
+
+function renderRiders(riders) {
+    const container = document.getElementById('riders-container');
     
     let html = '';
-    paginatedRiders.forEach((rider, index) => {
-        const rowNumber = startIndex + index + 1;
+    riders.forEach((rider, index) => {
+        const completionRate = getCompletionRate(rider);
+        const barColor = completionRate >= 80 ? 'var(--success)' : completionRate >= 50 ? 'var(--warning)' : 'var(--danger)';
+        
         html += `
-            <tr>
-                <td style="text-align: center; color: var(--text-secondary); font-weight: 600;">${rowNumber}</td>
-                <td><strong>${rider.full_name}</strong></td>
-                <td>${rider.phone}</td>
-                <td>
+            <div class="glass-card" style="padding: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), #1976D2); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 18px;">
+                            ${rider.full_name.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                            <h4 style="margin: 0; font-size: 16px;">${rider.full_name}</h4>
+                            <p style="color: var(--text-muted); margin: 2px 0 0 0; font-size: 13px;">${rider.phone}</p>
+                        </div>
+                    </div>
                     <span class="badge ${rider.is_available ? 'badge-success' : 'badge-danger'}">
                         ${rider.is_available ? 'Available' : 'Unavailable'}
                     </span>
-                </td>
-                <td>${rider.total_deliveries}</td>
-                <td>${rider.assigned_deliveries}</td>
-                <td>${rider.completed_deliveries}</td>
-            </tr>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px;">
+                    <div style="text-align: center; padding: 12px; background: var(--surface); border-radius: 8px;">
+                        <div style="font-size: 1.5rem; font-weight: 700; color: var(--primary);">${rider.total_deliveries}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">Total</div>
+                    </div>
+                    <div style="text-align: center; padding: 12px; background: var(--surface); border-radius: 8px;">
+                        <div style="font-size: 1.5rem; font-weight: 700; color: var(--warning);">${rider.assigned_deliveries}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">Assigned</div>
+                    </div>
+                    <div style="text-align: center; padding: 12px; background: var(--surface); border-radius: 8px;">
+                        <div style="font-size: 1.5rem; font-weight: 700; color: var(--success);">${rider.completed_deliveries}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">Completed</div>
+                    </div>
+                    <div style="text-align: center; padding: 12px; background: var(--surface); border-radius: 8px;">
+                        <div style="font-size: 1.5rem; font-weight: 700; color: var(--info);">${completionRate}%</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">Rate</div>
+                    </div>
+                </div>
+                
+                <!-- Completion Progress Bar -->
+                <div style="background: var(--surface); border-radius: 6px; height: 8px; overflow: hidden;">
+                    <div style="height: 100%; width: ${completionRate}%; background: ${barColor}; border-radius: 6px; transition: width 0.5s ease;"></div>
+                </div>
+            </div>
         `;
     });
     
-    tbody.innerHTML = html;
-    updatePaginationControls(totalPages);
-}
-
-function updatePaginationControls(totalPages) {
-    const pageInfo = document.getElementById('page-info');
-    const prevBtn = document.getElementById('prev-btn');
-    const nextBtn = document.getElementById('next-btn');
-    
-    if (!pageInfo) return;
-    
-    pageInfo.textContent = `Page ${currentPage} of ${totalPages || 1}`;
-    
-    if (prevBtn) prevBtn.disabled = currentPage <= 1;
-    if (nextBtn) nextBtn.disabled = currentPage >= totalPages;
-}
-
-function previousPage() {
-    if (currentPage > 1) {
-        currentPage--;
-        renderRiders();
-    }
-}
-
-function nextPage() {
-    const totalPages = Math.ceil(allRiders.length / itemsPerPage);
-    if (currentPage < totalPages) {
-        currentPage++;
-        renderRiders();
-    }
+    container.innerHTML = html;
 }
 </script>
 

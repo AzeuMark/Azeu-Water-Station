@@ -93,10 +93,13 @@ function renderDeliveries(orders) {
                     </div>
                 </div>
                 
-                <div class="delivery-footer">
-                    <button class="btn btn-success" onclick="markAsDelivered(${order.id})">
+                <div class="delivery-footer" style="display: flex; gap: 8px;">
+                    <button class="btn btn-success" onclick="markAsDelivered(${order.id})" style="flex: 1;">
                         <span class="material-icons">check_circle</span>
                         Mark as Delivered
+                    </button>
+                    <button class="btn btn-warning" onclick="requestReassign(${order.id})" title="Request Reassignment" style="flex: 0;">
+                        <span class="material-icons">swap_horiz</span>
                     </button>
                 </div>
             </div>
@@ -163,6 +166,55 @@ async function markAsDelivered(orderId) {
     } catch (error) {
         hideLoading();
         console.error('Update status error:', error);
+        showToast('An error occurred', 'error');
+    }
+}
+
+/**
+ * Request reassignment
+ */
+async function requestReassign(orderId) {
+    const result = await Swal.fire({
+        title: 'Request Reassignment',
+        text: 'Please provide a reason for requesting reassignment:',
+        icon: 'warning',
+        input: 'textarea',
+        inputPlaceholder: 'Enter reason...',
+        showCancelButton: true,
+        confirmButtonText: 'Request Reassign',
+        confirmButtonColor: '#FFA726',
+        inputValidator: (value) => {
+            if (!value) return 'Please provide a reason!';
+        }
+    });
+    
+    if (!result.isConfirmed) return;
+    
+    showLoading();
+    
+    try {
+        const response = await fetch('../api/orders/update_status.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                order_id: orderId,
+                status: 'reassigning',
+                reason: result.value,
+                csrf_token: getCSRFToken()
+            })
+        });
+        
+        const data = await response.json();
+        hideLoading();
+        
+        if (data.success) {
+            showToast('Reassignment requested', 'success');
+            loadDeliveries();
+        } else {
+            showToast(data.message || 'Failed to request reassignment', 'error');
+        }
+    } catch (error) {
+        hideLoading();
         showToast('An error occurred', 'error');
     }
 }

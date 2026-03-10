@@ -79,6 +79,31 @@ function renderOrders(orders) {
     let html = '';
     
     orders.forEach(order => {
+        // Build inline action buttons
+        let actions = `
+            <button class="btn-icon" onclick="viewOrderDetails(${order.id})" title="View Details">
+                <span class="material-icons">visibility</span>
+            </button>
+        `;
+        
+        // Cancel button for pending orders
+        if (order.status === 'pending') {
+            actions += `
+                <button class="btn-icon" onclick="cancelOrder(${order.id})" title="Cancel Order" style="color: var(--danger);">
+                    <span class="material-icons">cancel</span>
+                </button>
+            `;
+        }
+        
+        // Confirm receipt for delivered/picked_up
+        if ((order.status === 'delivered' || order.status === 'picked_up') && order.customer_confirmed == 0) {
+            actions += `
+                <button class="btn-icon" onclick="confirmDelivery(${order.id})" title="Confirm Receipt" style="color: var(--success);">
+                    <span class="material-icons">check_circle</span>
+                </button>
+            `;
+        }
+        
         html += `
             <tr>
                 <td><strong>#${order.id}</strong></td>
@@ -91,10 +116,8 @@ function renderOrders(orders) {
                         ${getStatusLabel(order.status)}
                     </span>
                 </td>
-                <td>
-                    <button class="btn-icon" onclick="viewOrderDetails(${order.id})" title="View Details">
-                        <span class="material-icons">visibility</span>
-                    </button>
+                <td style="white-space: nowrap;">
+                    ${actions}
                 </td>
             </tr>
         `;

@@ -22,7 +22,13 @@ require_once __DIR__ . '/../includes/sidebar.php';
 
 <main class="main-content">
     <div class="content-header">
-        <h1 class="content-title">Pending Accounts</h1>
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+            <h1 class="content-title">Pending Accounts</h1>
+            <button class="btn-bulk btn-bulk-success" onclick="approveAll()">
+                <span class="material-icons">done_all</span>
+                Approve All Pending
+            </button>
+        </div>
     </div>
     
     <div class="glass-card">
@@ -47,6 +53,8 @@ require_once __DIR__ . '/../includes/sidebar.php';
 </main>
 
 <script>
+let allPendingAccounts = [];
+
 document.addEventListener('DOMContentLoaded', loadPending);
 
 async function loadPending() {
@@ -57,6 +65,7 @@ async function loadPending() {
         const tbody = document.getElementById('pending-tbody');
         
         if (data.success && data.accounts.length > 0) {
+            allPendingAccounts = data.accounts;
             let html = '';
             data.accounts.forEach(acc => {
                 html += `
@@ -104,6 +113,45 @@ async function approve(userId) {
     } catch (error) {
         showToast('Error occurred', 'error');
     }
+}
+
+async function approveAll() {
+    if (allPendingAccounts.length === 0) {
+        showToast('No pending accounts to approve', 'info');
+        return;
+    }
+    
+    const result = await Swal.fire({
+        title: 'Approve All Pending',
+        html: `Approve all <strong>${allPendingAccounts.length}</strong> pending account(s)?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, Approve All',
+        confirmButtonColor: '#66BB6A',
+        cancelButtonText: 'Cancel'
+    });
+    
+    if (!result.isConfirmed) return;
+    
+    showLoading();
+    let success = 0, failed = 0;
+    
+    for (const acc of allPendingAccounts) {
+        try {
+            const response = await fetch('../api/accounts/approve.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ user_id: acc.id, csrf_token: getCSRFToken() })
+            });
+            const data = await response.json();
+            if (data.success) success++;
+            else failed++;
+        } catch (e) { failed++; }
+    }
+    
+    hideLoading();
+    showToast(`Approved: ${success}, Failed: ${failed}`, success > 0 ? 'success' : 'error');
+    loadPending();
 }
 </script>
 

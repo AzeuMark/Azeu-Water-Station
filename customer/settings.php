@@ -99,21 +99,7 @@ require_once __DIR__ . '/../includes/sidebar.php';
             </form>
         </div>
         
-        <!-- Preferences -->
-        <div class="glass-card">
-            <h3 style="margin-bottom: 20px;">Preferences</h3>
-            
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px; background: var(--surface); border-radius: var(--radius-sm);">
-                <div>
-                    <div style="font-weight: 600; margin-bottom: 4px;">Dark Mode</div>
-                    <div style="font-size: 0.85rem; color: var(--text-muted);">Use dark theme</div>
-                </div>
-                <label class="toggle-switch">
-                    <input type="checkbox" id="dark-mode-toggle" <?php echo $preferences['dark_mode'] ? 'checked' : ''; ?>>
-                    <span class="toggle-slider"></span>
-                </label>
-            </div>
-        </div>
+
         
         <!-- Cancellation Status -->
         <div class="glass-card">
@@ -287,24 +273,7 @@ document.getElementById('password-form').addEventListener('submit', async functi
     }
 });
 
-// Dark mode toggle
-document.getElementById('dark-mode-toggle').addEventListener('change', function() {
-    const isDark = this.checked;
-    
-    // Update theme immediately
-    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
-    localStorage.setItem('theme', isDark ? 'dark' : 'light');
-    
-    // Save to database
-    fetch('../api/settings/update_preferences.php', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-            dark_mode: isDark ? 1 : 0,
-            csrf_token: getCSRFToken()
-        })
-    });
-});
+
 
 // Toggle password visibility
 function togglePassword(inputId) {
@@ -363,23 +332,6 @@ document.getElementById('appeal-form').addEventListener('submit', async function
 </script>
 
 <style>
-.form-select {
-    width: 100%;
-    padding: 12px 16px;
-    border: 2px solid var(--border);
-    border-radius: var(--radius-sm);
-    background: var(--surface);
-    color: var(--text-primary);
-    font-size: 1rem;
-    font-family: var(--font);
-    transition: var(--transition);
-}
-
-.form-select:focus {
-    outline: none;
-    border-color: var(--primary);
-}
-
 .password-toggle {
     position: absolute;
     right: 12px;

@@ -26,7 +26,15 @@ require_once __DIR__ . '/../includes/sidebar.php';
 
 <main class="main-content">
     <div class="content-header">
-        <h1 class="content-title">Manage Accounts</h1>
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+            <h1 class="content-title">Manage Accounts</h1>
+            <?php if (in_array($_SESSION['role'], [ROLE_ADMIN, ROLE_SUPER_ADMIN])): ?>
+            <button class="btn btn-primary" onclick="showAddAccountModal()">
+                <span class="material-icons">person_add</span>
+                Add Account
+            </button>
+            <?php endif; ?>
+        </div>
     </div>
     
     <!-- Desktop Filter Bar -->
@@ -170,6 +178,83 @@ require_once __DIR__ . '/../includes/sidebar.php';
                 <button type="submit" class="btn btn-primary">
                     <span class="material-icons" style="font-size: 18px; vertical-align: middle;">save</span>
                     Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Add Account Modal -->
+<div class="modal-overlay" id="add-account-modal" style="display: none;">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>Add Account</h3>
+            <button class="modal-close" onclick="closeModal('add-account-modal')">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
+        <form id="addAccountForm" onsubmit="submitAddAccount(event)">
+            <div class="modal-body">
+                <div class="form-group">
+                    <div class="float-input-group">
+                        <input type="text" id="add_full_name" class="float-input" placeholder="Full Name" required>
+                        <label for="add_full_name" class="float-label">Full Name</label>
+                        <span class="material-icons input-icon">person</span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <div class="float-input-group">
+                        <input type="text" id="add_username" class="float-input" placeholder="Username" required>
+                        <label for="add_username" class="float-label">Username</label>
+                        <span class="material-icons input-icon">badge</span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <div class="float-input-group">
+                        <input type="email" id="add_email" class="float-input" placeholder="Email" required>
+                        <label for="add_email" class="float-label">Email</label>
+                        <span class="material-icons input-icon">email</span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <div class="float-input-group">
+                        <input type="tel" id="add_phone" class="float-input" placeholder="Phone" required>
+                        <label for="add_phone" class="float-label">Phone</label>
+                        <span class="material-icons input-icon">phone</span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600;">Role</label>
+                    <select id="add_role" class="form-select" required>
+                        <option value="customer">Customer</option>
+                        <option value="rider">Rider</option>
+                        <option value="staff">Staff</option>
+                        <?php if ($_SESSION['role'] === ROLE_SUPER_ADMIN): ?>
+                        <option value="admin">Admin</option>
+                        <?php endif; ?>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <div class="float-input-group">
+                        <input type="password" id="add_password" class="float-input" placeholder="Password" required>
+                        <label for="add_password" class="float-label">Password</label>
+                        <span class="material-icons input-icon">lock</span>
+                        <button type="button" class="password-toggle" onclick="togglePasswordVisibility('add_password', this)">
+                            <span class="material-icons">visibility</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="closeModal('add-account-modal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">
+                    <span class="material-icons" style="font-size: 18px; vertical-align: middle;">person_add</span>
+                    Create Account
                 </button>
             </div>
         </form>
@@ -698,6 +783,54 @@ function togglePasswordVisibility(inputId, button) {
     } else {
         input.type = 'password';
         icon.textContent = 'visibility';
+    }
+}
+
+// ============================================================================
+// ADD ACCOUNT
+// ============================================================================
+
+function showAddAccountModal() {
+    document.getElementById('addAccountForm').reset();
+    openModal('add-account-modal');
+}
+
+async function submitAddAccount(e) {
+    e.preventDefault();
+    
+    const payload = {
+        full_name: document.getElementById('add_full_name').value,
+        username: document.getElementById('add_username').value,
+        email: document.getElementById('add_email').value,
+        phone: document.getElementById('add_phone').value,
+        role: document.getElementById('add_role').value,
+        password: document.getElementById('add_password').value,
+        csrf_token: getCSRFToken()
+    };
+    
+    showLoading();
+    
+    try {
+        const response = await fetch('../api/auth/register.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        });
+        
+        const data = await response.json();
+        hideLoading();
+        
+        if (data.success) {
+            showToast('Account created successfully', 'success');
+            closeModal('add-account-modal');
+            loadAccounts();
+        } else {
+            showToast(data.message || 'Failed to create account', 'error');
+        }
+    } catch (error) {
+        hideLoading();
+        console.error('Error creating account:', error);
+        showToast('An error occurred', 'error');
     }
 }
 </script>

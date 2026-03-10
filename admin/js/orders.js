@@ -430,3 +430,136 @@ async function assignRider(e) {
 async function markReadyForPickup(orderId) {
     await updateOrderStatus(orderId, 'ready_for_pickup');
 }
+
+// ============================================================================
+// BULK ACTIONS
+// ============================================================================
+
+async function confirmAllPending() {
+    const pendingOrders = allOrders.filter(o => o.status === 'pending');
+    
+    if (pendingOrders.length === 0) {
+        showToast('No pending orders to confirm', 'info');
+        return;
+    }
+    
+    const result = await Swal.fire({
+        title: 'Confirm All Pending Orders',
+        html: `Are you sure you want to confirm <strong>${pendingOrders.length}</strong> pending order(s)?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, Confirm All',
+        confirmButtonColor: '#66BB6A',
+        cancelButtonText: 'Cancel'
+    });
+    
+    if (!result.isConfirmed) return;
+    
+    showLoading();
+    let success = 0, failed = 0;
+    
+    for (const order of pendingOrders) {
+        try {
+            const response = await fetch('../api/orders/update_status.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ order_id: order.id, status: 'confirmed', csrf_token: getCSRFToken() })
+            });
+            const data = await response.json();
+            if (data.success) success++;
+            else failed++;
+        } catch (e) { failed++; }
+    }
+    
+    hideLoading();
+    showToast(`Confirmed: ${success}, Failed: ${failed}`, success > 0 ? 'success' : 'error');
+    loadOrders();
+}
+
+async function autoAssignRiders() {
+    const confirmedDelivery = allOrders.filter(o => o.status === 'confirmed' && o.delivery_type === 'delivery');
+    
+    if (confirmedDelivery.length === 0) {
+        showToast('No confirmed delivery orders to assign', 'info');
+        return;
+    }
+    
+    const result = await Swal.fire({
+        title: 'Auto Assign Riders',
+        html: `Auto-assign riders to <strong>${confirmedDelivery.length}</strong> confirmed delivery order(s)?<br><small>The least-busy available rider will be assigned.</small>`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Auto Assign',
+        confirmButtonColor: '#42A5F5',
+        cancelButtonText: 'Cancel'
+    });
+    
+    if (!result.isConfirmed) return;
+    
+    showLoading();
+    let success = 0, failed = 0;
+    
+    for (const order of confirmedDelivery) {
+        try {
+            const response = await fetch('../api/orders/auto_assign.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ order_id: order.id, csrf_token: getCSRFToken() })
+            });
+            const data = await response.json();
+            if (data.success) success++;
+            else failed++;
+        } catch (e) { failed++; }
+    }
+    
+    hideLoading();
+    showToast(`Assigned: ${success}, Failed: ${failed}`, success > 0 ? 'success' : 'error');
+    loadOrders();
+    loadRiders();
+}
+
+async function cancelAllPending() {
+    const pendingOrders = allOrders.filter(o => o.status === 'pending');
+    
+    if (pendingOrders.length === 0) {
+        showToast('No pending orders to cancel', 'info');
+        return;
+    }
+    
+    const result = await Swal.fire({
+        title: 'Cancel All Pending Orders',
+        html: `Are you sure you want to cancel <strong>${pendingOrders.length}</strong> pending order(s)?`,
+        icon: 'warning',
+        input: 'textarea',
+        inputPlaceholder: 'Enter cancellation reason...',
+        showCancelButton: true,
+        confirmButtonText: 'Cancel All',
+        confirmButtonColor: '#EF5350',
+        cancelButtonText: 'Go Back',
+        inputValidator: (value) => {
+            if (!value) return 'Please provide a reason!';
+        }
+    });
+    
+    if (!result.isConfirmed) return;
+    
+    showLoading();
+    let success = 0, failed = 0;
+    
+    for (const order of pendingOrders) {
+        try {
+            const response = await fetch('../api/orders/cancel.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ order_id: order.id, reason: result.value, csrf_token: getCSRFToken() })
+            });
+            const data = await response.json();
+            if (data.success) success++;
+            else failed++;
+        } catch (e) { failed++; }
+    }
+    
+    hideLoading();
+    showToast(`Cancelled: ${success}, Failed: ${failed}`, success > 0 ? 'success' : 'error');
+    loadOrders();
+}

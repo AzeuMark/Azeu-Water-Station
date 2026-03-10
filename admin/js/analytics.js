@@ -103,16 +103,47 @@ function renderStatusChart(breakdown) {
     const labels = Object.keys(breakdown);
     const data = Object.values(breakdown);
     
+    // Unique colors per status for clear visual distinction
+    const statusColors = {
+        'pending':          '#FFA726',  // Orange
+        'confirmed':        '#42A5F5',  // Blue
+        'assigned':         '#7E57C2',  // Purple
+        'on_delivery':      '#26C6DA',  // Cyan
+        'delivered':        '#66BB6A',  // Green
+        'ready_for_pickup': '#29B6F6',  // Light Blue
+        'picked_up':        '#9CCC65',  // Light Green
+        'cancelled':        '#EF5350',  // Red
+        'accepted':         '#26A69A',  // Teal
+        'reassigning':      '#FFCA28',  // Amber
+        'flagged':          '#EC407A',  // Pink
+    };
+    
+    const colors = labels.map(label => statusColors[label] || '#9E9E9E');
+    
     statusChart = new Chart(ctx, {
         type: 'doughnut',
         data: {
-            labels: labels.map(l => l.replace('_', ' ')),
+            labels: labels.map(l => l.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())),
             datasets: [{
                 data: data,
-                backgroundColor: ['#FFA726', '#42A5F5', '#7E57C2', '#26A69A', '#66BB6A', '#EF5350']
+                backgroundColor: colors,
+                borderWidth: 2,
+                borderColor: 'var(--surface-card, #ffffff)'
             }]
         },
-        options: { responsive: true }
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 16,
+                        usePointStyle: true,
+                        font: { size: 12 }
+                    }
+                }
+            }
+        }
     });
 }
 

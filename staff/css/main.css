@@ -65,22 +65,7 @@
     text-align: center;
 }
 
-.form-select {
-    width: 100%;
-    padding: 12px 16px;
-    border: 2px solid var(--border);
-    border-radius: var(--radius-sm);
-    background: var(--surface);
-    color: var(--text-primary);
-    font-size: 1rem;
-    font-family: var(--font);
-    transition: var(--transition);
-}
 
-.form-select:focus {
-    outline: none;
-    border-color: var(--primary);
-}
 
 /* Items Box - Fixed Scrollable Container */
 .items-box {

@@ -24,7 +24,23 @@ require_once __DIR__ . '/../includes/sidebar.php';
 
 <main class="main-content">
     <div class="content-header">
-        <h1 class="content-title">Manage Orders</h1>
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+            <h1 class="content-title">Manage Orders</h1>
+            <div class="bulk-actions">
+                <button class="btn-bulk btn-bulk-success" onclick="confirmAllPending()" title="Confirm all pending orders">
+                    <span class="material-icons">done_all</span>
+                    Confirm All Pending
+                </button>
+                <button class="btn-bulk btn-bulk-primary" onclick="autoAssignRiders()" title="Auto-assign riders to confirmed orders">
+                    <span class="material-icons">delivery_dining</span>
+                    Auto Assign Riders
+                </button>
+                <button class="btn-bulk btn-bulk-danger" onclick="cancelAllPending()" title="Cancel all pending orders">
+                    <span class="material-icons">cancel</span>
+                    Cancel All Pending
+                </button>
+            </div>
+        </div>
     </div>
     
     <div class="glass-card" style="margin-bottom: 24px;">
