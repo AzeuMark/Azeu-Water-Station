@@ -411,18 +411,66 @@ async function loadRiders() {
         const response = await fetch('../api/riders/list.php?available_only=true');
         const data = await response.json();
         
-        const select = document.getElementById('rider-select');
+        const selectOptions = document.getElementById('rider-options');
+        const hiddenInput = document.getElementById('rider-select');
+        const triggerText = document.querySelector('#rider-trigger .selected-text');
         
         if (data.success && data.riders.length > 0) {
-            select.innerHTML = '<option value="">Select a rider...</option>' + 
-                data.riders.map(r => `<option value="${r.id}">${r.full_name} (${r.active_deliveries} active)</option>`).join('');
+            let html = '<div class="custom-select-option selected" data-value="">Select a rider...</div>';
+            html += data.riders.map(r => `<div class="custom-select-option" data-value="${r.id}">${r.full_name} (${r.active_deliveries} active)</div>`).join('');
+            selectOptions.innerHTML = html;
         } else {
-            select.innerHTML = '<option value="">No available riders</option>';
+            selectOptions.innerHTML = '<div class="custom-select-option selected" data-value="">No available riders</div>';
         }
+        if (hiddenInput) hiddenInput.value = '';
+        if (triggerText) triggerText.textContent = 'Select a rider...';
     } catch (error) {
         console.error('Failed to load riders:', error);
     }
 }
+
+function initRiderSelect() {
+    const trigger = document.getElementById('rider-trigger');
+    const optionsCont = document.getElementById('rider-options');
+    const hiddenInput = document.getElementById('rider-select');
+    
+    if (trigger && optionsCont) {
+        trigger.addEventListener('click', function(e) {
+            e.stopPropagation();
+            trigger.classList.toggle('active');
+            optionsCont.classList.toggle('active');
+        });
+        
+        document.addEventListener('click', function(e) {
+            if (!trigger.contains(e.target) && !optionsCont.contains(e.target)) {
+                trigger.classList.remove('active');
+                optionsCont.classList.remove('active');
+            }
+        });
+        
+        optionsCont.addEventListener('click', function(e) {
+            const opt = e.target.closest('.custom-select-option');
+            if (!opt) return;
+            
+            const value = opt.dataset.value;
+            if (value !== undefined) {
+                optionsCont.querySelectorAll('.custom-select-option').forEach(o => o.classList.remove('selected'));
+                opt.classList.add('selected');
+                
+                hiddenInput.value = value;
+                trigger.querySelector('.selected-text').textContent = opt.textContent;
+                trigger.querySelector('.selected-text').classList.remove('placeholder');
+            }
+            
+            trigger.classList.remove('active');
+            optionsCont.classList.remove('active');
+        });
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    initRiderSelect();
+});
 
 async function assignRider(e) {
     e.preventDefault();

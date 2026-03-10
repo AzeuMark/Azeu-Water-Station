@@ -229,14 +229,21 @@ require_once __DIR__ . '/../includes/sidebar.php';
                 
                 <div class="form-group">
                     <label style="display: block; margin-bottom: 8px; font-weight: 600;">Role</label>
-                    <select id="add_role" class="form-select" required>
-                        <option value="customer">Customer</option>
-                        <option value="rider">Rider</option>
-                        <option value="staff">Staff</option>
-                        <?php if ($_SESSION['role'] === ROLE_SUPER_ADMIN): ?>
-                        <option value="admin">Admin</option>
-                        <?php endif; ?>
-                    </select>
+                    <input type="hidden" id="add_role" value="customer" required>
+                    <div class="custom-select-wrapper" id="add-role-wrapper">
+                        <div class="custom-select-trigger" id="add-role-trigger">
+                            <span class="selected-text">Customer</span>
+                            <span class="material-icons arrow">expand_more</span>
+                        </div>
+                        <div class="custom-select-options" id="add-role-options">
+                            <div class="custom-select-option selected" data-value="customer">Customer</div>
+                            <div class="custom-select-option" data-value="rider">Rider</div>
+                            <div class="custom-select-option" data-value="staff">Staff</div>
+                            <?php if ($_SESSION['role'] === ROLE_SUPER_ADMIN): ?>
+                            <div class="custom-select-option" data-value="admin">Admin</div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="form-group">
@@ -792,8 +799,58 @@ function togglePasswordVisibility(inputId, button) {
 
 function showAddAccountModal() {
     document.getElementById('addAccountForm').reset();
+    
+    // Reset custom select to first item
+    const options = document.querySelectorAll('#add-role-options .custom-select-option');
+    if(options.length > 0) {
+        options.forEach(o => o.classList.remove('selected'));
+        const firstOpt = options[0];
+        firstOpt.classList.add('selected');
+        document.getElementById('add_role').value = firstOpt.dataset.value;
+        document.querySelector('#add-role-trigger .selected-text').textContent = firstOpt.textContent;
+    }
+    
     openModal('add-account-modal');
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Custom select initialization
+    const trigger = document.getElementById('add-role-trigger');
+    const optionsCont = document.getElementById('add-role-options');
+    const hiddenInput = document.getElementById('add_role');
+    
+    if (trigger && optionsCont) {
+        trigger.addEventListener('click', function(e) {
+            e.stopPropagation();
+            trigger.classList.toggle('active');
+            optionsCont.classList.toggle('active');
+        });
+        
+        document.addEventListener('click', function(e) {
+            if (!trigger.contains(e.target) && !optionsCont.contains(e.target)) {
+                trigger.classList.remove('active');
+                optionsCont.classList.remove('active');
+            }
+        });
+        
+        optionsCont.addEventListener('click', function(e) {
+            const opt = e.target.closest('.custom-select-option');
+            if (!opt) return;
+            
+            const value = opt.dataset.value;
+            if (value !== undefined) {
+                optionsCont.querySelectorAll('.custom-select-option').forEach(o => o.classList.remove('selected'));
+                opt.classList.add('selected');
+                
+                hiddenInput.value = value;
+                trigger.querySelector('.selected-text').textContent = opt.textContent;
+            }
+            
+            trigger.classList.remove('active');
+            optionsCont.classList.remove('active');
+        });
+    }
+});
 
 async function submitAddAccount(e) {
     e.preventDefault();

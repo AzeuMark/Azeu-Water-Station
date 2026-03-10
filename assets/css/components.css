@@ -260,14 +260,13 @@
 }
 
 .badge-pending { background: #FFA726; color: #fff; }
-.badge-confirmed { background: #42A5F5; color: #fff; }
-.badge-assigned { background: #7E57C2; color: #fff; }
-.badge-on-delivery { background: #26A69A; color: #fff; }
-.badge-delivered { background: #66BB6A; color: #fff; }
-.badge-accepted { background: #2E7D32; color: #fff; }
-.badge-ready-for-pickup { background: #29B6F6; color: #fff; }
-.badge-picked-up { background: #4CAF50; color: #fff; }
-.badge-cancelled { background: #EF5350; color: #fff; }
+.badge-confirmed { background: #00BCD4; color: #fff; }
+.badge-assigned { background: #3F51B5; color: #fff; }
+.badge-on-delivery { background: #9C27B0; color: #fff; }
+.badge-ready-for-pickup { background: #009688; color: #fff; }
+.badge-delivered, .badge-accepted { background: #4CAF50; color: #fff; }
+.badge-picked-up { background: #8BC34A; color: #fff; }
+.badge-cancelled { background: #F44336; color: #fff; }
 
 /* Role Badges */
 .badge-customer { background: #42A5F5; color: #fff; }
@@ -552,6 +551,25 @@
   background: var(--primary);
   color: white;
   border-color: var(--primary);
+}
+
+.filter-bar-desktop {
+  display: block;
+}
+
+.filter-bar-mobile {
+  display: none;
+  position: relative;
+  z-index: 100;
+}
+
+@media (max-width: 768px) {
+  .filter-bar-desktop {
+    display: none;
+  }
+  .filter-bar-mobile {
+    display: block !important;
+  }
 }
 
 /* Search Bar */
@@ -1201,51 +1219,111 @@ body.dark-mode .custom-select-option:hover {
 }
 
 /* ============================================================================
-   BULK ACTION BUTTONS
+   BULK ACTION BUTTONS (PREMIUM REDESIGN)
    ============================================================================ */
 
 .bulk-actions {
     display: flex;
-    gap: 8px;
+    gap: 14px;
     flex-wrap: wrap;
+    background: rgba(255, 255, 255, 0.03); /* Subtle backdrop */
+    backdrop-filter: blur(10px);
+    padding: 14px 20px;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.05), var(--shadow-sm);
+    align-items: center;
+}
+
+body.dark-mode .bulk-actions {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .btn-bulk {
-    padding: 8px 14px;
+    padding: 10px 20px;
     border: none;
     border-radius: 8px;
-    font-size: 13px;
-    font-weight: 600;
+    font-size: 0.85rem;
+    font-weight: 700;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); /* Bouncy hover */
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Shine effect on hover */
+.btn-bulk::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(to bottom right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0) 100%);
+    transform: rotate(45deg) translateY(-100%);
+    transition: transform 0.6s ease;
+}
+
+.btn-bulk:hover::after {
+    transform: rotate(45deg) translateY(100%);
 }
 
 .btn-bulk:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.btn-bulk:active {
+    transform: translateY(0) scale(0.98);
 }
 
 .btn-bulk-success {
-    background: linear-gradient(135deg, #66BB6A, #43A047);
+    background: linear-gradient(135deg, #4CAF50, #2E7D32);
     color: white;
+    border: 1px solid rgba(76, 175, 80, 0.4);
+    box-shadow: 0 4px 10px rgba(76, 175, 80, 0.3);
+}
+
+.btn-bulk-success:hover {
+    box-shadow: 0 6px 15px rgba(76, 175, 80, 0.4);
+    border-color: rgba(76, 175, 80, 0.8);
 }
 
 .btn-bulk-primary {
-    background: linear-gradient(135deg, #42A5F5, #1E88E5);
+    background: linear-gradient(135deg, #1E88E5, #1565C0);
     color: white;
+    border: 1px solid rgba(30, 136, 229, 0.4);
+    box-shadow: 0 4px 10px rgba(30, 136, 229, 0.3);
+}
+
+.btn-bulk-primary:hover {
+    box-shadow: 0 6px 15px rgba(30, 136, 229, 0.4);
+    border-color: rgba(30, 136, 229, 0.8);
 }
 
 .btn-bulk-danger {
-    background: linear-gradient(135deg, #EF5350, #E53935);
+    background: linear-gradient(135deg, #EF5350, #C62828);
     color: white;
+    border: 1px solid rgba(239, 83, 80, 0.4);
+    box-shadow: 0 4px 10px rgba(239, 83, 80, 0.3);
+}
+
+.btn-bulk-danger:hover {
+    box-shadow: 0 6px 15px rgba(239, 83, 80, 0.4);
+    border-color: rgba(239, 83, 80, 0.8);
 }
 
 .btn-bulk .material-icons {
-    font-size: 16px;
+    font-size: 18px;
+    position: relative;
+    z-index: 1;
 }
 
 /* Responsive bulk actions */
@@ -1461,4 +1539,136 @@ body.dark-mode .custom-select-option:hover {
     background: linear-gradient(135deg, #FB8C00, #F57C00);
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(255, 167, 38, 0.3);
+}
+
+/* ============================================================================
+   CUSTOM SELECT BOX (Replaces form-select dropdowns)
+   ============================================================================ */
+
+.custom-select-wrapper {
+    position: relative;
+    width: 100%;
+    user-select: none;
+}
+
+.custom-select-trigger {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-primary);
+    background: var(--surface-card);
+    border: 2px solid #e0e6ed;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.custom-select-trigger:hover {
+    border-color: var(--primary);
+    box-shadow: 0 4px 12px rgba(21, 101, 192, 0.15);
+    transform: translateY(-1px);
+}
+
+.custom-select-trigger.active {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(21, 101, 192, 0.1);
+}
+
+.custom-select-trigger .selected-text {
+    flex: 1;
+    color: var(--text-primary);
+}
+
+.custom-select-trigger .selected-text.placeholder {
+    color: #9ca3af;
+}
+
+.custom-select-trigger .arrow {
+    font-size: 24px;
+    color: #6b7280;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.custom-select-trigger.active .arrow {
+    transform: rotate(180deg);
+    color: var(--primary);
+}
+
+.custom-select-options {
+    position: absolute;
+    top: calc(100% + 1px);
+    left: 0;
+    right: 0;
+    background: var(--surface);
+    border: 1px solid #e0e6ed;
+    border-radius: 10px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.05);
+    max-height: 190px;
+    overflow-y: auto;
+    z-index: 1001;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.custom-select-options.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.custom-select-option {
+    padding: 12px 16px;
+    font-size: 15px;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.custom-select-option:first-child { border-radius: 10px 10px 0 0; }
+.custom-select-option:last-child { border-radius: 0 0 10px 10px; }
+
+.custom-select-option:hover {
+    background: linear-gradient(90deg, rgba(21, 101, 192, 0.08) 0%, rgba(21, 101, 192, 0.04) 100%);
+    padding-left: 20px;
+}
+
+.custom-select-option.selected {
+    background: linear-gradient(90deg, rgba(21, 101, 192, 0.12) 0%, rgba(21, 101, 192, 0.06) 100%);
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.custom-select-option.selected::before {
+    font-weight: bold;
+    margin-right: 8px;
+    color: var(--primary);
+}
+
+.custom-select-options::-webkit-scrollbar { width: 6px; }
+.custom-select-options::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
+.custom-select-options::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+.custom-select-options::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+body.dark-mode .custom-select-trigger {
+    background: var(--surface);
+    border-color: #374151;
+}
+
+body.dark-mode .custom-select-options {
+    background: var(--surface);
+    border-color: #374151;
+}
+
+body.dark-mode .custom-select-option:hover {
+    background: linear-gradient(90deg, rgba(66, 153, 225, 0.15) 0%, rgba(66, 153, 225, 0.08) 100%);
 }

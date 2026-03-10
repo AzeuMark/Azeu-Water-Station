@@ -147,9 +147,16 @@ require_once __DIR__ . '/../includes/sidebar.php';
                 <input type="hidden" id="assign-order-id">
                 <div id="reassign-reason-note" style="display: none;"></div>
                 <label for="rider-select" style="display: block; margin-bottom: 8px; font-weight: 600;">Select Rider</label>
-                <select id="rider-select" class="form-select" required>
-                    <option value="">Loading...</option>
-                </select>
+                <input type="hidden" id="rider-select" required>
+                <div class="custom-select-wrapper" id="rider-wrapper">
+                    <div class="custom-select-trigger" id="rider-trigger">
+                        <span class="selected-text placeholder">Loading...</span>
+                        <span class="material-icons arrow">expand_more</span>
+                    </div>
+                    <div class="custom-select-options" id="rider-options">
+                        <div class="custom-select-option" data-value="">Loading...</div>
+                    </div>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline" onclick="closeModal('assign-rider-modal')">Cancel</button>
@@ -198,83 +205,7 @@ require_once __DIR__ . '/../includes/sidebar.php';
     z-index: 100;
 }
 
-/* Custom Select Styles */
-.custom-select-wrapper {
-    position: relative;
-    width: 100%;
-}
 
-.custom-select-trigger {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 14px 16px;
-    background: var(--surface);
-    border: 2px solid var(--border);
-    border-radius: 10px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-weight: 500;
-    color: var(--text-primary);
-}
-
-.custom-select-trigger:hover {
-    border-color: var(--primary);
-}
-
-.custom-select-trigger.active {
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(21, 101, 192, 0.1);
-}
-
-.custom-select-trigger .arrow {
-    transition: transform 0.3s ease;
-}
-
-.custom-select-trigger.active .arrow {
-    transform: rotate(180deg);
-}
-
-.custom-select-options {
-    position: absolute;
-    top: calc(100% + 1px);
-    left: 0;
-    right: 0;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.05);
-    max-height: 190px;
-    overflow-y: auto;
-    z-index: 1001;
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(-10px);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.custom-select-options.active {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
-}
-
-.custom-select-option {
-    padding: 12px 16px;
-    cursor: pointer;
-    transition: background 0.2s;
-    color: var(--text-primary);
-}
-
-.custom-select-option:hover {
-    background: var(--hover);
-}
-
-.custom-select-option.selected {
-    background: var(--primary);
-    color: white;
-    font-weight: 600;
-}
 
 /* Mobile Responsive */
 @media (max-width: 768px) {

@@ -65,7 +65,117 @@
     text-align: center;
 }
 
+.form-select {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid #e0e6ed;
+    border-radius: 10px;
+    background: var(--surface-card);
+    color: var(--text-primary);
+    font-size: 15px;
+    font-family: var(--font);
+    font-weight: 500;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
 
+.form-select:hover {
+    border-color: var(--primary);
+    box-shadow: 0 4px 12px rgba(21, 101, 192, 0.15);
+    transform: translateY(-1px);
+}
+
+.form-select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(21, 101, 192, 0.1);
+}
+
+/* Badge Styles */
+.badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 0.813rem;
+    font-weight: 500;
+    text-transform: capitalize;
+    white-space: nowrap;
+    text-align: center;
+}
+
+/* Stock Count Badges */
+.badge-danger {
+    background: rgba(220, 53, 69, 0.15);
+    color: #dc3545;
+    border: 1px solid rgba(220, 53, 69, 0.4);
+}
+
+.badge-warning {
+    background: rgba(255, 193, 7, 0.2);
+    color: #f39c12;
+    border: 1px solid rgba(255, 193, 7, 0.5);
+}
+
+.badge-success {
+    background: rgba(40, 167, 69, 0.15);
+    color: #28a745;
+    border: 1px solid rgba(40, 167, 69, 0.4);
+}
+
+/* Status Badges */
+.badge-active { background: #28a745 !important; color: #ffffff !important; border: none !important; }
+.badge-inactive { background: #6c757d !important; color: #ffffff !important; border: none !important; }
+
+.badge-out_of_stock { background: #dc3545 !important; color: #ffffff !important; border: none !important; }
+.badge-low_stock { background: #ffc107 !important; color: #212529 !important; border: none !important; }
+
+.badge-pending {
+    background: rgba(255, 152, 0, 0.1);
+    color: #F57C00;
+    border: 1px solid rgba(255, 152, 0, 0.3);
+}
+
+.badge-confirmed {
+    background: rgba(0, 188, 212, 0.1);
+    color: #0097A7;
+    border: 1px solid rgba(0, 188, 212, 0.3);
+}
+
+.badge-assigned {
+    background: rgba(63, 81, 181, 0.1);
+    color: #3949AB;
+    border: 1px solid rgba(63, 81, 181, 0.3);
+}
+
+.badge-on_delivery {
+    background: rgba(156, 39, 176, 0.1);
+    color: #8E24AA;
+    border: 1px solid rgba(156, 39, 176, 0.3);
+}
+
+.badge-ready_for_pickup {
+    background: rgba(0, 150, 136, 0.1);
+    color: #00796B;
+    border: 1px solid rgba(0, 150, 136, 0.3);
+}
+
+.badge-delivered, .badge-accepted {
+    background: rgba(76, 175, 80, 0.1);
+    color: #388E3C;
+    border: 1px solid rgba(76, 175, 80, 0.3);
+}
+
+.badge-picked_up {
+    background: rgba(139, 195, 74, 0.1);
+    color: #689F38;
+    border: 1px solid rgba(139, 195, 74, 0.3);
+}
+
+.badge-cancelled, .badge-flagged {
+    background: rgba(244, 67, 54, 0.1);
+    color: #D32F2F;
+    border: 1px solid rgba(244, 67, 54, 0.3);
+}
 
 /* Items Box - Fixed Scrollable Container */
 .items-box {

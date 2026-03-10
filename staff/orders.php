@@ -43,14 +43,42 @@ require_once __DIR__ . '/../includes/sidebar.php';
         </div>
     </div>
     
-    <div class="glass-card" style="margin-bottom: 24px;">
+    <!-- Desktop Filter Bar -->
+    <div class="glass-card filter-bar-desktop" style="margin-bottom: 24px;">
         <div class="filter-bar">
-            <button class="filter-btn active" data-status="">All</button>
-            <button class="filter-btn" data-status="pending">Pending</button>
-            <button class="filter-btn" data-status="confirmed">Confirmed</button>
-            <button class="filter-btn" data-status="assigned">Assigned</button>
-            <button class="filter-btn" data-status="on_delivery">On Delivery</button>
-            <button class="filter-btn" data-status="delivered">Delivered</button>
+            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; flex: 1;">
+                <div style="display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-weight: 500; font-size: 14px; white-space: nowrap;">
+                    <span class="material-icons" style="font-size: 20px;">filter_list</span>
+                    Filter:
+                </div>
+                <button class="filter-btn active" data-status="">All</button>
+                <button class="filter-btn" data-status="pending">Pending</button>
+                <button class="filter-btn" data-status="confirmed">Confirmed</button>
+                <button class="filter-btn" data-status="assigned">Assigned</button>
+                <button class="filter-btn" data-status="on_delivery">On Delivery</button>
+                <button class="filter-btn" data-status="delivered">Delivered</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Mobile Filter Dropdown -->
+    <div class="glass-card filter-bar-mobile" style="margin-bottom: 24px; display: none;">
+        <div style="padding: 16px;">
+            <div class="custom-select-wrapper">
+                <div class="custom-select-trigger" id="mobile-filter-trigger">
+                    <span class="material-icons" style="margin-right: 8px; font-size: 20px;">filter_list</span>
+                    <span class="selected-text">All</span>
+                    <span class="material-icons arrow">expand_more</span>
+                </div>
+                <div class="custom-select-options" id="mobile-filter-options">
+                    <div class="custom-select-option selected" data-status="">All</div>
+                    <div class="custom-select-option" data-status="pending">Pending</div>
+                    <div class="custom-select-option" data-status="confirmed">Confirmed</div>
+                    <div class="custom-select-option" data-status="assigned">Assigned</div>
+                    <div class="custom-select-option" data-status="on_delivery">On Delivery</div>
+                    <div class="custom-select-option" data-status="delivered">Delivered</div>
+                </div>
+            </div>
         </div>
     </div>
     
@@ -105,9 +133,16 @@ require_once __DIR__ . '/../includes/sidebar.php';
                 <input type="hidden" id="assign-order-id">
                 <div id="reassign-reason-note" style="display: none;"></div>
                 <label for="rider-select" style="display: block; margin-bottom: 8px; font-weight: 600;">Select Rider</label>
-                <select id="rider-select" class="form-select" required>
-                    <option value="">Loading...</option>
-                </select>
+                <input type="hidden" id="rider-select" required>
+                <div class="custom-select-wrapper" id="rider-wrapper">
+                    <div class="custom-select-trigger" id="rider-trigger">
+                        <span class="selected-text placeholder">Loading...</span>
+                        <span class="material-icons arrow">expand_more</span>
+                    </div>
+                    <div class="custom-select-options" id="rider-options">
+                        <div class="custom-select-option" data-value="">Loading...</div>
+                    </div>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline" onclick="closeModal('assign-rider-modal')">Cancel</button>

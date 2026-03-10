@@ -24,16 +24,44 @@ require_once __DIR__ . '/../includes/sidebar.php';
     <div class="content-header">
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
             <h1 class="content-title">Riders</h1>
-            <div style="display: flex; gap: 8px; align-items: center;">
-                <label style="font-size: 14px; font-weight: 500; color: var(--text-secondary);">Sort by:</label>
-                <select id="sort-select" class="form-select" style="width: auto; min-width: 180px; padding: 10px 14px;" onchange="sortRiders()">
-                    <option value="name">Name (A-Z)</option>
-                    <option value="total_desc">Most Deliveries</option>
-                    <option value="total_asc">Least Deliveries</option>
-                    <option value="completion_desc">Highest Completion %</option>
-                    <option value="completion_asc">Lowest Completion %</option>
-                    <option value="available">Available First</option>
-                </select>
+        </div>
+    </div>
+    
+    <!-- Desktop Filter Bar -->
+    <div class="glass-card filter-bar-desktop" style="margin-bottom: 24px;">
+        <div class="filter-bar">
+            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; flex: 1;">
+                <div style="display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-weight: 500; font-size: 14px; white-space: nowrap;">
+                    <span class="material-icons" style="font-size: 20px;">sort</span>
+                    Sort by:
+                </div>
+                <button class="filter-btn active" data-sort="name">Name (A-Z)</button>
+                <button class="filter-btn" data-sort="total_desc">Most Deliveries</button>
+                <button class="filter-btn" data-sort="total_asc">Least Deliveries</button>
+                <button class="filter-btn" data-sort="completion_desc">Highest Completion %</button>
+                <button class="filter-btn" data-sort="completion_asc">Lowest Completion %</button>
+                <button class="filter-btn" data-sort="available">Available First</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Mobile Filter Dropdown -->
+    <div class="glass-card filter-bar-mobile" style="margin-bottom: 24px; display: none;">
+        <div style="padding: 16px;">
+            <div class="custom-select-wrapper">
+                <div class="custom-select-trigger" id="mobile-filter-trigger">
+                    <span class="material-icons" style="margin-right: 8px; font-size: 20px;">sort</span>
+                    <span class="selected-text">Name (A-Z)</span>
+                    <span class="material-icons arrow">expand_more</span>
+                </div>
+                <div class="custom-select-options" id="mobile-filter-options">
+                    <div class="custom-select-option selected" data-sort="name">Name (A-Z)</div>
+                    <div class="custom-select-option" data-sort="total_desc">Most Deliveries</div>
+                    <div class="custom-select-option" data-sort="total_asc">Least Deliveries</div>
+                    <div class="custom-select-option" data-sort="completion_desc">Highest Completion %</div>
+                    <div class="custom-select-option" data-sort="completion_asc">Lowest Completion %</div>
+                    <div class="custom-select-option" data-sort="available">Available First</div>
+                </div>
             </div>
         </div>
     </div>
@@ -48,8 +76,77 @@ require_once __DIR__ . '/../includes/sidebar.php';
 
 <script>
 let allRiders = [];
+let currentSort = 'name';
 
-document.addEventListener('DOMContentLoaded', loadRiders);
+document.addEventListener('DOMContentLoaded', () => {
+    loadRiders();
+    initFilterButtons();
+});
+
+function initFilterButtons() {
+    // Desktop buttons
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            currentSort = this.dataset.sort;
+            sortRiders();
+            
+            // Sync mobile dropdown text
+            const text = this.textContent;
+            const mobileSelectedText = document.querySelector('#mobile-filter-trigger .selected-text');
+            if(mobileSelectedText) mobileSelectedText.textContent = text;
+            
+            // Sync mobile options
+            document.querySelectorAll('#mobile-filter-options .custom-select-option').forEach(opt => {
+                opt.classList.remove('selected');
+                if(opt.dataset.sort === currentSort) opt.classList.add('selected');
+            });
+        });
+    });
+
+    // Mobile Dropdown logic
+    const mobileTrigger = document.getElementById('mobile-filter-trigger');
+    const mobileOptions = document.getElementById('mobile-filter-options');
+    
+    if (mobileTrigger && mobileOptions) {
+        mobileTrigger.addEventListener('click', function(e) {
+            e.stopPropagation();
+            mobileTrigger.classList.toggle('active');
+            mobileOptions.classList.toggle('active');
+        });
+        
+        document.addEventListener('click', function(e) {
+            if (!mobileTrigger.contains(e.target) && !mobileOptions.contains(e.target)) {
+                mobileTrigger.classList.remove('active');
+                mobileOptions.classList.remove('active');
+            }
+        });
+        
+        mobileOptions.addEventListener('click', function(e) {
+            const option = e.target.closest('.custom-select-option');
+            if (!option) return;
+            
+            const sortType = option.dataset.sort;
+            
+            mobileOptions.querySelectorAll('.custom-select-option').forEach(opt => opt.classList.remove('selected'));
+            option.classList.add('selected');
+            
+            mobileTrigger.querySelector('.selected-text').textContent = option.textContent.trim();
+            mobileTrigger.classList.remove('active');
+            mobileOptions.classList.remove('active');
+            
+            currentSort = sortType;
+            sortRiders();
+            
+            // Sync desktop active state
+            document.querySelectorAll('.filter-btn').forEach(b => {
+                b.classList.remove('active');
+                if(b.dataset.sort === sortType) b.classList.add('active');
+            });
+        });
+    }
+}
 
 async function loadRiders() {
     try {
@@ -68,10 +165,9 @@ async function loadRiders() {
 }
 
 function sortRiders() {
-    const sortBy = document.getElementById('sort-select').value;
     let sorted = [...allRiders];
     
-    switch (sortBy) {
+    switch (currentSort) {
         case 'name':
             sorted.sort((a, b) => a.full_name.localeCompare(b.full_name));
             break;
