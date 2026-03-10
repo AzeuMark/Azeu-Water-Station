@@ -21,17 +21,29 @@ async function loadSettings() {
         if (data.success) {
             const settings = data.settings;
             
-            // Populate form fields
+            // General Settings
             document.getElementById('station_name').value = settings.station_name || '';
             document.getElementById('station_address').value = settings.station_address || '';
             document.getElementById('delivery_fee').value = settings.delivery_fee || '';
             document.getElementById('low_stock_threshold').value = settings.low_stock_threshold || '';
+            
+            // Order Settings
             document.getElementById('max_cancellation').value = settings.max_cancellation || '';
             document.getElementById('pending_expiry_days').value = settings.pending_expiry_days || '';
+            
+            // Order Toggles
+            document.getElementById('auto_confirm_orders').checked = settings.auto_confirm_orders == '1';
+            document.getElementById('auto_assign_rider').checked = settings.auto_assign_rider == '1';
+            document.getElementById('auto_reassign_rider').checked = settings.auto_reassign_rider == '1';
+            
+            // Security Settings
             document.getElementById('max_login_attempts').value = settings.max_login_attempts || '';
             document.getElementById('login_lockout_minutes').value = settings.login_lockout_minutes || '';
             document.getElementById('encrypt_passwords').checked = settings.encrypt_passwords == '1';
             document.getElementById('maintenance_mode').checked = settings.maintenance_mode == '1';
+            document.getElementById('force_dark_mode').checked = settings.force_dark_mode == '1';
+            
+            // Inventory Settings
             document.getElementById('default_item_names').value = settings.default_item_names || '';
         }
     } catch (error) {
@@ -44,16 +56,27 @@ async function saveSettings(e) {
     e.preventDefault();
     
     const settings = {
+        // General
         station_name: document.getElementById('station_name').value,
         station_address: document.getElementById('station_address').value,
         delivery_fee: document.getElementById('delivery_fee').value,
         low_stock_threshold: document.getElementById('low_stock_threshold').value,
+        
+        // Order
         max_cancellation: document.getElementById('max_cancellation').value,
         pending_expiry_days: document.getElementById('pending_expiry_days').value,
+        auto_confirm_orders: document.getElementById('auto_confirm_orders').checked ? '1' : '0',
+        auto_assign_rider: document.getElementById('auto_assign_rider').checked ? '1' : '0',
+        auto_reassign_rider: document.getElementById('auto_reassign_rider').checked ? '1' : '0',
+        
+        // Security
         max_login_attempts: document.getElementById('max_login_attempts').value,
         login_lockout_minutes: document.getElementById('login_lockout_minutes').value,
         encrypt_passwords: document.getElementById('encrypt_passwords').checked ? '1' : '0',
         maintenance_mode: document.getElementById('maintenance_mode').checked ? '1' : '0',
+        force_dark_mode: document.getElementById('force_dark_mode').checked ? '1' : '0',
+        
+        // Inventory
         default_item_names: document.getElementById('default_item_names').value
     };
     

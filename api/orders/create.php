@@ -201,17 +201,85 @@ try {
         );
     }
     
+    // =====================================================================
+    // AUTO-CONFIRM: If setting is enabled, auto-confirm the order
+    // =====================================================================
+    $auto_confirmed = false;
+    $auto_assigned_rider = null;
+    
+    if (get_setting('auto_confirm_orders') == '1') {
+        db_update("UPDATE orders SET status = ? WHERE id = ?", [STATUS_CONFIRMED, $order_id]);
+        $auto_confirmed = true;
+        
+        // Notify customer
+        create_notification(
+            $customer_id,
+            'Order Auto-Confirmed',
+            "Your order #$order_id has been automatically confirmed",
+            'order_confirmed',
+            $order_id
+        );
+        
+        // =================================================================
+        // AUTO-ASSIGN RIDER: If setting is enabled and it's a delivery order
+        // =================================================================
+        if (get_setting('auto_assign_rider') == '1' && $delivery_type === DEL_DELIVERY) {
+            $rider = db_fetch(
+                "SELECT u.id, u.full_name,
+                 (SELECT COUNT(*) FROM orders WHERE rider_id = u.id AND status IN ('assigned', 'on_delivery')) as active_count
+                 FROM users u 
+                 WHERE u.role = 'rider' AND u.status = 'active' AND u.is_available = 1
+                 ORDER BY active_count ASC LIMIT 1"
+            );
+            
+            if ($rider) {
+                db_update(
+                    "UPDATE orders SET rider_id = ?, status = ? WHERE id = ?",
+                    [$rider['id'], STATUS_ASSIGNED, $order_id]
+                );
+                $auto_assigned_rider = $rider['full_name'];
+                
+                // Notify rider
+                create_notification(
+                    $rider['id'],
+                    'New Delivery Assigned',
+                    "You have been auto-assigned to deliver Order #$order_id",
+                    'order_assigned',
+                    $order_id
+                );
+                
+                // Notify customer
+                create_notification(
+                    $customer_id,
+                    'Rider Assigned',
+                    "A rider ({$rider['full_name']}) has been assigned to your order #$order_id",
+                    'order_assigned',
+                    $order_id
+                );
+            }
+        }
+    }
+    
     $pdo->commit();
     
-    logger_info("Order created successfully", ['order_id' => $order_id, 'total' => $total_amount]);
+    logger_info("Order created successfully", ['order_id' => $order_id, 'total' => $total_amount, 'auto_confirmed' => $auto_confirmed]);
     
-    json_response([
+    $response = [
         'success' => true,
         'message' => 'Order placed successfully',
         'order_id' => $order_id,
         'receipt_token' => $receipt_token,
         'total_amount' => $total_amount
-    ]);
+    ];
+    
+    if ($auto_confirmed) {
+        $response['message'] = 'Order placed and automatically confirmed!';
+    }
+    if ($auto_assigned_rider) {
+        $response['message'] = 'Order placed, confirmed, and rider ' . $auto_assigned_rider . ' assigned!';
+    }
+    
+    json_response($response);
     
 } catch (Exception $e) {
     if ($pdo->inTransaction()) {

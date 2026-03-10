@@ -37,6 +37,10 @@ $station_name = get_setting('station_name') ?? 'Azeu Water Station';
     <?php if (isset($page_css)): ?>
         <link rel="stylesheet" href="css/<?php echo $page_css; ?>">
     <?php endif; ?>
+    
+    <?php if (get_setting('force_dark_mode') == '1'): ?>
+        <meta name="force-dark-mode" content="1">
+    <?php endif; ?>
 </head>
 <body>
     <!-- Hamburger Toggle (Mobile) -->

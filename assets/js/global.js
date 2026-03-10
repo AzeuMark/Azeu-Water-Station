@@ -5,12 +5,37 @@
 
 // Theme Management
 function initTheme() {
+    // Check if force dark mode is enabled system-wide
+    const forceDark = document.querySelector('meta[name="force-dark-mode"]');
+    
+    if (forceDark && forceDark.getAttribute('content') === '1') {
+        // Force dark mode — override user preference
+        document.documentElement.setAttribute('data-theme', 'dark');
+        updateThemeIcon('dark');
+        
+        // Disable the toggle button visually
+        const themeToggle = document.querySelector('.theme-toggle');
+        if (themeToggle) {
+            themeToggle.style.opacity = '0.4';
+            themeToggle.style.cursor = 'not-allowed';
+            themeToggle.title = 'Dark mode is enforced by admin';
+        }
+        return;
+    }
+    
     const savedTheme = localStorage.getItem('theme') || 'light';
     document.documentElement.setAttribute('data-theme', savedTheme);
     updateThemeIcon(savedTheme);
 }
 
 function toggleTheme() {
+    // Block toggle if force dark mode is enabled
+    const forceDark = document.querySelector('meta[name="force-dark-mode"]');
+    if (forceDark && forceDark.getAttribute('content') === '1') {
+        showToast('Dark mode is enforced by the administrator', 'info');
+        return;
+    }
+    
     const currentTheme = document.documentElement.getAttribute('data-theme');
     const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
     
