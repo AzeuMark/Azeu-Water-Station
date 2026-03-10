@@ -324,6 +324,34 @@ async function updateOrderStatus(orderId, status) {
 
 function showAssignRider(orderId) {
     document.getElementById('assign-order-id').value = orderId;
+    
+    // Check if this order has a reassignment reason
+    const order = allOrders.find(o => o.id == orderId);
+    const reassignNote = document.getElementById('reassign-reason-note');
+    
+    if (reassignNote) {
+        if (order && order.staff_comment && order.staff_comment.includes('[REASSIGN REQUEST')) {
+            const match = order.staff_comment.match(/\[REASSIGN REQUEST[^\]]*\]\s*(.*)/);
+            const reason = match ? match[1] : order.staff_comment;
+            
+            reassignNote.innerHTML = `
+                <div style="background: rgba(255,167,38,0.1); border: 1px solid rgba(255,167,38,0.3); border-radius: 8px; padding: 12px; margin-bottom: 16px;">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-weight: 600; color: #F57C00;">
+                        <span class="material-icons" style="font-size: 18px;">swap_horiz</span>
+                        Reassignment Requested
+                    </div>
+                    <div style="font-size: 13px; color: var(--text-secondary);">
+                        <strong>Reason:</strong> ${reason}
+                    </div>
+                </div>
+            `;
+            reassignNote.style.display = 'block';
+        } else {
+            reassignNote.innerHTML = '';
+            reassignNote.style.display = 'none';
+        }
+    }
+    
     closeModal('order-modal');
     openModal('assign-rider-modal');
 }

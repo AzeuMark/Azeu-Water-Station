@@ -4,11 +4,15 @@
  * ============================================================================
  * 
  * Purpose: Active deliveries management logic
- * Functions: Load deliveries, update status, view details
+ * Functions: Load deliveries, update status, view details, pagination
  * 
  * Status: ✅ IMPLEMENTED
  * ============================================================================
  */
+
+let allDeliveryOrders = [];
+let deliveriesPage = 1;
+const deliveriesPerPage = 10;
 
 document.addEventListener('DOMContentLoaded', function() {
     loadDeliveries();
@@ -19,12 +23,15 @@ document.addEventListener('DOMContentLoaded', function() {
  */
 async function loadDeliveries() {
     try {
-        const response = await fetch('../api/orders/list.php?status=on_delivery');
+        const response = await fetch('../api/orders/list.php?status=on_delivery&limit=100');
         const data = await response.json();
         
-        if (data.success) {
-            renderDeliveries(data.orders);
+        if (data.success && data.orders.length > 0) {
+            allDeliveryOrders = data.orders;
+            deliveriesPage = 1;
+            renderDeliveries();
         } else {
+            allDeliveryOrders = [];
             showEmptyState();
         }
     } catch (error) {
@@ -34,19 +41,24 @@ async function loadDeliveries() {
 }
 
 /**
- * Render deliveries
+ * Render deliveries with pagination
  */
-function renderDeliveries(orders) {
+function renderDeliveries() {
     const container = document.getElementById('deliveries-container');
     
-    if (orders.length === 0) {
+    if (allDeliveryOrders.length === 0) {
         showEmptyState();
         return;
     }
     
+    // Pagination
+    const totalPages = Math.ceil(allDeliveryOrders.length / deliveriesPerPage);
+    const startIdx = (deliveriesPage - 1) * deliveriesPerPage;
+    const pageOrders = allDeliveryOrders.slice(startIdx, startIdx + deliveriesPerPage);
+    
     let html = '<div style="display: grid; gap: 20px;">';
     
-    orders.forEach(order => {
+    pageOrders.forEach(order => {
         html += `
             <div class="delivery-card">
                 <div class="delivery-header">
@@ -107,8 +119,43 @@ function renderDeliveries(orders) {
     });
     
     html += '</div>';
-    
     container.innerHTML = html;
+    
+    updateDeliveriesPagination(totalPages);
+}
+
+function updateDeliveriesPagination(totalPages) {
+    const wrapper = document.getElementById('deliveries-pagination');
+    if (!wrapper) return;
+    
+    const info = document.getElementById('del-page-info');
+    const prevBtn = document.getElementById('del-prev-btn');
+    const nextBtn = document.getElementById('del-next-btn');
+    
+    if (totalPages <= 1) {
+        wrapper.style.display = 'none';
+        return;
+    }
+    
+    wrapper.style.display = 'flex';
+    info.textContent = `Page ${deliveriesPage} of ${totalPages}`;
+    prevBtn.disabled = deliveriesPage <= 1;
+    nextBtn.disabled = deliveriesPage >= totalPages;
+}
+
+function prevDeliveriesPage() {
+    if (deliveriesPage > 1) {
+        deliveriesPage--;
+        renderDeliveries();
+    }
+}
+
+function nextDeliveriesPage() {
+    const totalPages = Math.ceil(allDeliveryOrders.length / deliveriesPerPage);
+    if (deliveriesPage < totalPages) {
+        deliveriesPage++;
+        renderDeliveries();
+    }
 }
 
 /**
@@ -123,6 +170,9 @@ function showEmptyState() {
             <p class="empty-message">Your active deliveries will appear here</p>
         </div>
     `;
+    
+    const pagination = document.getElementById('deliveries-pagination');
+    if (pagination) pagination.style.display = 'none';
 }
 
 /**
@@ -159,7 +209,13 @@ async function markAsDelivered(orderId) {
         
         if (data.success) {
             showToast('Order marked as delivered!', 'success');
-            loadDeliveries();
+            // Remove from local list
+            allDeliveryOrders = allDeliveryOrders.filter(o => o.id != orderId);
+            if (allDeliveryOrders.length === 0) {
+                showEmptyState();
+            } else {
+                renderDeliveries();
+            }
         } else {
             showToast(data.message || 'Failed to update status', 'error');
         }
@@ -193,12 +249,11 @@ async function requestReassign(orderId) {
     showLoading();
     
     try {
-        const response = await fetch('../api/orders/update_status.php', {
+        const response = await fetch('../api/orders/request_reassign.php', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
                 order_id: orderId,
-                status: 'reassigning',
                 reason: result.value,
                 csrf_token: getCSRFToken()
             })
@@ -208,8 +263,14 @@ async function requestReassign(orderId) {
         hideLoading();
         
         if (data.success) {
-            showToast('Reassignment requested', 'success');
-            loadDeliveries();
+            showToast(data.message || 'Reassignment requested', 'success');
+            // Remove from local list
+            allDeliveryOrders = allDeliveryOrders.filter(o => o.id != orderId);
+            if (allDeliveryOrders.length === 0) {
+                showEmptyState();
+            } else {
+                renderDeliveries();
+            }
         } else {
             showToast(data.message || 'Failed to request reassignment', 'error');
         }

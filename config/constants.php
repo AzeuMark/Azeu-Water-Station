@@ -46,7 +46,6 @@ define('STATUS_ACCEPTED', 'accepted');
 define('STATUS_READY_FOR_PICKUP', 'ready_for_pickup');
 define('STATUS_PICKED_UP', 'picked_up');
 define('STATUS_CANCELLED', 'cancelled');
-define('STATUS_REASSIGNING', 'reassigning');
 
 // Account Statuses
 define('ACCOUNT_PENDING', 'pending');

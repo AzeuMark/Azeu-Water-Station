@@ -145,6 +145,7 @@ require_once __DIR__ . '/../includes/sidebar.php';
         <form id="assign-rider-form">
             <div class="modal-body">
                 <input type="hidden" id="assign-order-id">
+                <div id="reassign-reason-note" style="display: none;"></div>
                 <label for="rider-select" style="display: block; margin-bottom: 8px; font-weight: 600;">Select Rider</label>
                 <select id="rider-select" class="form-select" required>
                     <option value="">Loading...</option>

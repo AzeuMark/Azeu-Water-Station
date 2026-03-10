@@ -9,7 +9,7 @@
  * 
  * Features:
  * - List all completed deliveries
- * - Filter by date range
+ * - Pagination
  * - View delivery details
  * 
  * Status: ✅ IMPLEMENTED
@@ -57,25 +57,66 @@ require_once __DIR__ . '/../includes/sidebar.php';
                 </tbody>
             </table>
         </div>
+        
+        <!-- Pagination -->
+        <div class="pagination-controls-wrapper" id="history-pagination" style="display: none;">
+            <div class="pagination-controls">
+                <button class="btn-icon" onclick="prevHistoryPage()" id="history-prev-btn" title="Previous">
+                    <span class="material-icons">chevron_left</span>
+                </button>
+                <span class="page-info" id="history-page-info">Page 1 of 1</span>
+                <button class="btn-icon" onclick="nextHistoryPage()" id="history-next-btn" title="Next">
+                    <span class="material-icons">chevron_right</span>
+                </button>
+            </div>
+        </div>
     </div>
 </main>
 
+<style>
+.pagination-controls-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    border-top: 1px solid var(--border);
+}
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.page-info {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    padding: 0 8px;
+    min-width: 100px;
+    text-align: center;
+}
+</style>
+
 <script>
+let allHistoryOrders = [];
+let historyPage = 1;
+const historyPerPage = 15;
+
 document.addEventListener('DOMContentLoaded', function() {
     loadHistory();
 });
 
 async function loadHistory() {
     try {
-        const response = await fetch('../api/orders/list.php');
+        const response = await fetch('../api/orders/list.php?limit=100');
         const data = await response.json();
         
         if (data.success) {
             // Filter completed orders
-            const completed = data.orders.filter(o => 
+            allHistoryOrders = data.orders.filter(o => 
                 o.status === 'delivered' || o.status === 'accepted'
             );
-            renderHistory(completed);
+            historyPage = 1;
+            renderHistory();
         } else {
             showEmptyState();
         }
@@ -85,17 +126,22 @@ async function loadHistory() {
     }
 }
 
-function renderHistory(orders) {
+function renderHistory() {
     const tbody = document.getElementById('history-tbody');
     
-    if (orders.length === 0) {
+    if (allHistoryOrders.length === 0) {
         showEmptyState();
         return;
     }
     
+    // Pagination
+    const totalPages = Math.ceil(allHistoryOrders.length / historyPerPage);
+    const startIdx = (historyPage - 1) * historyPerPage;
+    const pageOrders = allHistoryOrders.slice(startIdx, startIdx + historyPerPage);
+    
     let html = '';
     
-    orders.forEach(order => {
+    pageOrders.forEach(order => {
         html += `
             <tr>
                 <td><strong>#${order.id}</strong></td>
@@ -113,9 +159,43 @@ function renderHistory(orders) {
     });
     
     tbody.innerHTML = html;
+    updateHistoryPagination(totalPages);
+}
+
+function updateHistoryPagination(totalPages) {
+    const wrapper = document.getElementById('history-pagination');
+    const info = document.getElementById('history-page-info');
+    const prevBtn = document.getElementById('history-prev-btn');
+    const nextBtn = document.getElementById('history-next-btn');
+    
+    if (totalPages <= 1) {
+        wrapper.style.display = 'none';
+        return;
+    }
+    
+    wrapper.style.display = 'flex';
+    info.textContent = `Page ${historyPage} of ${totalPages}`;
+    prevBtn.disabled = historyPage <= 1;
+    nextBtn.disabled = historyPage >= totalPages;
+}
+
+function prevHistoryPage() {
+    if (historyPage > 1) {
+        historyPage--;
+        renderHistory();
+    }
+}
+
+function nextHistoryPage() {
+    const totalPages = Math.ceil(allHistoryOrders.length / historyPerPage);
+    if (historyPage < totalPages) {
+        historyPage++;
+        renderHistory();
+    }
 }
 
 function showEmptyState() {
+    document.getElementById('history-pagination').style.display = 'none';
     const tbody = document.getElementById('history-tbody');
     tbody.innerHTML = `
         <tr>

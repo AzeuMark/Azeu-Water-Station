@@ -47,7 +47,43 @@ require_once __DIR__ . '/../includes/sidebar.php';
                 <div class="spinner"></div>
             </div>
         </div>
+        
+        <!-- Pagination -->
+        <div class="pagination-controls-wrapper" id="deliveries-pagination" style="display: none;">
+            <div class="pagination-controls">
+                <button class="btn-icon" onclick="prevDeliveriesPage()" id="del-prev-btn" title="Previous">
+                    <span class="material-icons">chevron_left</span>
+                </button>
+                <span class="page-info" id="del-page-info">Page 1 of 1</span>
+                <button class="btn-icon" onclick="nextDeliveriesPage()" id="del-next-btn" title="Next">
+                    <span class="material-icons">chevron_right</span>
+                </button>
+            </div>
+        </div>
     </div>
 </main>
+
+<style>
+.pagination-controls-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    border-top: 1px solid var(--border);
+}
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.page-info {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    padding: 0 8px;
+    min-width: 100px;
+    text-align: center;
+}
+</style>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

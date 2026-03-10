@@ -83,6 +83,7 @@ try {
     // Get orders
     $query = "SELECT o.*, 
               u.full_name as customer_name,
+              u.phone as customer_phone,
               r.full_name as rider_name,
               (SELECT COUNT(*) FROM order_items WHERE order_id = o.id) as item_count
               FROM orders o
