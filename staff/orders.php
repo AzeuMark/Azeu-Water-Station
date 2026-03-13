@@ -24,8 +24,26 @@ require_once __DIR__ . '/../includes/sidebar.php';
 
 <main class="main-content">
     <div class="content-header" style="position: relative; z-index: 200;">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
-            <h1 class="content-title">Manage Orders</h1>
+        <h1 class="content-title">Manage Orders</h1>
+    </div>
+    
+    <!-- Desktop Filter Bar -->
+    <div class="glass-card filter-bar-desktop" style="margin-bottom: 24px;">
+        <div class="filter-bar-inner">
+            <div class="filter-bar">
+                <div style="display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-weight: 500; font-size: 14px; white-space: nowrap;">
+                    <span class="material-icons" style="font-size: 20px;">filter_list</span>
+                    Filter:
+                </div>
+                <button class="filter-btn active" data-status="">All</button>
+                <button class="filter-btn" data-status="pending">Pending</button>
+                <button class="filter-btn" data-status="confirmed">Confirmed</button>
+                <button class="filter-btn" data-status="assigned">Assigned</button>
+                <button class="filter-btn" data-status="reassign_requested">Reassign Requested</button>
+                <button class="filter-btn" data-status="on_delivery">On Delivery</button>
+                <button class="filter-btn" data-status="delivered">Delivered</button>
+                <button class="filter-btn" data-status="cancelled">Cancelled</button>
+            </div>
             <div class="bulk-actions">
                 <button class="btn-bulk btn-bulk-success" onclick="confirmAllPending()" title="Confirm all pending orders">
                     <span class="material-icons">done_all</span>
@@ -42,11 +60,11 @@ require_once __DIR__ . '/../includes/sidebar.php';
                     <div class="bulk-dropdown-menu">
                         <button class="bulk-dropdown-item" onclick="autoAssignRiders(); closeBulkDropdown('assign-bulk-dropdown')">
                             <span class="material-icons">auto_awesome</span>
-                            Auto Assign All
+                            Auto Assign
                         </button>
                         <button class="bulk-dropdown-item" onclick="assignSpecificRider(); closeBulkDropdown('assign-bulk-dropdown')">
                             <span class="material-icons">person_pin</span>
-                            Assign to Specific Rider
+                            Assign to Rider
                         </button>
                     </div>
                 </div>
@@ -80,48 +98,81 @@ require_once __DIR__ . '/../includes/sidebar.php';
         </div>
     </div>
     
-    <!-- Desktop Filter Bar -->
-    <div class="glass-card filter-bar-desktop" style="margin-bottom: 24px;">
-        <div class="filter-bar">
-            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; flex: 1;">
-                <div style="display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-weight: 500; font-size: 14px; white-space: nowrap;">
-                    <span class="material-icons" style="font-size: 20px;">filter_list</span>
-                    Filter:
-                </div>
-                <button class="filter-btn active" data-status="">All</button>
-                <button class="filter-btn" data-status="pending">Pending</button>
-                <button class="filter-btn" data-status="confirmed">Confirmed</button>
-                <button class="filter-btn" data-status="assigned">Assigned</button>
-                <button class="filter-btn" data-status="reassign_requested">Reassign Requested</button>
-                <button class="filter-btn" data-status="on_delivery">On Delivery</button>
-                <button class="filter-btn" data-status="delivered">Delivered</button>
-                <button class="filter-btn" data-status="cancelled">Cancelled</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Mobile Filter Dropdown -->
+    <!-- Mobile Filter & Actions Bar -->
     <div class="glass-card filter-bar-mobile" style="margin-bottom: 24px; display: none;">
-        <div style="padding: 16px;">
-            <div class="custom-select-wrapper">
-                <div class="custom-select-trigger" id="mobile-filter-trigger">
-                    <span class="material-icons" style="margin-right: 8px; font-size: 20px;">filter_list</span>
-                    <span class="selected-text">All</span>
-                    <span class="material-icons arrow">expand_more</span>
+        <div class="filter-bar-mobile-inner">
+            <div class="filter-bar-mobile-filter">
+                <div class="custom-select-wrapper">
+                    <div class="custom-select-trigger" id="mobile-filter-trigger">
+                        <span class="material-icons" style="margin-right: 8px; font-size: 20px;">filter_list</span>
+                        <span class="selected-text">All</span>
+                        <span class="material-icons arrow">expand_more</span>
+                    </div>
+                    <div class="custom-select-options" id="mobile-filter-options">
+                        <div class="custom-select-option selected" data-status="">All</div>
+                        <div class="custom-select-option" data-status="pending">Pending</div>
+                        <div class="custom-select-option" data-status="confirmed">Confirmed</div>
+                        <div class="custom-select-option" data-status="assigned">Assigned</div>
+                        <div class="custom-select-option" data-status="on_delivery">On Delivery</div>
+                        <div class="custom-select-option" data-status="delivered">Delivered</div>
+                    </div>
                 </div>
-                <div class="custom-select-options" id="mobile-filter-options">
-                    <div class="custom-select-option selected" data-status="">All</div>
-                    <div class="custom-select-option" data-status="pending">Pending</div>
-                    <div class="custom-select-option" data-status="confirmed">Confirmed</div>
-                    <div class="custom-select-option" data-status="assigned">Assigned</div>
-                    <div class="custom-select-option" data-status="on_delivery">On Delivery</div>
-                    <div class="custom-select-option" data-status="delivered">Delivered</div>
+            </div>
+            <div class="filter-bar-mobile-divider"></div>
+            <div class="bulk-actions">
+                <button class="btn-bulk btn-bulk-success" onclick="confirmAllPending()" title="Confirm all pending orders">
+                    <span class="material-icons">done_all</span>
+                    Confirm All Pending
+                </button>
+
+                <div class="bulk-dropdown" id="assign-bulk-dropdown-mobile">
+                    <button class="btn-bulk btn-bulk-primary" onclick="toggleBulkDropdown('assign-bulk-dropdown-mobile')" title="Assign riders to confirmed delivery orders">
+                        <span class="material-icons">delivery_dining</span>
+                        Assign Rider
+                        <span class="material-icons bulk-dropdown-arrow">expand_more</span>
+                    </button>
+                    <div class="bulk-dropdown-menu">
+                        <button class="bulk-dropdown-item" onclick="autoAssignRiders(); closeBulkDropdown('assign-bulk-dropdown-mobile')">
+                            <span class="material-icons">auto_awesome</span>
+                            Auto Assign
+                        </button>
+                        <button class="bulk-dropdown-item" onclick="assignSpecificRider(); closeBulkDropdown('assign-bulk-dropdown-mobile')">
+                            <span class="material-icons">person_pin</span>
+                            Assign to Rider
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bulk-dropdown" id="cancel-bulk-dropdown-mobile">
+                    <button class="btn-bulk btn-bulk-danger" onclick="toggleBulkDropdown('cancel-bulk-dropdown-mobile')" title="Cancel orders by status">
+                        <span class="material-icons">cancel</span>
+                        Cancel Orders
+                        <span class="material-icons bulk-dropdown-arrow">expand_more</span>
+                    </button>
+                    <div class="bulk-dropdown-menu">
+                        <button class="bulk-dropdown-item item-danger" onclick="cancelByStatus('pending'); closeBulkDropdown('cancel-bulk-dropdown-mobile')">
+                            Cancel All Pending
+                        </button>
+                        <button class="bulk-dropdown-item item-danger" onclick="cancelByStatus('confirmed'); closeBulkDropdown('cancel-bulk-dropdown-mobile')">
+                            Cancel All Confirmed
+                        </button>
+                        <button class="bulk-dropdown-item item-danger" onclick="cancelByStatus('assigned'); closeBulkDropdown('cancel-bulk-dropdown-mobile')">
+                            Cancel All Assigned
+                        </button>
+                        <button class="bulk-dropdown-item item-danger" onclick="cancelByStatus('reassign_requested'); closeBulkDropdown('cancel-bulk-dropdown-mobile')">
+                            Cancel All Reassign Requested
+                        </button>
+                        <button class="bulk-dropdown-item item-danger" onclick="cancelByStatus('on_delivery'); closeBulkDropdown('cancel-bulk-dropdown-mobile')">
+                            Cancel All On Delivery
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
     
-    <div class="glass-card">
+    <!-- Desktop Table View -->
+    <div class="glass-card orders-table-view">
         <div class="data-table-wrapper">
             <table class="data-table" id="orders-table">
                 <thead>
@@ -141,6 +192,24 @@ require_once __DIR__ . '/../includes/sidebar.php';
                     <tr><td colspan="9" style="text-align: center; padding: 40px;"><div class="spinner"></div></td></tr>
                 </tbody>
             </table>
+        </div>
+    </div>
+
+    <!-- Mobile/Tablet Card View -->
+    <div class="orders-card-view" id="orders-cards">
+        <div class="spinner" style="margin: 40px auto;"></div>
+    </div>
+
+    <!-- Mobile Pagination -->
+    <div id="pagination-wrapper-mobile" style="display: none; justify-content: center; align-items: center; padding: 16px 20px; background: var(--surface-card); border: 1px solid var(--border); border-radius: var(--radius); margin-top: 16px;">
+        <div class="pagination-controls">
+            <button class="btn-icon" onclick="previousCardPage()" id="prev-btn-mobile" title="Previous Page">
+                <span class="material-icons">chevron_left</span>
+            </button>
+            <span class="page-info" id="page-info-mobile">Page 1 of 1</span>
+            <button class="btn-icon" onclick="nextCardPage()" id="next-btn-mobile" title="Next Page">
+                <span class="material-icons">chevron_right</span>
+            </button>
         </div>
     </div>
 </main>
@@ -192,11 +261,11 @@ require_once __DIR__ . '/../includes/sidebar.php';
     </div>
 </div>
 
-<!-- Bulk Assign to Specific Rider Modal -->
+<!-- Bulk Assign to Rider Modal -->
 <div class="modal-overlay" id="bulk-assign-rider-modal" style="display: none;">
     <div class="modal">
         <div class="modal-header">
-            <h3>Assign to Specific Rider</h3>
+            <h3>Assign to Rider</h3>
             <button class="modal-close" onclick="closeModal('bulk-assign-rider-modal')">
                 <span class="material-icons">close</span>
             </button>

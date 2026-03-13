@@ -11,9 +11,13 @@ let currentFilter = '';
 let currentOrderId = null;
 let allOrders = [];
 let currentPage = 1;
-let itemsPerPage = 20;
+let itemsPerPage = window.innerWidth <= 1024 ? 10 : 15;
 let sortCol = 'order_date';
 let sortDir = 'desc';
+
+function getItemsPerPage() {
+    return window.innerWidth <= 1024 ? 10 : 15;
+}
 
 document.addEventListener('DOMContentLoaded', function() {
     loadOrders();
@@ -23,6 +27,17 @@ document.addEventListener('DOMContentLoaded', function() {
     
     document.getElementById('assign-rider-form').addEventListener('submit', assignRider);
     document.getElementById('bulk-assign-rider-form').addEventListener('submit', assignRiderBulk);
+    
+    window.addEventListener('resize', function() {
+        const newPerPage = getItemsPerPage();
+        if (newPerPage !== itemsPerPage) {
+            itemsPerPage = newPerPage;
+            currentPage = 1;
+        }
+        if (allOrders.length > 0) {
+            renderOrders();
+        }
+    });
 });
 
 function initSortHeaders() {
@@ -108,10 +123,14 @@ function updateSortIcons() {
 
 function renderOrders() {
     const tbody = document.getElementById('orders-tbody');
+    const cardsContainer = document.getElementById('orders-cards');
     
     if (allOrders.length === 0) {
         tbody.innerHTML = '<tr><td colspan="10"><div class="empty-state"><p>No orders found</p></div></td></tr>';
         updatePaginationControls(0);
+        if (cardsContainer) {
+            cardsContainer.innerHTML = '<div class="order-cards-empty"><span class="material-icons">receipt_long</span><p>No orders found</p></div>';
+        }
         return;
     }
     
@@ -121,6 +140,7 @@ function renderOrders() {
     const endIndex = startIndex + itemsPerPage;
     const paginatedOrders = allOrders.slice(startIndex, endIndex);
     
+    // Table view
     let html = '';
     paginatedOrders.forEach((order, index) => {
         const rowNumber = startIndex + index + 1;
@@ -151,10 +171,72 @@ function renderOrders() {
     tbody.innerHTML = html;
     updatePaginationControls(totalPages);
     
+    // Card view
+    if (cardsContainer) {
+        renderOrderCards(paginatedOrders, cardsContainer, startIndex);
+    }
+    
     // Load items for all visible orders
     paginatedOrders.forEach(order => {
         loadOrderItems(order.id);
     });
+}
+
+function renderOrderCards(orders, container, startIndex = 0) {
+    let cardsHtml = '<div class="order-cards-grid">';
+    orders.forEach((order, index) => {
+        const cardNumber = startIndex + index + 1;
+        const actionButtons = getActionButtons(order);
+        cardsHtml += `
+            <div class="order-card">
+                <div class="order-card-header">
+                    <div class="order-card-header-left">
+                        <span class="material-icons">tag</span>
+                        <span>${cardNumber}</span>
+                    </div>
+                    <div class="order-card-actions">
+                        ${actionButtons}
+                    </div>
+                </div>
+                <div class="order-card-row">
+                    <div class="order-card-label"><span class="material-icons">receipt</span> Order ID</div>
+                    <div class="order-card-value"><strong>#${order.id}</strong></div>
+                </div>
+                <div class="order-card-row">
+                    <div class="order-card-label"><span class="material-icons">person</span> Customer</div>
+                    <div class="order-card-value">${order.customer_name}</div>
+                </div>
+                <div class="order-card-items">
+                    <div class="order-card-items-label"><span class="material-icons">inventory_2</span> Items</div>
+                    <div class="order-card-items-list" id="card-items-${order.id}">
+                        <span style="color:var(--text-muted)">Loading...</span>
+                    </div>
+                </div>
+                <div class="order-card-row">
+                    <div class="order-card-label"><span class="material-icons">calendar_today</span> Date</div>
+                    <div class="order-card-value">${formatDate(order.order_date)}</div>
+                </div>
+                <div class="order-card-row">
+                    <div class="order-card-label"><span class="material-icons">local_shipping</span> Type</div>
+                    <div class="order-card-value">${order.delivery_type === 'delivery' ? 'Delivery' : 'Pickup'}</div>
+                </div>
+                <div class="order-card-row">
+                    <div class="order-card-label"><span class="material-icons">payments</span> Total</div>
+                    <div class="order-card-value total-highlight">${formatCurrency(order.total_amount)}</div>
+                </div>
+                <div class="order-card-row">
+                    <div class="order-card-label"><span class="material-icons">info</span> Status</div>
+                    <div class="order-card-value"><span class="badge badge-${order.status}">${order.status.replace(/_/g, ' ')}</span></div>
+                </div>
+                <div class="order-card-row">
+                    <div class="order-card-label"><span class="material-icons">sports_motorsports</span> Rider</div>
+                    <div class="order-card-value">${order.rider_name || '<span style="color:var(--text-muted)">Nothing</span>'}</div>
+                </div>
+            </div>
+        `;
+    });
+    cardsHtml += '</div>';
+    container.innerHTML = cardsHtml;
 }
 
 function getActionButtons(order) {
@@ -212,13 +294,15 @@ function getActionButtons(order) {
 
 async function loadOrderItems(orderId) {
     const itemsBox = document.getElementById(`items-box-${orderId}`);
-    if (!itemsBox) return;
+    const cardItems = document.getElementById(`card-items-${orderId}`);
+    if (!itemsBox && !cardItems) return;
     
     try {
         const response = await fetch(`../api/orders/get.php?id=${orderId}`);
         const data = await response.json();
         
         if (data.success && data.items) {
+            // Table items
             let itemsHtml = '';
             data.items.forEach((item, index) => {
                 itemsHtml += `
@@ -229,12 +313,28 @@ async function loadOrderItems(orderId) {
                     </div>
                 `;
             });
-            itemsBox.innerHTML = itemsHtml;
+            if (itemsBox) itemsBox.innerHTML = itemsHtml;
+            
+            // Card items
+            if (cardItems) {
+                let cardHtml = '';
+                data.items.forEach(item => {
+                    cardHtml += `
+                        <div class="order-card-item">
+                            <span class="order-card-item-name">${item.item_name} × ${item.quantity}</span>
+                            <span class="order-card-item-amount">${formatCurrency(item.subtotal)}</span>
+                        </div>
+                    `;
+                });
+                cardItems.innerHTML = cardHtml;
+            }
         } else {
-            itemsBox.innerHTML = '<div class="items-error">No items</div>';
+            if (itemsBox) itemsBox.innerHTML = '<div class="items-error">No items</div>';
+            if (cardItems) cardItems.innerHTML = '<span style="color:var(--text-muted)">No items</span>';
         }
     } catch (error) {
-        itemsBox.innerHTML = '<div class="items-error">Failed to load</div>';
+        if (itemsBox) itemsBox.innerHTML = '<div class="items-error">Failed to load</div>';
+        if (cardItems) cardItems.innerHTML = '<span style="color:var(--text-muted)">Failed to load</span>';
     }
 }
 
@@ -244,19 +344,34 @@ function updatePaginationControls(totalPages) {
     const nextBtn = document.getElementById('next-btn');
     const paginationWrapper = document.getElementById('pagination-wrapper');
     
+    const pageInfoMobile = document.getElementById('page-info-mobile');
+    const prevBtnMobile = document.getElementById('prev-btn-mobile');
+    const nextBtnMobile = document.getElementById('next-btn-mobile');
+    const paginationWrapperMobile = document.getElementById('pagination-wrapper-mobile');
+    
     if (!pageInfo) return;
     
-    // Hide pagination if only 1 page or no pages
     if (totalPages <= 1) {
         if (paginationWrapper) paginationWrapper.style.display = 'none';
+        if (paginationWrapperMobile) paginationWrapperMobile.style.display = 'none';
         return;
     }
     
-    if (paginationWrapper) paginationWrapper.style.display = 'flex';
+    // Show only the correct one for current viewport
+    if (window.innerWidth <= 1024) {
+        if (paginationWrapper) paginationWrapper.style.display = 'none';
+        if (paginationWrapperMobile) paginationWrapperMobile.style.display = 'flex';
+    } else {
+        if (paginationWrapper) paginationWrapper.style.display = 'flex';
+        if (paginationWrapperMobile) paginationWrapperMobile.style.display = 'none';
+    }
     pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+    if (pageInfoMobile) pageInfoMobile.textContent = `Page ${currentPage} of ${totalPages}`;
     
     if (prevBtn) prevBtn.disabled = currentPage <= 1;
     if (nextBtn) nextBtn.disabled = currentPage >= totalPages;
+    if (prevBtnMobile) prevBtnMobile.disabled = currentPage <= 1;
+    if (nextBtnMobile) nextBtnMobile.disabled = currentPage >= totalPages;
 }
 
 function previousPage() {
@@ -368,8 +483,8 @@ async function confirmOrder(orderId) {
         showCancelButton: true,
         confirmButtonColor: 'var(--success)',
         cancelButtonColor: 'var(--text-muted)',
-        confirmButtonText: 'Yes, Confirm',
-        cancelButtonText: 'Cancel'
+        confirmButtonText: 'Yes',
+        cancelButtonText: 'Close'
     });
     
     if (!result.isConfirmed) return;
@@ -638,12 +753,12 @@ async function confirmAllPending() {
     
     const result = await Swal.fire({
         title: 'Confirm All Pending Orders',
-        html: `Are you sure you want to confirm <strong>${pendingOrders.length}</strong> pending order(s)?`,
+        html: `Are you sure you want to confirm <strong>${pendingOrders.length}</strong> pending order(s) on this page?`,
         icon: 'question',
         showCancelButton: true,
-        confirmButtonText: 'Yes, Confirm All',
+        confirmButtonText: 'Confirm All',
         confirmButtonColor: '#66BB6A',
-        cancelButtonText: 'Cancel'
+        cancelButtonText: 'Close'
     });
     
     if (!result.isConfirmed) return;
@@ -684,7 +799,7 @@ async function autoAssignRiders() {
         showCancelButton: true,
         confirmButtonText: 'Auto Assign',
         confirmButtonColor: '#42A5F5',
-        cancelButtonText: 'Cancel'
+        cancelButtonText: 'Close'
     });
     
     if (!result.isConfirmed) return;
@@ -711,6 +826,53 @@ async function autoAssignRiders() {
     loadRiders();
 }
 
+async function cancelAllCancellable() {
+    const cancellableStatuses = ['pending', 'confirmed', 'assigned', 'reassign_requested', 'on_delivery'];
+    const cancellableOrders = allOrders.filter(o => cancellableStatuses.includes(o.status));
+
+    if (cancellableOrders.length === 0) {
+        showToast('No cancellable orders found', 'info');
+        return;
+    }
+
+    const result = await Swal.fire({
+        title: 'Cancel All Cancellable Orders',
+        html: `Are you sure you want to cancel <strong>${cancellableOrders.length}</strong> order(s)?<br><small style="color:var(--text-muted)">Includes: pending, confirmed, assigned, reassign requested, on delivery</small>`,
+        icon: 'warning',
+        input: 'textarea',
+        inputPlaceholder: 'Enter cancellation reason...',
+        showCancelButton: true,
+        confirmButtonText: 'Cancel All',
+        confirmButtonColor: '#EF5350',
+        cancelButtonText: 'Close',
+        inputValidator: (value) => {
+            if (!value) return 'Please provide a reason!';
+        }
+    });
+
+    if (!result.isConfirmed) return;
+
+    showLoading();
+    let success = 0, failed = 0;
+
+    for (const order of cancellableOrders) {
+        try {
+            const response = await fetch('../api/orders/cancel.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ order_id: order.id, reason: result.value, csrf_token: getCSRFToken() })
+            });
+            const data = await response.json();
+            if (data.success) success++;
+            else failed++;
+        } catch (err) { failed++; }
+    }
+
+    hideLoading();
+    showToast(`Cancelled: ${success}, Failed: ${failed}`, success > 0 ? 'success' : 'error');
+    loadOrders();
+}
+
 async function cancelByStatus(status) {
     const statusOrders = allOrders.filter(o => o.status === status);
     const statusLabel = status.replace(/_/g, ' ');
@@ -730,7 +892,7 @@ async function cancelByStatus(status) {
         showCancelButton: true,
         confirmButtonText: 'Cancel All',
         confirmButtonColor: '#EF5350',
-        cancelButtonText: 'Go Back',
+        cancelButtonText: 'Close',
         inputValidator: (value) => {
             if (!value) return 'Please provide a reason!';
         }
@@ -776,7 +938,7 @@ function closeBulkDropdown(id) {
 }
 
 // ============================================================================
-// ASSIGN TO SPECIFIC RIDER (BULK)
+// Assign to Rider (BULK)
 // ============================================================================
 
 function assignSpecificRider() {

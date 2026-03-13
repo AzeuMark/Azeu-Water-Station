@@ -26,16 +26,16 @@ $station_name = get_setting('station_name') ?? 'Azeu Water Station';
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     
     <!-- Global CSS -->
-    <link rel="stylesheet" href="../assets/css/global.css">
-    <link rel="stylesheet" href="../assets/css/components.css">
-    <link rel="stylesheet" href="../assets/css/layout.css">
+    <link rel="stylesheet" href="../assets/css/global.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="../assets/css/components.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="../assets/css/layout.css?v=<?php echo time(); ?>">
     
     <!-- SweetAlert2 -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     
     <!-- Page-specific CSS -->
     <?php if (isset($page_css)): ?>
-        <link rel="stylesheet" href="css/<?php echo $page_css; ?>">
+        <link rel="stylesheet" href="css/<?php echo $page_css; ?>?v=<?php echo time(); ?>">
     <?php endif; ?>
     
     <?php if (get_setting('force_dark_mode') == '1'): ?>

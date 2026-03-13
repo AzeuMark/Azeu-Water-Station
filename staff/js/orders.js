@@ -10,6 +10,8 @@
 let currentFilter = '';
 let currentOrderId = null;
 let allOrders = [];
+let currentCardPage = 1;
+let cardItemsPerPage = 10;
 
 document.addEventListener('DOMContentLoaded', function() {
     loadOrders();
@@ -39,6 +41,7 @@ async function loadOrders() {
         
         if (data.success) {
             allOrders = data.orders;
+            currentCardPage = 1;
             renderOrders(data.orders);
         }
     } catch (error) {
@@ -48,12 +51,18 @@ async function loadOrders() {
 
 function renderOrders(orders) {
     const tbody = document.getElementById('orders-tbody');
+    const cardsContainer = document.getElementById('orders-cards');
     
     if (orders.length === 0) {
         tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state"><p>No orders found</p></div></td></tr>';
+        if (cardsContainer) {
+            cardsContainer.innerHTML = '<div class="order-cards-empty"><span class="material-icons">receipt_long</span><p>No orders found</p></div>';
+        }
+        updateCardPagination(0);
         return;
     }
     
+    // Table view
     let html = '';
     orders.forEach(order => {
         const actionButtons = getActionButtons(order);
@@ -81,10 +90,120 @@ function renderOrders(orders) {
     
     tbody.innerHTML = html;
     
-    // Load items for all visible orders
+    // Card view with pagination
+    if (cardsContainer) {
+        const totalCardPages = Math.ceil(orders.length / cardItemsPerPage);
+        const cardStart = (currentCardPage - 1) * cardItemsPerPage;
+        const cardEnd = cardStart + cardItemsPerPage;
+        const paginatedCards = orders.slice(cardStart, cardEnd);
+        
+        renderOrderCards(paginatedCards, cardsContainer, cardStart);
+        updateCardPagination(totalCardPages);
+        
+        // Load items for card orders
+        paginatedCards.forEach(order => {
+            loadOrderItems(order.id);
+        });
+    }
+    
+    // Load items for table orders
     orders.forEach(order => {
         loadOrderItems(order.id);
     });
+}
+
+function renderOrderCards(orders, container, startIndex = 0) {
+    let cardsHtml = '<div class="order-cards-grid">';
+    orders.forEach((order, index) => {
+        const cardNumber = startIndex + index + 1;
+        const actionButtons = getActionButtons(order);
+        cardsHtml += `
+            <div class="order-card">
+                <div class="order-card-header">
+                    <div class="order-card-header-left">
+                        <span class="material-icons">tag</span>
+                        <span>${cardNumber}</span>
+                    </div>
+                    <div class="order-card-actions">
+                        ${actionButtons}
+                    </div>
+                </div>
+                <div class="order-card-row">
+                    <div class="order-card-label"><span class="material-icons">receipt</span> Order ID</div>
+                    <div class="order-card-value"><strong>#${order.id}</strong></div>
+                </div>
+                <div class="order-card-row">
+                    <div class="order-card-label"><span class="material-icons">person</span> Customer</div>
+                    <div class="order-card-value">${order.customer_name}</div>
+                </div>
+                <div class="order-card-items">
+                    <div class="order-card-items-label"><span class="material-icons">inventory_2</span> Items</div>
+                    <div class="order-card-items-list" id="card-items-${order.id}">
+                        <span style="color:var(--text-muted)">Loading...</span>
+                    </div>
+                </div>
+                <div class="order-card-row">
+                    <div class="order-card-label"><span class="material-icons">calendar_today</span> Date</div>
+                    <div class="order-card-value">${formatDate(order.order_date)}</div>
+                </div>
+                <div class="order-card-row">
+                    <div class="order-card-label"><span class="material-icons">local_shipping</span> Type</div>
+                    <div class="order-card-value">${order.delivery_type === 'delivery' ? 'Delivery' : 'Pickup'}</div>
+                </div>
+                <div class="order-card-row">
+                    <div class="order-card-label"><span class="material-icons">payments</span> Total</div>
+                    <div class="order-card-value total-highlight">${formatCurrency(order.total_amount)}</div>
+                </div>
+                <div class="order-card-row">
+                    <div class="order-card-label"><span class="material-icons">info</span> Status</div>
+                    <div class="order-card-value"><span class="badge badge-${order.status}">${order.status.replace(/_/g, ' ')}</span></div>
+                </div>
+                <div class="order-card-row">
+                    <div class="order-card-label"><span class="material-icons">sports_motorsports</span> Rider</div>
+                    <div class="order-card-value">${order.rider_name || '<span style="color:var(--text-muted)">Nothing</span>'}</div>
+                </div>
+            </div>
+        `;
+    });
+    cardsHtml += '</div>';
+    container.innerHTML = cardsHtml;
+}
+
+function updateCardPagination(totalPages) {
+    const pageInfo = document.getElementById('page-info-mobile');
+    const prevBtn = document.getElementById('prev-btn-mobile');
+    const nextBtn = document.getElementById('next-btn-mobile');
+    const wrapper = document.getElementById('pagination-wrapper-mobile');
+    
+    if (!wrapper) return;
+    
+    // Only show on mobile/tablet
+    if (window.innerWidth > 1024 || totalPages <= 1) {
+        wrapper.style.display = 'none';
+        return;
+    }
+    
+    wrapper.style.display = 'flex';
+    if (pageInfo) pageInfo.textContent = `Page ${currentCardPage} of ${totalPages}`;
+    if (prevBtn) prevBtn.disabled = currentCardPage <= 1;
+    if (nextBtn) nextBtn.disabled = currentCardPage >= totalPages;
+}
+
+function previousCardPage() {
+    if (currentCardPage > 1) {
+        currentCardPage--;
+        renderOrders(allOrders);
+        document.getElementById('orders-cards')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+}
+
+function nextCardPage() {
+    const totalPages = Math.ceil(allOrders.length / cardItemsPerPage);
+    if (currentCardPage < totalPages) {
+        currentCardPage++;
+        renderOrders(allOrders);
+        document.getElementById('orders-cards')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
 }
 
 function getActionButtons(order) {
@@ -142,13 +261,15 @@ function getActionButtons(order) {
 
 async function loadOrderItems(orderId) {
     const itemsBox = document.getElementById(`items-box-${orderId}`);
-    if (!itemsBox) return;
+    const cardItems = document.getElementById(`card-items-${orderId}`);
+    if (!itemsBox && !cardItems) return;
     
     try {
         const response = await fetch(`../api/orders/get.php?id=${orderId}`);
         const data = await response.json();
         
         if (data.success && data.items) {
+            // Table items
             let itemsHtml = '';
             data.items.forEach((item, index) => {
                 itemsHtml += `
@@ -159,12 +280,28 @@ async function loadOrderItems(orderId) {
                     </div>
                 `;
             });
-            itemsBox.innerHTML = itemsHtml;
+            if (itemsBox) itemsBox.innerHTML = itemsHtml;
+            
+            // Card items
+            if (cardItems) {
+                let cardHtml = '';
+                data.items.forEach(item => {
+                    cardHtml += `
+                        <div class="order-card-item">
+                            <span class="order-card-item-name">${item.item_name} × ${item.quantity}</span>
+                            <span class="order-card-item-amount">${formatCurrency(item.subtotal)}</span>
+                        </div>
+                    `;
+                });
+                cardItems.innerHTML = cardHtml;
+            }
         } else {
-            itemsBox.innerHTML = '<div class="items-error">No items</div>';
+            if (itemsBox) itemsBox.innerHTML = '<div class="items-error">No items</div>';
+            if (cardItems) cardItems.innerHTML = '<span style="color:var(--text-muted)">No items</span>';
         }
     } catch (error) {
-        itemsBox.innerHTML = '<div class="items-error">Failed to load</div>';
+        if (itemsBox) itemsBox.innerHTML = '<div class="items-error">Failed to load</div>';
+        if (cardItems) cardItems.innerHTML = '<span style="color:var(--text-muted)">Failed to load</span>';
     }
 }
 
@@ -669,7 +806,7 @@ function closeBulkDropdown(id) {
 }
 
 // ============================================================================
-// ASSIGN TO SPECIFIC RIDER (BULK)
+// Assign to Rider (BULK)
 // ============================================================================
 
 function assignSpecificRider() {

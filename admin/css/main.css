@@ -328,6 +328,255 @@
     }
 }
 
+/* ============================================================================
+   RESPONSIVE ORDER CARDS — Mobile/Tablet View
+   ============================================================================ */
+
+/* Show/hide logic */
+.orders-card-view {
+    display: none;
+}
+
+.orders-table-view {
+    display: block;
+}
+
+@media (max-width: 1024px) {
+    .orders-card-view {
+        display: block;
+    }
+    .orders-table-view {
+        display: none;
+    }
+}
+
+/* Pagination controls for orders */
+.pagination-controls-wrapper {
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: 0 0 var(--radius) var(--radius);
+}
+
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    white-space: nowrap;
+}
+
+.pagination-controls .page-info {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    padding: 0 8px;
+    min-width: 100px;
+    text-align: center;
+}
+
+/* Card grid */
+.order-cards-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+}
+
+@media (min-width: 600px) and (max-width: 1024px) {
+    .order-cards-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Individual card */
+.order-card {
+    background: var(--surface-card);
+    border-radius: 16px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07);
+    overflow: hidden;
+    border: 1px solid var(--border);
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.order-card:hover {
+    box-shadow: 0 8px 16px -2px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+}
+
+/* Card header */
+.order-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+}
+
+.order-card-header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--text-primary);
+}
+
+.order-card-header-left .material-icons {
+    font-size: 20px;
+    color: var(--primary);
+}
+
+.order-card-actions {
+    display: flex;
+    gap: 4px;
+}
+
+.order-card-actions .btn-icon {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    border-radius: 8px;
+}
+
+.order-card-actions .btn-icon .material-icons {
+    font-size: 18px;
+}
+
+/* Card data rows */
+.order-card-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+}
+
+.order-card-row:last-child {
+    border-bottom: none;
+}
+
+.order-card-label {
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 500;
+    flex-shrink: 0;
+}
+
+.order-card-label .material-icons {
+    font-size: 16px;
+}
+
+.order-card-value {
+    font-weight: 600;
+    color: var(--text-primary);
+    text-align: right;
+    max-width: 60%;
+    word-break: break-word;
+}
+
+.order-card-value.total-highlight {
+    color: var(--primary);
+    font-size: 15px;
+    font-weight: 700;
+}
+
+/* Card items section */
+.order-card-items {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+}
+
+.order-card-items-label {
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 500;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.order-card-items-label .material-icons {
+    font-size: 16px;
+}
+
+.order-card-items-list {
+    max-height: 90px;
+    overflow-y: auto;
+    padding: 6px 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 12px;
+}
+
+.order-card-items-list::-webkit-scrollbar {
+    width: 3px;
+}
+
+.order-card-items-list::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 10px;
+}
+
+.order-card-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-primary);
+}
+
+.order-card-item:last-child {
+    border-bottom: none;
+}
+
+.order-card-item-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.order-card-item-amount {
+    font-weight: 500;
+    flex-shrink: 0;
+    margin-left: 8px;
+}
+
+/* Badge in card */
+.order-card-value .badge {
+    font-size: 12px;
+    padding: 3px 10px;
+}
+
+/* Empty state for cards */
+.order-cards-empty {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--text-muted);
+    background: var(--surface-card);
+    border-radius: 16px;
+    border: 1px solid var(--border);
+}
+
+.order-cards-empty .material-icons {
+    font-size: 48px;
+    margin-bottom: 12px;
+    opacity: 0.4;
+}
+
+.order-cards-empty p {
+    font-size: 15px;
+    font-weight: 500;
+}
+
 /* Sortable Table Headers */
 .sortable-th {
     cursor: pointer;
