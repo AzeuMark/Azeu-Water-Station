@@ -63,6 +63,7 @@ try {
             "SELECT 
              COUNT(*) as total_deliveries,
              SUM(CASE WHEN status IN ('assigned', 'on_delivery', 'reassign_requested') THEN 1 ELSE 0 END) as active_deliveries,
+             SUM(CASE WHEN status = 'on_delivery' THEN 1 ELSE 0 END) as on_delivery_count,
              SUM(CASE WHEN status IN ('delivered', 'accepted') THEN 1 ELSE 0 END) as completed_deliveries
              FROM orders WHERE rider_id = ?",
             [$rider['id']]
@@ -70,6 +71,7 @@ try {
         
         $rider['total_deliveries'] = $stats['total_deliveries'];
         $rider['active_deliveries'] = intval($stats['active_deliveries']);
+        $rider['on_delivery_count'] = intval($stats['on_delivery_count']);
         $rider['completed_deliveries'] = $stats['completed_deliveries'];
     }
     

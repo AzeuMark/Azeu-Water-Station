@@ -22,6 +22,7 @@ document.addEventListener('DOMContentLoaded', function() {
     loadRiders();
     
     document.getElementById('assign-rider-form').addEventListener('submit', assignRider);
+    document.getElementById('bulk-assign-rider-form').addEventListener('submit', assignRiderBulk);
 });
 
 function initSortHeaders() {
@@ -498,21 +499,35 @@ async function loadRiders() {
         const data = await response.json();
         
         const selectOptions = document.getElementById('rider-options');
+        const bulkSelectOptions = document.getElementById('bulk-rider-options');
         const hiddenInput = document.getElementById('rider-select');
         const triggerText = document.querySelector('#rider-trigger .selected-text');
         
         if (data.success && data.riders.length > 0) {
             let html = '<div class="custom-select-option selected" data-value="">Select a rider...</div>';
             html += data.riders.map(r => {
-                const busy = r.active_deliveries > 0;
+                const busy = r.on_delivery_count > 0;
                 const label = busy
-                    ? `${r.full_name} <span style="color:#E65100;font-size:12px;">(${r.active_deliveries} active — busy)</span>`
-                    : `${r.full_name} <span style="color:#888;font-size:12px;">(available)</span>`;
-                return `<div class="custom-select-option${busy ? ' disabled' : ''}" data-value="${busy ? '' : r.id}" data-rider-id="${r.id}" ${busy ? 'style="opacity:0.5;cursor:not-allowed;" title="This rider has active deliveries"' : ''}>${label}</div>`;
+                    ? `${r.full_name} <span style="color:#E65100;font-size:12px;">(on delivery — busy)</span>`
+                    : `${r.full_name} <span style="color:#888;font-size:12px;">(${r.active_deliveries > 0 ? r.active_deliveries + ' assigned' : 'available'})</span>`;
+                return `<div class="custom-select-option${busy ? ' disabled' : ''}" data-value="${busy ? '' : r.id}" data-rider-id="${r.id}" ${busy ? 'style="opacity:0.5;cursor:not-allowed;" title="This rider is currently on delivery"' : ''}>${label}</div>`;
             }).join('');
-            selectOptions.innerHTML = html;
+            if (selectOptions) selectOptions.innerHTML = html;
+            
+            // Bulk assign — all active riders selectable (show load info only)
+            if (bulkSelectOptions) {
+                let bulkHtml = '<div class="custom-select-option selected" data-value="">Select a rider...</div>';
+                bulkHtml += data.riders.map(r => {
+                    const label = r.active_deliveries > 0
+                        ? `${r.full_name} <span style="color:#E65100;font-size:12px;">(${r.active_deliveries} active)</span>`
+                        : `${r.full_name} <span style="color:#388E3C;font-size:12px;">(available)</span>`;
+                    return `<div class="custom-select-option" data-value="${r.id}">${label}</div>`;
+                }).join('');
+                bulkSelectOptions.innerHTML = bulkHtml;
+            }
         } else {
-            selectOptions.innerHTML = '<div class="custom-select-option selected" data-value="">No riders found</div>';
+            if (selectOptions) selectOptions.innerHTML = '<div class="custom-select-option selected" data-value="">No riders found</div>';
+            if (bulkSelectOptions) bulkSelectOptions.innerHTML = '<div class="custom-select-option selected" data-value="">No riders found</div>';
         }
         if (hiddenInput) hiddenInput.value = '';
         if (triggerText) triggerText.textContent = 'Select a rider...';
@@ -565,6 +580,12 @@ function initRiderSelect() {
 
 document.addEventListener('DOMContentLoaded', () => {
     initRiderSelect();
+    initBulkRiderSelect();
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.bulk-dropdown')) {
+            document.querySelectorAll('.bulk-dropdown.open').forEach(d => d.classList.remove('open'));
+        }
+    });
 });
 
 async function assignRider(e) {
@@ -690,17 +711,19 @@ async function autoAssignRiders() {
     loadRiders();
 }
 
-async function cancelAllPending() {
-    const pendingOrders = allOrders.filter(o => o.status === 'pending');
+async function cancelByStatus(status) {
+    const statusOrders = allOrders.filter(o => o.status === status);
+    const statusLabel = status.replace(/_/g, ' ');
+    const statusTitle = statusLabel.charAt(0).toUpperCase() + statusLabel.slice(1);
     
-    if (pendingOrders.length === 0) {
-        showToast('No pending orders to cancel', 'info');
+    if (statusOrders.length === 0) {
+        showToast(`No ${statusLabel} orders to cancel`, 'info');
         return;
     }
     
     const result = await Swal.fire({
-        title: 'Cancel All Pending Orders',
-        html: `Are you sure you want to cancel <strong>${pendingOrders.length}</strong> pending order(s)?`,
+        title: `Cancel All ${statusTitle} Orders`,
+        html: `Are you sure you want to cancel <strong>${statusOrders.length}</strong> ${statusLabel} order(s)?`,
         icon: 'warning',
         input: 'textarea',
         inputPlaceholder: 'Enter cancellation reason...',
@@ -718,7 +741,7 @@ async function cancelAllPending() {
     showLoading();
     let success = 0, failed = 0;
     
-    for (const order of pendingOrders) {
+    for (const order of statusOrders) {
         try {
             const response = await fetch('../api/orders/cancel.php', {
                 method: 'POST',
@@ -728,10 +751,135 @@ async function cancelAllPending() {
             const data = await response.json();
             if (data.success) success++;
             else failed++;
-        } catch (e) { failed++; }
+        } catch (err) { failed++; }
     }
     
     hideLoading();
     showToast(`Cancelled: ${success}, Failed: ${failed}`, success > 0 ? 'success' : 'error');
     loadOrders();
+}
+
+// ============================================================================
+// BULK DROPDOWN TOGGLE
+// ============================================================================
+
+function toggleBulkDropdown(id) {
+    const dropdown = document.getElementById(id);
+    const isOpen = dropdown.classList.contains('open');
+    document.querySelectorAll('.bulk-dropdown.open').forEach(d => d.classList.remove('open'));
+    if (!isOpen) dropdown.classList.add('open');
+}
+
+function closeBulkDropdown(id) {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('open');
+}
+
+// ============================================================================
+// ASSIGN TO SPECIFIC RIDER (BULK)
+// ============================================================================
+
+function assignSpecificRider() {
+    const confirmedDelivery = allOrders.filter(o => o.status === 'confirmed' && o.delivery_type === 'delivery');
+    
+    if (confirmedDelivery.length === 0) {
+        showToast('No confirmed delivery orders to assign', 'info');
+        return;
+    }
+    
+    const countText = document.getElementById('bulk-assign-count-text');
+    if (countText) {
+        countText.textContent = `This will assign all ${confirmedDelivery.length} confirmed delivery order(s) to the selected rider.`;
+    }
+    
+    // Reset rider selection
+    const hiddenInput = document.getElementById('bulk-rider-select');
+    const triggerText = document.querySelector('#bulk-rider-trigger .selected-text');
+    if (hiddenInput) hiddenInput.value = '';
+    if (triggerText) {
+        triggerText.textContent = 'Select a rider...';
+        triggerText.classList.add('placeholder');
+    }
+    document.querySelectorAll('#bulk-rider-options .custom-select-option').forEach(o => o.classList.remove('selected'));
+    const firstOpt = document.querySelector('#bulk-rider-options .custom-select-option');
+    if (firstOpt) firstOpt.classList.add('selected');
+    
+    openModal('bulk-assign-rider-modal');
+}
+
+async function assignRiderBulk(e) {
+    e.preventDefault();
+    
+    const riderId = document.getElementById('bulk-rider-select').value;
+    if (!riderId) {
+        showToast('Please select a rider', 'warning');
+        return;
+    }
+    
+    const confirmedDelivery = allOrders.filter(o => o.status === 'confirmed' && o.delivery_type === 'delivery');
+    if (confirmedDelivery.length === 0) {
+        showToast('No confirmed delivery orders to assign', 'info');
+        closeModal('bulk-assign-rider-modal');
+        return;
+    }
+    
+    closeModal('bulk-assign-rider-modal');
+    showLoading();
+    let success = 0, failed = 0;
+    
+    for (const order of confirmedDelivery) {
+        try {
+            const response = await fetch('../api/orders/assign_rider.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ order_id: order.id, rider_id: riderId, csrf_token: getCSRFToken() })
+            });
+            const data = await response.json();
+            if (data.success) success++;
+            else failed++;
+        } catch (err) { failed++; }
+    }
+    
+    hideLoading();
+    showToast(`Assigned: ${success}, Failed: ${failed}`, success > 0 ? 'success' : 'error');
+    loadOrders();
+    loadRiders();
+}
+
+function initBulkRiderSelect() {
+    const trigger = document.getElementById('bulk-rider-trigger');
+    const optionsCont = document.getElementById('bulk-rider-options');
+    const hiddenInput = document.getElementById('bulk-rider-select');
+    
+    if (!trigger || !optionsCont) return;
+    
+    trigger.addEventListener('click', function(e) {
+        e.stopPropagation();
+        trigger.classList.toggle('active');
+        optionsCont.classList.toggle('active');
+    });
+    
+    document.addEventListener('click', function(e) {
+        if (!trigger.contains(e.target) && !optionsCont.contains(e.target)) {
+            trigger.classList.remove('active');
+            optionsCont.classList.remove('active');
+        }
+    });
+    
+    optionsCont.addEventListener('click', function(e) {
+        const opt = e.target.closest('.custom-select-option');
+        if (!opt || opt.classList.contains('disabled')) return;
+        
+        const value = opt.dataset.value;
+        if (value !== undefined) {
+            optionsCont.querySelectorAll('.custom-select-option').forEach(o => o.classList.remove('selected'));
+            opt.classList.add('selected');
+            hiddenInput.value = value;
+            trigger.querySelector('.selected-text').textContent = opt.textContent;
+            trigger.querySelector('.selected-text').classList.remove('placeholder');
+        }
+        
+        trigger.classList.remove('active');
+        optionsCont.classList.remove('active');
+    });
 }

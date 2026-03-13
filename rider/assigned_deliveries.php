@@ -30,7 +30,7 @@ require_once __DIR__ . '/../includes/sidebar.php';
 ?>
 
 <main class="main-content">
-    <div class="content-header">
+    <div class="content-header" style="position: relative; z-index: 200;">
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
             <h1 class="content-title">Assigned Deliveries</h1>
             <button class="btn btn-primary" id="start-all-btn" onclick="startAllDeliveries()" style="display: none;">
@@ -40,34 +40,66 @@ require_once __DIR__ . '/../includes/sidebar.php';
         </div>
     </div>
     
-    <!-- Filter/Sort Bar -->
-    <div class="glass-card" style="margin-bottom: 24px;" id="filter-sort-bar" style="display: none;">
-        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-            <div style="display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-weight: 500; font-size: 14px;">
-                <span class="material-icons" style="font-size: 20px;">sort</span>
-                Sort by:
+    <!-- Desktop Filter/Sort Bar -->
+    <div class="glass-card filter-bar-desktop" style="margin-bottom: 24px;" id="filter-sort-bar" style="display: none;">
+        <div class="filter-bar">
+            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; flex: 1;">
+                <div style="display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-weight: 500; font-size: 14px; white-space: nowrap;">
+                    <span class="material-icons" style="font-size: 20px;">sort</span>
+                    Sort by:
+                </div>
+                <button class="filter-btn active" data-sort="customer">Customer Name</button>
+                <button class="filter-btn" data-sort="address">Address</button>
+                <button class="filter-btn" data-sort="amount_asc">Amount ↑</button>
+                <button class="filter-btn" data-sort="amount_desc">Amount ↓</button>
             </div>
-            <button class="filter-btn active" data-sort="priority">Priority</button>
-            <button class="filter-btn" data-sort="customer">Customer Name</button>
-            <button class="filter-btn" data-sort="address">Address</button>
-            <button class="filter-btn" data-sort="amount_asc">Amount ↑</button>
-            <button class="filter-btn" data-sort="amount_desc">Amount ↓</button>
+        </div>
+    </div>
+
+    <!-- Mobile Sort Dropdown -->
+    <div class="glass-card filter-bar-mobile" style="margin-bottom: 24px;" id="filter-sort-bar-mobile" style="display: none;">
+        <div style="padding: 16px;">
+            <div class="custom-select-wrapper">
+                <div class="custom-select-trigger" id="mobile-sort-trigger">
+                    <span class="material-icons" style="margin-right: 8px; font-size: 20px;">sort</span>
+                    <span class="selected-text">Customer Name</span>
+                    <span class="material-icons arrow">expand_more</span>
+                </div>
+                <div class="custom-select-options" id="mobile-sort-options">
+                    <div class="custom-select-option selected" data-sort="customer">Customer Name</div>
+                    <div class="custom-select-option" data-sort="address">Address</div>
+                    <div class="custom-select-option" data-sort="amount_asc">Amount ↑</div>
+                    <div class="custom-select-option" data-sort="amount_desc">Amount ↓</div>
+                </div>
+            </div>
         </div>
     </div>
     
     <div class="glass-card">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 8px;">
             <h3 style="margin: 0;">Delivery Queue (<span id="delivery-count">0</span>)</h3>
-            <p style="font-size: 0.9rem; color: var(--text-muted); margin: 0;">
-                <span class="material-icons" style="font-size: 18px; vertical-align: middle;">info</span>
-                Drag to reorder priority
-            </p>
         </div>
         
-        <div id="assigned-deliveries-list">
-            <div style="text-align: center; padding: 40px;">
-                <div class="spinner"></div>
-            </div>
+        <div class="data-table-wrapper">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Customer</th>
+                        <th>Address</th>
+                        <th>Amount</th>
+                        <th>Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="assigned-deliveries-list">
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 40px;">
+                            <div class="spinner"></div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
         
         <!-- Pagination -->
@@ -86,6 +118,15 @@ require_once __DIR__ . '/../includes/sidebar.php';
 </main>
 
 <style>
+/* Desktop/Mobile filter bar visibility */
+@media (max-width: 768px) {
+    .filter-bar-desktop { display: none !important; }
+    .filter-bar-mobile  { display: block !important; }
+}
+@media (min-width: 769px) {
+    .filter-bar-desktop { display: block !important; }
+    .filter-bar-mobile  { display: none !important; }
+}
 .pagination-controls-wrapper {
     display: flex;
     justify-content: center;
@@ -111,7 +152,7 @@ require_once __DIR__ . '/../includes/sidebar.php';
 <script>
 let assignedOrders = [];
 let sortedOrders = [];
-let currentSort = 'priority';
+let currentSort = 'customer';
 let assignedPage = 1;
 const assignedPerPage = 10;
 
@@ -121,15 +162,41 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initSortButtons() {
-    document.querySelectorAll('[data-sort]').forEach(btn => {
+    const sortBtns = document.querySelectorAll('[data-sort]');
+    sortBtns.forEach(btn => {
         btn.addEventListener('click', function() {
-            document.querySelectorAll('[data-sort]').forEach(b => b.classList.remove('active'));
+            sortBtns.forEach(b => b.classList.remove('active'));
             this.classList.add('active');
             currentSort = this.dataset.sort;
             assignedPage = 1;
             applySortAndRender();
         });
     });
+
+    // Mobile custom-select
+    const trigger = document.getElementById('mobile-sort-trigger');
+    const optionsList = document.getElementById('mobile-sort-options');
+    if (trigger && optionsList) {
+        trigger.addEventListener('click', () => optionsList.classList.toggle('open'));
+        optionsList.querySelectorAll('.custom-select-option').forEach(opt => {
+            opt.addEventListener('click', function() {
+                optionsList.querySelectorAll('.custom-select-option').forEach(o => o.classList.remove('selected'));
+                this.classList.add('selected');
+                trigger.querySelector('.selected-text').textContent = this.textContent;
+                optionsList.classList.remove('open');
+                currentSort = this.dataset.sort;
+                // Sync desktop buttons
+                sortBtns.forEach(b => b.classList.toggle('active', b.dataset.sort === currentSort));
+                assignedPage = 1;
+                applySortAndRender();
+            });
+        });
+        document.addEventListener('click', e => {
+            if (!trigger.contains(e.target) && !optionsList.contains(e.target)) {
+                optionsList.classList.remove('open');
+            }
+        });
+    }
 }
 
 async function loadAssignedDeliveries() {
@@ -143,10 +210,10 @@ async function loadAssignedDeliveries() {
             // Show buttons
             document.getElementById('start-all-btn').style.display = 'inline-flex';
             document.getElementById('filter-sort-bar').style.display = 'block';
+            document.getElementById('filter-sort-bar-mobile').style.display = 'block';
             document.getElementById('delivery-count').textContent = assignedOrders.length;
             
             applySortAndRender();
-            initSortable();
         } else {
             showEmptyState();
         }
@@ -172,9 +239,7 @@ function applySortAndRender() {
         case 'amount_desc':
             sortedOrders.sort((a, b) => parseFloat(b.total_amount) - parseFloat(a.total_amount));
             break;
-        case 'priority':
         default:
-            // Keep original order (server order = priority)
             break;
     }
     
@@ -182,7 +247,7 @@ function applySortAndRender() {
 }
 
 function renderAssignedDeliveries() {
-    const container = document.getElementById('assigned-deliveries-list');
+    const tbody = document.getElementById('assigned-deliveries-list');
     
     if (sortedOrders.length === 0) {
         showEmptyState();
@@ -194,56 +259,30 @@ function renderAssignedDeliveries() {
     const startIdx = (assignedPage - 1) * assignedPerPage;
     const pageOrders = sortedOrders.slice(startIdx, startIdx + assignedPerPage);
     
-    let html = '<div id="sortable-list">';
-    
+    let html = '';
     pageOrders.forEach((order, index) => {
-        const globalIndex = startIdx + index;
         html += `
-            <div class="delivery-card sortable-item" data-order-id="${order.id}">
-                <div class="drag-handle">
-                    <span class="material-icons">drag_indicator</span>
-                </div>
-                <div style="flex: 1;">
-                    <div class="delivery-header">
-                        <div>
-                            <h4>Order #${order.id}</h4>
-                            <p style="font-size: 0.9rem; color: var(--text-muted);">${order.customer_name}</p>
-                        </div>
-                        <div style="text-align: right;">
-                            <div style="font-size: 0.85rem; color: var(--text-muted);">Priority</div>
-                            <div style="font-size: 1.5rem; font-weight: 700; color: var(--primary);">#${globalIndex + 1}</div>
-                        </div>
-                    </div>
-                    
-                    <div style="display: flex; gap: 20px; margin-top: 12px;">
-                        <div style="flex: 1;">
-                            <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px;">Address</div>
-                            <div style="font-size: 0.95rem;">${order.delivery_address || 'N/A'}</div>
-                        </div>
-                        <div>
-                            <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px;">Amount</div>
-                            <div style="font-weight: 700; color: var(--primary);">${formatCurrency(order.total_amount)}</div>
-                        </div>
-                    </div>
-                </div>
-                <div style="display: flex; flex-direction: column; gap: 6px;">
-                    <button class="btn btn-primary" onclick="startDelivery(${order.id})" style="white-space: nowrap;">
-                        <span class="material-icons">play_arrow</span>
+            <tr data-order-id="${order.id}">
+                <td><strong>#${order.id}</strong></td>
+                <td>${order.customer_name || '—'}</td>
+                <td style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${order.delivery_address || ''}">${order.delivery_address || '—'}</td>
+                <td><strong style="color: var(--primary);">${formatCurrency(order.total_amount)}</strong></td>
+                <td style="white-space: nowrap;">${formatDate(order.order_date)}</td>
+                <td style="white-space: nowrap;">
+                    <button class="btn btn-primary btn-sm" onclick="startDelivery(${order.id})">
+                        <span class="material-icons" style="font-size: 16px;">play_arrow</span>
                         Start
                     </button>
-                    <button class="btn btn-warning" onclick="requestReassign(${order.id})" title="Request Reassignment" style="white-space: nowrap; font-size: 12px; padding: 6px 10px;">
+                    <button class="btn btn-warning btn-sm" onclick="requestReassign(${order.id})" style="margin-left: 4px;">
                         <span class="material-icons" style="font-size: 16px;">swap_horiz</span>
                         Reassign
                     </button>
-                </div>
-            </div>
+                </td>
+            </tr>
         `;
     });
     
-    html += '</div>';
-    container.innerHTML = html;
-    
-    // Pagination controls
+    tbody.innerHTML = html;
     updateAssignedPagination(totalPages);
 }
 
@@ -282,61 +321,22 @@ function nextAssignedPage() {
 function showEmptyState() {
     document.getElementById('start-all-btn').style.display = 'none';
     document.getElementById('filter-sort-bar').style.display = 'none';
+    document.getElementById('filter-sort-bar-mobile').style.display = 'none';
     document.getElementById('assigned-pagination').style.display = 'none';
     document.getElementById('delivery-count').textContent = '0';
     
-    const container = document.getElementById('assigned-deliveries-list');
-    container.innerHTML = `
-        <div class="empty-state">
-            <span class="material-icons empty-icon">assignment</span>
-            <p class="empty-title">No assigned deliveries</p>
-            <p class="empty-message">New deliveries will appear here when assigned to you</p>
-        </div>
+    const tbody = document.getElementById('assigned-deliveries-list');
+    tbody.innerHTML = `
+        <tr>
+            <td colspan="6">
+                <div class="empty-state">
+                    <span class="material-icons empty-icon">assignment</span>
+                    <p class="empty-title">No assigned deliveries</p>
+                    <p class="empty-message">New deliveries will appear here when assigned to you</p>
+                </div>
+            </td>
+        </tr>
     `;
-}
-
-function initSortable() {
-    const list = document.getElementById('sortable-list');
-    if (!list || typeof Sortable === 'undefined') return;
-    
-    Sortable.create(list, {
-        animation: 150,
-        handle: '.drag-handle',
-        onEnd: savePriority
-    });
-}
-
-async function savePriority() {
-    const items = document.querySelectorAll('.sortable-item');
-    const priorities = [];
-    
-    items.forEach((item, index) => {
-        priorities.push({
-            order_id: parseInt(item.dataset.orderId),
-            priority: index + 1
-        });
-    });
-    
-    try {
-        await fetch('../api/riders/update_priority.php', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                priorities: priorities,
-                csrf_token: getCSRFToken()
-            })
-        });
-        
-        // Update priority numbers in UI
-        items.forEach((item, index) => {
-            const priorityNum = item.querySelector('.delivery-header > div:last-child > div:last-child');
-            if (priorityNum) {
-                priorityNum.textContent = '#' + (index + 1);
-            }
-        });
-    } catch (error) {
-        console.error('Failed to save priority:', error);
-    }
 }
 
 async function startDelivery(orderId) {

@@ -44,7 +44,7 @@ require_once __DIR__ . '/../../config/session.php';
 require_once __DIR__ . '/../../config/functions.php';
 
 // Auth check
-require_role([ROLE_CUSTOMER, ROLE_STAFF, ROLE_ADMIN, ROLE_SUPER_ADMIN]);
+require_role([ROLE_CUSTOMER, ROLE_RIDER, ROLE_STAFF, ROLE_ADMIN, ROLE_SUPER_ADMIN]);
 
 // Get JSON input
 $input = json_decode(file_get_contents('php://input'), true);
@@ -88,7 +88,17 @@ try {
         }
     }
     
-    // Staff/Admin can cancel any order regardless of status
+    if ($role === ROLE_RIDER) {
+        // Rider can only cancel orders assigned to them at assigned or on_delivery status
+        if ($order['rider_id'] != $user_id) {
+            $pdo->rollBack();
+            json_response(['success' => false, 'message' => 'Not your assigned order'], 403);
+        }
+        if (!in_array($order['status'], [STATUS_ASSIGNED, STATUS_ON_DELIVERY])) {
+            $pdo->rollBack();
+            json_response(['success' => false, 'message' => 'You can only cancel assigned or on-delivery orders'], 403);
+        }
+    }
     
     // Update order status
     db_update(
@@ -148,17 +158,17 @@ try {
         );
     }
     
-    // Notify staff if cancelled by customer
-    if ($role === ROLE_CUSTOMER) {
+    // Notify staff if cancelled by customer or rider
+    if ($role === ROLE_CUSTOMER || $role === ROLE_RIDER) {
         $staff_admins = db_fetch_all(
             "SELECT id FROM users WHERE role IN ('staff', 'admin', 'super_admin') AND status = 'active'"
         );
-        
+        $cancellerLabel = $role === ROLE_RIDER ? 'Rider' : 'Customer';
         foreach ($staff_admins as $admin) {
             create_notification(
                 $admin['id'],
-                'Order Cancelled by Customer',
-                "Order #$order_id has been cancelled by " . $_SESSION['full_name'],
+                "Order Cancelled by $cancellerLabel",
+                "Order #$order_id has been cancelled by " . $_SESSION['full_name'] . ". Reason: $reason",
                 'order_cancelled',
                 $order_id
             );

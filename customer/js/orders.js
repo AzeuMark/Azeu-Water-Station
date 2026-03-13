@@ -11,10 +11,14 @@
  */
 
 let currentFilter = '';
+let allOrders = [];
+let sortCol = 'order_date';
+let sortDir = 'desc';
 
 document.addEventListener('DOMContentLoaded', function() {
     loadOrders();
     initFilterButtons();
+    initSortHeaders();
     
     // Check if specific order ID in URL
     const urlParams = new URLSearchParams(window.location.search);
@@ -34,11 +38,36 @@ function initFilterButtons() {
         btn.addEventListener('click', function() {
             filterBtns.forEach(b => b.classList.remove('active'));
             this.classList.add('active');
-            
             currentFilter = this.dataset.status;
             loadOrders();
         });
     });
+
+    // Mobile custom-select
+    const trigger = document.getElementById('mobile-filter-trigger');
+    const optionsList = document.getElementById('mobile-filter-options');
+    if (trigger && optionsList) {
+        trigger.addEventListener('click', () => optionsList.classList.toggle('open'));
+        optionsList.querySelectorAll('.custom-select-option').forEach(opt => {
+            opt.addEventListener('click', function() {
+                optionsList.querySelectorAll('.custom-select-option').forEach(o => o.classList.remove('selected'));
+                this.classList.add('selected');
+                trigger.querySelector('.selected-text').textContent = this.textContent;
+                optionsList.classList.remove('open');
+                currentFilter = this.dataset.status;
+                // Keep desktop filter buttons in sync
+                filterBtns.forEach(b => {
+                    b.classList.toggle('active', b.dataset.status === currentFilter);
+                });
+                loadOrders();
+            });
+        });
+        document.addEventListener('click', e => {
+            if (!trigger.contains(e.target) && !optionsList.contains(e.target)) {
+                optionsList.classList.remove('open');
+            }
+        });
+    }
 }
 
 /**
@@ -55,14 +84,73 @@ async function loadOrders() {
         const data = await response.json();
         
         if (data.success) {
-            renderOrders(data.orders);
+            allOrders = data.orders;
+            sortOrders();
         } else {
+            allOrders = [];
             showEmptyState();
         }
     } catch (error) {
         console.error('Failed to load orders:', error);
+        allOrders = [];
         showEmptyState();
     }
+}
+
+/**
+ * Sort stored orders and re-render
+ */
+function sortOrders() {
+    const sorted = [...allOrders].sort((a, b) => {
+        let valA = a[sortCol], valB = b[sortCol];
+        if (sortCol === 'total_amount' || sortCol === 'id') {
+            valA = parseFloat(valA) || 0;
+            valB = parseFloat(valB) || 0;
+        } else {
+            valA = (valA || '').toString().toLowerCase();
+            valB = (valB || '').toString().toLowerCase();
+        }
+        if (valA < valB) return sortDir === 'asc' ? -1 : 1;
+        if (valA > valB) return sortDir === 'asc' ? 1 : -1;
+        return 0;
+    });
+    renderOrders(sorted);
+    updateSortIcons();
+}
+
+/**
+ * Initialize sortable column header click handlers
+ */
+function initSortHeaders() {
+    document.querySelectorAll('.sortable-th').forEach(th => {
+        th.addEventListener('click', function() {
+            const col = this.dataset.col;
+            if (sortCol === col) {
+                sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortCol = col;
+                sortDir = 'asc';
+            }
+            sortOrders();
+        });
+    });
+}
+
+/**
+ * Update sort icon states
+ */
+function updateSortIcons() {
+    document.querySelectorAll('.sortable-th').forEach(th => {
+        const icon = th.querySelector('.sort-icon');
+        if (!icon) return;
+        th.classList.remove('th-sorted');
+        if (th.dataset.col === sortCol) {
+            th.classList.add('th-sorted');
+            icon.textContent = sortDir === 'asc' ? 'arrow_upward' : 'arrow_downward';
+        } else {
+            icon.textContent = 'unfold_more';
+        }
+    });
 }
 
 /**
@@ -78,7 +166,7 @@ function renderOrders(orders) {
     
     let html = '';
     
-    orders.forEach(order => {
+    orders.forEach((order, index) => {
         // Build inline action buttons
         let actions = `
             <button class="btn-icon" onclick="viewOrderDetails(${order.id})" title="View Details">
@@ -106,6 +194,7 @@ function renderOrders(orders) {
         
         html += `
             <tr>
+                <td style="text-align: center; color: var(--text-muted);">${index + 1}</td>
                 <td><strong>#${order.id}</strong></td>
                 <td>${formatDate(order.order_date)}</td>
                 <td>${order.delivery_type === 'delivery' ? 'Delivery' : 'Pickup'}</td>
@@ -133,7 +222,7 @@ function showEmptyState() {
     const tbody = document.getElementById('orders-tbody');
     tbody.innerHTML = `
         <tr>
-            <td colspan="7">
+            <td colspan="8">
                 <div class="empty-state">
                     <span class="material-icons empty-icon">inbox</span>
                     <p class="empty-title">No orders found</p>
