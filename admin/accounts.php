@@ -80,16 +80,17 @@ require_once __DIR__ . '/../includes/sidebar.php';
                 <thead>
                     <tr>
                         <th style="width: 60px; text-align: center;">No</th>
-                        <th>Name</th>
-                        <th>Username</th>
-                        <th>Email</th>
-                        <th>Role</th>
-                        <th>Status</th>
+                        <th class="sortable-th" data-col="full_name">Name <span class="sort-icon material-icons">unfold_more</span></th>
+                        <th class="sortable-th" data-col="username">Username <span class="sort-icon material-icons">unfold_more</span></th>
+                        <th class="sortable-th" data-col="email">Email <span class="sort-icon material-icons">unfold_more</span></th>
+                        <th class="sortable-th" data-col="role">Role <span class="sort-icon material-icons">unfold_more</span></th>
+                        <th class="sortable-th" data-col="status">Status <span class="sort-icon material-icons">unfold_more</span></th>
+                        <th class="sortable-th" data-col="created_at">Created Date <span class="sort-icon material-icons">unfold_more</span></th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody id="accounts-tbody">
-                    <tr><td colspan="7" style="text-align: center; padding: 40px;"><div class="spinner"></div></td></tr>
+                    <tr><td colspan="8" style="text-align: center; padding: 40px;"><div class="spinner"></div></td></tr>
                 </tbody>
             </table>
         </div>
@@ -271,6 +272,32 @@ require_once __DIR__ . '/../includes/sidebar.php';
 </div>
 
 <style>
+/* Sortable table headers */
+.sortable-th {
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+}
+.sortable-th:hover {
+    background: var(--primary);
+    color: #fff;
+}
+.sortable-th .sort-icon {
+    font-size: 14px;
+    vertical-align: middle;
+    margin-left: 4px;
+    opacity: 0.5;
+    transition: opacity 0.2s;
+}
+.sortable-th:hover .sort-icon,
+.sortable-th.th-sorted .sort-icon {
+    opacity: 1;
+}
+.sortable-th.th-sorted {
+    background: var(--primary);
+    color: #fff;
+}
+
 /* Pagination Controls - Bottom Center */
 .pagination-controls-wrapper {
     display: flex;
@@ -424,9 +451,12 @@ let allAccounts = [];
 let currentPage = 1;
 let itemsPerPage = 20;
 let flagReasonsMap = {};
+let sortCol = 'created_at';
+let sortDir = 'desc';
 
 document.addEventListener('DOMContentLoaded', function() {
     loadAccounts();
+    updateSortIcons();
     
     document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.addEventListener('click', function() {
@@ -434,6 +464,23 @@ document.addEventListener('DOMContentLoaded', function() {
             this.classList.add('active');
             currentRoleFilter = this.dataset.role;
             loadAccounts();
+        });
+    });
+
+    // Sortable header clicks
+    document.querySelectorAll('.sortable-th').forEach(th => {
+        th.addEventListener('click', function() {
+            const col = this.dataset.col;
+            if (sortCol === col) {
+                sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortCol = col;
+                sortDir = 'asc';
+            }
+            updateSortIcons();
+            sortAccounts();
+            currentPage = 1;
+            renderAccounts();
         });
     });
     
@@ -481,6 +528,40 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+function sortAccounts() {
+    allAccounts.sort((a, b) => {
+        let valA = (a[sortCol] ?? '').toString().toLowerCase();
+        let valB = (b[sortCol] ?? '').toString().toLowerCase();
+        // Date columns: compare as dates
+        if (sortCol === 'created_at') {
+            valA = new Date(a[sortCol] ?? 0);
+            valB = new Date(b[sortCol] ?? 0);
+        }
+        if (valA < valB) return sortDir === 'asc' ? -1 : 1;
+        if (valA > valB) return sortDir === 'asc' ? 1 : -1;
+        return 0;
+    });
+}
+
+function updateSortIcons() {
+    document.querySelectorAll('.sortable-th').forEach(th => {
+        const icon = th.querySelector('.sort-icon');
+        if (th.dataset.col === sortCol) {
+            icon.textContent = sortDir === 'asc' ? 'arrow_upward' : 'arrow_downward';
+            th.classList.add('th-sorted');
+        } else {
+            icon.textContent = 'unfold_more';
+            th.classList.remove('th-sorted');
+        }
+    });
+}
+
+function formatDate(dateStr) {
+    if (!dateStr) return '—';
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
 async function loadAccounts() {
     try {
         const url = currentRoleFilter ? `../api/accounts/list.php?role=${currentRoleFilter}` : '../api/accounts/list.php';
@@ -492,9 +573,10 @@ async function loadAccounts() {
         if (data.success && data.accounts.length > 0) {
             allAccounts = data.accounts;
             currentPage = 1;
+            sortAccounts();
             renderAccounts();
         } else {
-            tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><p>No accounts found</p></div></td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><p>No accounts found</p></div></td></tr>';
             updatePaginationControls(0);
         }
     } catch (error) {
@@ -506,7 +588,7 @@ function renderAccounts() {
     const tbody = document.getElementById('accounts-tbody');
     
     if (allAccounts.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><p>No accounts found</p></div></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><p>No accounts found</p></div></td></tr>';
         updatePaginationControls(0);
         return;
     }
@@ -529,6 +611,7 @@ function renderAccounts() {
                         <td>${acc.email}</td>
                         <td><span class="badge badge-${acc.role}">${acc.role}</span></td>
                         <td><span class="badge badge-${acc.status}">${acc.status}</span></td>
+                        <td style="white-space: nowrap; color: var(--text-secondary); font-size: 13px;">${formatDate(acc.created_at)}</td>
                         <td>
                             ${acc.role === 'super_admin' ? 
                                 `<span class="badge badge-protected" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 600; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 4px;">
