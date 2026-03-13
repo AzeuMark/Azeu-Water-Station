@@ -40,6 +40,9 @@ try {
 // Create all tables
 create_all_tables();
 
+// Run schema migrations for existing installations
+run_migrations();
+
 // Seed initial data
 seed_initial_data();
 
@@ -344,6 +347,21 @@ function seed_initial_data() {
             $stmt->execute([$item]);
         }
         logger_info("Default item names seeded");
+    }
+}
+
+/**
+ * Run schema migrations for existing installations
+ */
+function run_migrations() {
+    global $pdo;
+
+    // Add flag_reason column to users if it doesn't exist
+    try {
+        $pdo->exec("ALTER TABLE users ADD COLUMN flag_reason TEXT NULL AFTER status");
+        logger_info("Migration: added flag_reason column to users");
+    } catch (PDOException $e) {
+        // Column already exists — safe to ignore
     }
 }
 

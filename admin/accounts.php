@@ -49,6 +49,7 @@ require_once __DIR__ . '/../includes/sidebar.php';
                 <button class="filter-btn" data-role="customer">Customers</button>
                 <button class="filter-btn" data-role="rider">Riders</button>
                 <button class="filter-btn" data-role="staff">Staff</button>
+                <button class="filter-btn" data-role="admin">Admins</button>
             </div>
         </div>
     </div>
@@ -67,6 +68,7 @@ require_once __DIR__ . '/../includes/sidebar.php';
                     <div class="custom-select-option" data-role="customer">Customers</div>
                     <div class="custom-select-option" data-role="rider">Riders</div>
                     <div class="custom-select-option" data-role="staff">Staff</div>
+                    <div class="custom-select-option" data-role="admin">Admins</div>
                 </div>
             </div>
         </div>
@@ -421,6 +423,7 @@ const currentUserRole = '<?php echo $_SESSION['role']; ?>';
 let allAccounts = [];
 let currentPage = 1;
 let itemsPerPage = 20;
+let flagReasonsMap = {};
 
 document.addEventListener('DOMContentLoaded', function() {
     loadAccounts();
@@ -480,7 +483,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 async function loadAccounts() {
     try {
-        const url = currentRoleFilter ? `../api/accounts/list.php?role=${currentRoleFilter}&status=active` : '../api/accounts/list.php?status=active';
+        const url = currentRoleFilter ? `../api/accounts/list.php?role=${currentRoleFilter}` : '../api/accounts/list.php';
         const response = await fetch(url);
         const data = await response.json();
         
@@ -514,7 +517,9 @@ function renderAccounts() {
     const paginatedAccounts = allAccounts.slice(startIndex, endIndex);
     
     let html = '';
+    flagReasonsMap = {};
     paginatedAccounts.forEach((acc, index) => {
+        if (acc.flag_reason) flagReasonsMap[acc.id] = acc.flag_reason;
         const rowNumber = startIndex + index + 1;
                 html += `
                     <tr>
@@ -542,12 +547,16 @@ function renderAccounts() {
                                 }
                                 ${(acc.role === 'customer' || acc.role === 'rider') ? 
                                     (acc.status === 'flagged' ? 
-                                        `<button class="btn-icon" onclick="unflagAccount(${acc.id})" title="Unflag">
+                                        `<button class="btn-icon btn-warning" onclick="viewFlagReason(${acc.id})" title="View Flag Reason">
+                                            <span class="material-icons">info</span>
+                                        </button>
+                                        <button class="btn-icon" onclick="unflagAccount(${acc.id})" title="Unflag">
                                             <span class="material-icons">flag_circle</span>
                                         </button>` : 
-                                        `<button class="btn-icon" onclick="flagAccount(${acc.id})" title="Flag">
-                                            <span class="material-icons">flag</span>
-                                        </button>`
+                                        (acc.status !== 'pending' ?
+                                            `<button class="btn-icon" onclick="flagAccount(${acc.id})" title="Flag">
+                                                <span class="material-icons">flag</span>
+                                            </button>` : '')
                                     ) : ''
                                 }
                                 ${acc.role !== 'super_admin' && !(acc.role === 'admin' && currentUserRole === 'admin') ? 
@@ -601,14 +610,28 @@ function nextPage() {
 }
 
 async function flagAccount(userId) {
-    const reason = prompt('Reason for flagging:');
-    if (!reason) return;
+    const { value: reason, isConfirmed } = await Swal.fire({
+        title: 'Flag Account',
+        input: 'textarea',
+        inputLabel: 'Reason for flagging',
+        inputPlaceholder: 'Enter the reason for flagging this account...',
+        inputAttributes: { 'aria-label': 'Flag reason' },
+        showCancelButton: true,
+        confirmButtonText: 'Flag Account',
+        confirmButtonColor: '#d33',
+        cancelButtonText: 'Cancel',
+        inputValidator: (value) => {
+            if (!value || !value.trim()) return 'Please provide a reason for flagging.';
+        }
+    });
+    
+    if (!isConfirmed || !reason) return;
     
     try {
         const response = await fetch('../api/accounts/flag.php', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ user_id: userId, action: 'flag', reason, csrf_token: getCSRFToken() })
+            body: JSON.stringify({ user_id: userId, action: 'flag', reason: reason.trim(), csrf_token: getCSRFToken() })
         });
         
         const data = await response.json();
@@ -625,7 +648,17 @@ async function flagAccount(userId) {
 }
 
 async function unflagAccount(userId) {
-    if (!confirm('Unflag this account?')) return;
+    const result = await Swal.fire({
+        title: 'Unflag Account?',
+        text: 'This will restore the account to active status and reset the cancellation count.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, unflag it',
+        confirmButtonColor: '#3085d6',
+        cancelButtonText: 'Cancel'
+    });
+    
+    if (!result.isConfirmed) return;
     
     try {
         const response = await fetch('../api/accounts/flag.php', {
@@ -645,6 +678,16 @@ async function unflagAccount(userId) {
     } catch (error) {
         showToast('An error occurred', 'error');
     }
+}
+
+function viewFlagReason(userId) {
+    const reason = flagReasonsMap[userId] || 'No reason provided.';
+    Swal.fire({
+        title: 'Flag Reason',
+        text: reason,
+        icon: 'warning',
+        confirmButtonText: 'Close'
+    });
 }
 
 async function editAccount(userId) {
@@ -748,7 +791,7 @@ async function deleteAccount(userId) {
     if (!confirmed.isConfirmed) return;
     
     try {
-        const response = await fetch('../api/accounts/update.php', {
+        const response = await fetch('../api/accounts/delete.php', {
             method: 'DELETE',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ 
@@ -868,7 +911,7 @@ async function submitAddAccount(e) {
     showLoading();
     
     try {
-        const response = await fetch('../api/auth/register.php', {
+        const response = await fetch('../api/accounts/create.php', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(payload)

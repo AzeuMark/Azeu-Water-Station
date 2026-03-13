@@ -84,7 +84,7 @@ try {
     $total = $total_result['total'];
     
     // Get accounts
-    $query = "SELECT id, username, full_name, email, phone, role, status, 
+    $query = "SELECT id, username, full_name, email, phone, role, status, flag_reason,
               is_available, cancellation_count, created_at, updated_at
               FROM users 
               WHERE $where_sql

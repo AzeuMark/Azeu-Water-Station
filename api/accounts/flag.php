@@ -80,7 +80,7 @@ try {
     
     if ($action === 'flag') {
         // Flag account
-        db_update("UPDATE users SET status = ? WHERE id = ?", [ACCOUNT_FLAGGED, $user_id]);
+        db_update("UPDATE users SET status = ?, flag_reason = ? WHERE id = ?", [ACCOUNT_FLAGGED, $reason, $user_id]);
         
         // Notify user
         create_notification(
@@ -102,7 +102,7 @@ try {
     } else {
         // Unflag account
         db_update(
-            "UPDATE users SET status = ?, cancellation_count = 0 WHERE id = ?",
+            "UPDATE users SET status = ?, cancellation_count = 0, flag_reason = NULL WHERE id = ?",
             [ACCOUNT_ACTIVE, $user_id]
         );
         
