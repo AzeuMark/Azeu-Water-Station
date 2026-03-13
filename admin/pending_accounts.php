@@ -39,11 +39,11 @@ require_once __DIR__ . '/../includes/sidebar.php';
                 <thead>
                     <tr>
                         <th style="width: 60px; text-align: center;">No</th>
-                        <th>Name</th>
-                        <th>Username</th>
-                        <th>Email</th>
-                        <th>Phone</th>
-                        <th>Registered</th>
+                        <th class="sortable-th" data-col="full_name">Name <span class="sort-icon material-icons">unfold_more</span></th>
+                        <th class="sortable-th" data-col="username">Username <span class="sort-icon material-icons">unfold_more</span></th>
+                        <th class="sortable-th" data-col="email">Email <span class="sort-icon material-icons">unfold_more</span></th>
+                        <th class="sortable-th" data-col="phone">Phone <span class="sort-icon material-icons">unfold_more</span></th>
+                        <th class="sortable-th th-sorted" data-col="created_at">Registered <span class="sort-icon material-icons">arrow_downward</span></th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -122,8 +122,29 @@ require_once __DIR__ . '/../includes/sidebar.php';
 let allPendingAccounts = [];
 let currentPage = 1;
 let itemsPerPage = 20;
+let sortCol = 'created_at';
+let sortDir = 'desc';
 
-document.addEventListener('DOMContentLoaded', loadPending);
+document.addEventListener('DOMContentLoaded', function() {
+    loadPending();
+
+    document.querySelectorAll('.sortable-th').forEach(th => {
+        th.addEventListener('click', function() {
+            const col = this.dataset.col;
+            if (sortCol === col) {
+                sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortCol = col;
+                sortDir = col === 'created_at' ? 'desc' : 'asc';
+            }
+            updateSortIcons();
+            sortPending();
+            currentPage = 1;
+            renderPending();
+        });
+    });
+    updateSortIcons();
+});
 
 async function loadPending() {
     try {
@@ -133,6 +154,7 @@ async function loadPending() {
         if (data.success && data.accounts.length > 0) {
             allPendingAccounts = data.accounts;
             currentPage = 1;
+            sortPending();
             renderPending();
         } else {
             const tbody = document.getElementById('pending-tbody');
@@ -142,6 +164,30 @@ async function loadPending() {
     } catch (error) {
         console.error('Error:', error);
     }
+}
+
+function sortPending() {
+    allPendingAccounts.sort((a, b) => {
+        let valA = sortCol === 'created_at' ? new Date(a[sortCol] ?? 0) : (a[sortCol] ?? '').toString().toLowerCase();
+        let valB = sortCol === 'created_at' ? new Date(b[sortCol] ?? 0) : (b[sortCol] ?? '').toString().toLowerCase();
+        if (valA < valB) return sortDir === 'asc' ? -1 : 1;
+        if (valA > valB) return sortDir === 'asc' ? 1 : -1;
+        return 0;
+    });
+}
+
+function updateSortIcons() {
+    document.querySelectorAll('.sortable-th').forEach(th => {
+        const icon = th.querySelector('.sort-icon');
+        if (!icon) return;
+        if (th.dataset.col === sortCol) {
+            icon.textContent = sortDir === 'asc' ? 'arrow_upward' : 'arrow_downward';
+            th.classList.add('th-sorted');
+        } else {
+            icon.textContent = 'unfold_more';
+            th.classList.remove('th-sorted');
+        }
+    });
 }
 
 function renderPending() {

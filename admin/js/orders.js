@@ -12,14 +12,36 @@ let currentOrderId = null;
 let allOrders = [];
 let currentPage = 1;
 let itemsPerPage = 20;
+let sortCol = 'order_date';
+let sortDir = 'desc';
 
 document.addEventListener('DOMContentLoaded', function() {
     loadOrders();
     initFilterButtons();
+    initSortHeaders();
     loadRiders();
     
     document.getElementById('assign-rider-form').addEventListener('submit', assignRider);
 });
+
+function initSortHeaders() {
+    document.querySelectorAll('.sortable-th').forEach(th => {
+        th.addEventListener('click', function() {
+            const col = this.dataset.col;
+            if (sortCol === col) {
+                sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortCol = col;
+                sortDir = col === 'order_date' ? 'desc' : 'asc';
+            }
+            updateSortIcons();
+            sortOrders();
+            currentPage = 1;
+            renderOrders();
+        });
+    });
+    updateSortIcons();
+}
 
 function initFilterButtons() {
     document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -41,11 +63,46 @@ async function loadOrders() {
         if (data.success) {
             allOrders = data.orders;
             currentPage = 1;
+            sortOrders();
             renderOrders();
         }
     } catch (error) {
         console.error('Failed to load orders:', error);
     }
+}
+
+function sortOrders() {
+    const statusOrder = { pending:1, confirmed:2, assigned:3, on_delivery:4, delivered:5, accepted:6, ready_for_pickup:7, picked_up:8, cancelled:9 };
+    allOrders.sort((a, b) => {
+        let valA = a[sortCol] ?? '';
+        let valB = b[sortCol] ?? '';
+        if (sortCol === 'order_date') {
+            valA = new Date(valA); valB = new Date(valB);
+        } else if (sortCol === 'total_amount' || sortCol === 'id') {
+            valA = parseFloat(valA); valB = parseFloat(valB);
+        } else if (sortCol === 'status') {
+            valA = statusOrder[valA] ?? 99; valB = statusOrder[valB] ?? 99;
+        } else {
+            valA = valA.toString().toLowerCase(); valB = valB.toString().toLowerCase();
+        }
+        if (valA < valB) return sortDir === 'asc' ? -1 : 1;
+        if (valA > valB) return sortDir === 'asc' ? 1 : -1;
+        return 0;
+    });
+}
+
+function updateSortIcons() {
+    document.querySelectorAll('.sortable-th').forEach(th => {
+        const icon = th.querySelector('.sort-icon');
+        if (!icon) return;
+        if (th.dataset.col === sortCol) {
+            icon.textContent = sortDir === 'asc' ? 'arrow_upward' : 'arrow_downward';
+            th.classList.add('th-sorted');
+        } else {
+            icon.textContent = 'unfold_more';
+            th.classList.remove('th-sorted');
+        }
+    });
 }
 
 function renderOrders() {

@@ -78,10 +78,10 @@ require_once __DIR__ . '/../includes/sidebar.php';
                 <thead>
                     <tr>
                         <th style="width: 60px; text-align: center;">No</th>
-                        <th>Item</th>
-                        <th>Price</th>
-                        <th>Stock</th>
-                        <th>Status</th>
+                        <th class="sortable-th th-sorted th-asc" data-sort="name" data-sort-desc="name-desc">Item <span class="sort-icon material-icons">arrow_upward</span></th>
+                        <th class="sortable-th" data-sort="price-asc" data-sort-desc="price-desc">Price <span class="sort-icon material-icons">unfold_more</span></th>
+                        <th class="sortable-th" data-sort="stock-asc" data-sort-desc="stock-desc">Stock <span class="sort-icon material-icons">unfold_more</span></th>
+                        <th class="sortable-th" data-sort="status" data-sort-desc="status">Status <span class="sort-icon material-icons">unfold_more</span></th>
                         <th>Actions</th>
                     </tr>
                 </thead>

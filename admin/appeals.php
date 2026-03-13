@@ -66,10 +66,10 @@ require_once __DIR__ . '/../includes/sidebar.php';
                 <thead>
                     <tr>
                         <th style="width: 60px; text-align: center;">No</th>
-                        <th>Customer</th>
-                        <th>Reason</th>
-                        <th>Date</th>
-                        <th>Status</th>
+                        <th class="sortable-th" data-col="customer_name">Customer <span class="sort-icon material-icons">unfold_more</span></th>
+                        <th class="sortable-th" data-col="reason">Reason <span class="sort-icon material-icons">unfold_more</span></th>
+                        <th class="sortable-th" data-col="created_at">Date <span class="sort-icon material-icons">unfold_more</span></th>
+                        <th class="sortable-th" data-col="status">Status <span class="sort-icon material-icons">unfold_more</span></th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -273,6 +273,8 @@ let currentStatusFilter = '';
 let allAppeals = [];
 let currentPage = 1;
 let itemsPerPage = 20;
+let sortCol = 'created_at';
+let sortDir = 'desc';
 
 document.addEventListener('DOMContentLoaded', function() {
     loadAppeals();
@@ -285,6 +287,24 @@ document.addEventListener('DOMContentLoaded', function() {
             loadAppeals();
         });
     });
+
+    // Sortable headers
+    document.querySelectorAll('.sortable-th').forEach(th => {
+        th.addEventListener('click', function() {
+            const col = this.dataset.col;
+            if (sortCol === col) {
+                sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortCol = col;
+                sortDir = col === 'created_at' ? 'desc' : 'asc';
+            }
+            updateSortIcons();
+            sortAppeals();
+            currentPage = 1;
+            renderAppeals();
+        });
+    });
+    updateSortIcons();
     
     // Mobile Filter Dropdown Handler
     const mobileTrigger = document.getElementById('mobile-filter-trigger');
@@ -339,6 +359,7 @@ async function loadAppeals() {
         if (data.success && data.appeals.length > 0) {
             allAppeals = data.appeals;
             currentPage = 1;
+            sortAppeals();
             renderAppeals();
         } else {
             const tbody = document.getElementById('appeals-tbody');
@@ -348,6 +369,38 @@ async function loadAppeals() {
     } catch (error) {
         console.error('Error:', error);
     }
+}
+
+function sortAppeals() {
+    const statusOrder = { pending: 1, approved: 2, denied: 3 };
+    allAppeals.sort((a, b) => {
+        let valA = a[sortCol] ?? '';
+        let valB = b[sortCol] ?? '';
+        if (sortCol === 'created_at') {
+            valA = new Date(valA); valB = new Date(valB);
+        } else if (sortCol === 'status') {
+            valA = statusOrder[valA] ?? 99; valB = statusOrder[valB] ?? 99;
+        } else {
+            valA = valA.toString().toLowerCase(); valB = valB.toString().toLowerCase();
+        }
+        if (valA < valB) return sortDir === 'asc' ? -1 : 1;
+        if (valA > valB) return sortDir === 'asc' ? 1 : -1;
+        return 0;
+    });
+}
+
+function updateSortIcons() {
+    document.querySelectorAll('.sortable-th').forEach(th => {
+        const icon = th.querySelector('.sort-icon');
+        if (!icon) return;
+        if (th.dataset.col === sortCol) {
+            icon.textContent = sortDir === 'asc' ? 'arrow_upward' : 'arrow_downward';
+            th.classList.add('th-sorted');
+        } else {
+            icon.textContent = 'unfold_more';
+            th.classList.remove('th-sorted');
+        }
+    });
 }
 
 function renderAppeals() {

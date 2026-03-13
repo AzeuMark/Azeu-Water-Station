@@ -14,6 +14,38 @@ document.addEventListener('DOMContentLoaded', function() {
     
     document.getElementById('item-form').addEventListener('submit', saveItem);
     document.getElementById('restock-form').addEventListener('submit', restockItem);
+
+    // Sortable column header clicks
+    document.querySelectorAll('th.sortable-th[data-sort]').forEach(th => {
+        th.addEventListener('click', function() {
+            const asc = this.dataset.sort;
+            const desc = this.dataset.sortDesc;
+            const icon = this.querySelector('.sort-icon');
+            const isCurrentAsc = this.classList.contains('th-asc');
+
+            // Reset all headers
+            document.querySelectorAll('th.sortable-th').forEach(h => {
+                h.classList.remove('th-sorted', 'th-asc', 'th-desc');
+                const i = h.querySelector('.sort-icon');
+                if (i) i.textContent = 'unfold_more';
+            });
+
+            let sortKey;
+            if (!isCurrentAsc) {
+                sortKey = asc;
+                this.classList.add('th-sorted', 'th-asc');
+                if (icon) icon.textContent = 'arrow_upward';
+            } else {
+                sortKey = desc;
+                this.classList.add('th-sorted', 'th-desc');
+                if (icon) icon.textContent = 'arrow_downward';
+            }
+
+            // Sync the matching filter button and apply sort
+            const matchBtn = document.querySelector(`.filter-btn[data-sort="${sortKey}"]`);
+            applySortFilter(matchBtn || this, sortKey);
+        });
+    });
 });
 
 async function loadSettings() {

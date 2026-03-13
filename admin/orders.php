@@ -88,13 +88,13 @@ require_once __DIR__ . '/../includes/sidebar.php';
                 <thead>
                     <tr>
                         <th style="width: 60px; text-align: center;">No</th>
-                        <th>ID</th>
-                        <th>Customer</th>
+                        <th class="sortable-th" data-col="id">ID <span class="sort-icon material-icons">unfold_more</span></th>
+                        <th class="sortable-th" data-col="customer_name">Customer <span class="sort-icon material-icons">unfold_more</span></th>
                         <th>Items</th>
-                        <th>Date</th>
-                        <th>Type</th>
-                        <th>Total</th>
-                        <th>Status</th>
+                        <th class="sortable-th" data-col="order_date">Date <span class="sort-icon material-icons">unfold_more</span></th>
+                        <th class="sortable-th" data-col="delivery_type">Type <span class="sort-icon material-icons">unfold_more</span></th>
+                        <th class="sortable-th" data-col="total_amount">Total <span class="sort-icon material-icons">unfold_more</span></th>
+                        <th class="sortable-th" data-col="status">Status <span class="sort-icon material-icons">unfold_more</span></th>
                         <th>Actions</th>
                     </tr>
                 </thead>

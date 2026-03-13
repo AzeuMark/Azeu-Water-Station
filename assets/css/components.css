@@ -836,19 +836,44 @@
     border: none !important;
 }
 
-.badge-confirmed,
-.badge-assigned,
-.badge-on_delivery,
-.badge-ready_for_pickup {
-    background: #007bff !important;
+.badge-confirmed {
+    background: #00BCD4 !important;
     color: #ffffff !important;
     border: none !important;
 }
 
-.badge-delivered,
-.badge-accepted,
+.badge-assigned {
+    background: #3F51B5 !important;
+    color: #ffffff !important;
+    border: none !important;
+}
+
+.badge-on_delivery {
+    background: #9C27B0 !important;
+    color: #ffffff !important;
+    border: none !important;
+}
+
+.badge-ready_for_pickup {
+    background: #009688 !important;
+    color: #ffffff !important;
+    border: none !important;
+}
+
+.badge-delivered {
+    background: #4CAF50 !important;
+    color: #ffffff !important;
+    border: none !important;
+}
+
+.badge-accepted {
+    background: #2E7D32 !important;
+    color: #ffffff !important;
+    border: none !important;
+}
+
 .badge-picked_up {
-    background: #28a745 !important;
+    background: #8BC34A !important;
     color: #ffffff !important;
     border: none !important;
 }

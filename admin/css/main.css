@@ -321,3 +321,30 @@
         font-size: 0.688rem;
     }
 }
+
+/* Sortable Table Headers */
+.sortable-th {
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+    transition: background 0.2s;
+}
+.sortable-th:hover {
+    background: var(--primary);
+    color: #fff;
+}
+.sortable-th .sort-icon {
+    font-size: 14px;
+    vertical-align: middle;
+    margin-left: 4px;
+    opacity: 0.5;
+    transition: opacity 0.2s;
+}
+.sortable-th:hover .sort-icon,
+.sortable-th.th-sorted .sort-icon {
+    opacity: 1;
+}
+.sortable-th.th-sorted {
+    background: var(--primary);
+    color: #fff;
+}
