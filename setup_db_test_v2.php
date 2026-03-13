@@ -1657,7 +1657,7 @@ document.querySelectorAll('input[type="color"]').forEach(picker => {
     picker.addEventListener('input', () => {
         textInput.value = picker.value;
     });
-});
+})
 </script>
 </body>
 </html>
