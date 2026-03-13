@@ -12,6 +12,14 @@ $current_user = get_logged_in_user();
 $role = $current_user['role'];
 $station_name = get_setting('station_name') ?? 'Azeu Water Station';
 
+// Fetch sidebar badge counts for staff/admin roles
+$badge_counts = ['orders' => 0, 'pending_accounts' => 0, 'inventory' => 0];
+if (in_array($role, [ROLE_STAFF, ROLE_ADMIN, ROLE_SUPER_ADMIN])) {
+    $badge_counts['orders']           = (int)(db_fetch("SELECT COUNT(*) as cnt FROM orders WHERE status = 'pending'")['cnt'] ?? 0);
+    $badge_counts['pending_accounts'] = (int)(db_fetch("SELECT COUNT(*) as cnt FROM users WHERE status = 'pending' AND deleted_at IS NULL")['cnt'] ?? 0);
+    $badge_counts['inventory']        = (int)(db_fetch("SELECT COUNT(*) as cnt FROM inventory WHERE status = 'out_of_stock'")['cnt'] ?? 0);
+}
+
 // Define menu items per role
 $menu_items = [];
 
@@ -43,10 +51,10 @@ switch ($role) {
     case ROLE_STAFF:
         $menu_items = [
             ['icon' => 'dashboard', 'label' => 'Dashboard', 'href' => 'dashboard.php'],
-            ['icon' => 'receipt_long', 'label' => 'Orders', 'href' => 'orders.php'],
+            ['icon' => 'receipt_long', 'label' => 'Orders', 'href' => 'orders.php', 'badge' => $badge_counts['orders']],
             ['icon' => 'people', 'label' => 'Accounts', 'href' => 'accounts.php'],
-            ['icon' => 'pending_actions', 'label' => 'Pending Accounts', 'href' => 'pending_accounts.php'],
-            ['icon' => 'inventory_2', 'label' => 'Inventory', 'href' => 'inventory.php'],
+            ['icon' => 'pending_actions', 'label' => 'Pending Accounts', 'href' => 'pending_accounts.php', 'badge' => $badge_counts['pending_accounts']],
+            ['icon' => 'inventory_2', 'label' => 'Inventory', 'href' => 'inventory.php', 'badge' => $badge_counts['inventory']],
             ['icon' => 'directions_bike', 'label' => 'Riders', 'href' => 'riders.php'],
             ['icon' => 'gavel', 'label' => 'Appeals', 'href' => 'appeals.php'],
             ['divider' => true],
@@ -59,10 +67,10 @@ switch ($role) {
     case ROLE_SUPER_ADMIN:
         $menu_items = [
             ['icon' => 'dashboard', 'label' => 'Dashboard', 'href' => 'dashboard.php'],
-            ['icon' => 'receipt_long', 'label' => 'Orders', 'href' => 'orders.php'],
+            ['icon' => 'receipt_long', 'label' => 'Orders', 'href' => 'orders.php', 'badge' => $badge_counts['orders']],
             ['icon' => 'people', 'label' => 'Accounts', 'href' => 'accounts.php'],
-            ['icon' => 'pending_actions', 'label' => 'Pending Accounts', 'href' => 'pending_accounts.php'],
-            ['icon' => 'inventory_2', 'label' => 'Inventory', 'href' => 'inventory.php'],
+            ['icon' => 'pending_actions', 'label' => 'Pending Accounts', 'href' => 'pending_accounts.php', 'badge' => $badge_counts['pending_accounts']],
+            ['icon' => 'inventory_2', 'label' => 'Inventory', 'href' => 'inventory.php', 'badge' => $badge_counts['inventory']],
             ['icon' => 'directions_bike', 'label' => 'Riders', 'href' => 'riders.php'],
             ['icon' => 'gavel', 'label' => 'Appeals', 'href' => 'appeals.php'],
             ['divider' => true],
@@ -93,6 +101,9 @@ switch ($role) {
                 <a href="<?php echo $item['href']; ?>" class="sidebar-item">
                     <span class="material-icons"><?php echo $item['icon']; ?></span>
                     <span><?php echo $item['label']; ?></span>
+                    <?php if (!empty($item['badge']) && $item['badge'] > 0): ?>
+                        <span class="sidebar-badge"><?php echo $item['badge']; ?></span>
+                    <?php endif; ?>
                 </a>
             <?php endif; ?>
         <?php endforeach; ?>

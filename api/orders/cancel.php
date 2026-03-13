@@ -88,14 +88,7 @@ try {
         }
     }
     
-    // Staff/Admin can cancel orders that are not yet delivered/picked up
-    if (in_array($role, [ROLE_STAFF, ROLE_ADMIN, ROLE_SUPER_ADMIN])) {
-        $non_cancellable = [STATUS_DELIVERED, STATUS_PICKED_UP, STATUS_ACCEPTED];
-        if (in_array($order['status'], $non_cancellable)) {
-            $pdo->rollBack();
-            json_response(['success' => false, 'message' => 'Cannot cancel completed orders'], 403);
-        }
-    }
+    // Staff/Admin can cancel any order regardless of status
     
     // Update order status
     db_update(
@@ -103,14 +96,20 @@ try {
         [STATUS_CANCELLED, $reason, $user_id, $order_id]
     );
     
-    // Restore stock for all items
-    $order_items = db_fetch_all("SELECT inventory_id, quantity FROM order_items WHERE order_id = ?", [$order_id]);
-    
-    foreach ($order_items as $item) {
-        db_update(
-            "UPDATE inventory SET stock_count = stock_count + ? WHERE id = ?",
-            [$item['quantity'], $item['inventory_id']]
-        );
+    // Only restore stock if the order was confirmed (pending orders never had stock deducted)
+    if ($order['status'] !== STATUS_PENDING) {
+        $order_items = db_fetch_all("SELECT inventory_id, quantity FROM order_items WHERE order_id = ?", [$order_id]);
+        foreach ($order_items as $item) {
+            db_update(
+                "UPDATE inventory SET stock_count = stock_count + ? WHERE id = ?",
+                [$item['quantity'], $item['inventory_id']]
+            );
+            // Mark back to active if it was out of stock
+            db_update(
+                "UPDATE inventory SET status = ? WHERE id = ? AND status = ?",
+                [INV_ACTIVE, $item['inventory_id'], INV_OUT_OF_STOCK]
+            );
+        }
     }
     
     // Increment customer's cancellation count if cancelled by customer

@@ -848,6 +848,12 @@
     border: none !important;
 }
 
+.badge-reassign_requested {
+    background: #F57C00 !important;
+    color: #ffffff !important;
+    border: none !important;
+}
+
 .badge-on_delivery {
     background: #9C27B0 !important;
     color: #ffffff !important;

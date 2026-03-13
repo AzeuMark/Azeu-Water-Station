@@ -215,9 +215,12 @@ function renderPending() {
                 <td>${acc.email}</td>
                 <td>${acc.phone}</td>
                 <td>${formatDate(acc.created_at)}</td>
-                <td>
+                <td style="display: flex; gap: 6px; flex-wrap: wrap;">
                     <button class="btn btn-sm btn-success" onclick="approve(${acc.id})">
                         <span class="material-icons">check</span> Approve
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="deny(${acc.id}, '${acc.full_name.replace(/'/g, "\\'")}')">
+                        <span class="material-icons">close</span> Deny
                     </button>
                 </td>
             </tr>
@@ -278,6 +281,39 @@ async function approve(userId) {
         
         if (data.success) {
             showToast('Account approved', 'success');
+            await loadPending();
+        } else {
+            showToast(data.message || 'Failed', 'error');
+        }
+    } catch (error) {
+        showToast('Error occurred', 'error');
+    }
+}
+
+async function deny(userId, fullName) {
+    const result = await Swal.fire({
+        title: 'Deny Account',
+        html: `Deny and delete the account of <strong>${fullName}</strong>? This cannot be undone.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, Deny',
+        confirmButtonColor: '#EF5350',
+        cancelButtonText: 'Cancel'
+    });
+    
+    if (!result.isConfirmed) return;
+    
+    try {
+        const response = await fetch('../api/accounts/delete.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ user_id: userId, csrf_token: getCSRFToken() })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showToast('Account denied and removed', 'success');
             await loadPending();
         } else {
             showToast(data.message || 'Failed', 'error');

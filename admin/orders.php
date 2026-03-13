@@ -55,8 +55,10 @@ require_once __DIR__ . '/../includes/sidebar.php';
                 <button class="filter-btn" data-status="pending">Pending</button>
                 <button class="filter-btn" data-status="confirmed">Confirmed</button>
                 <button class="filter-btn" data-status="assigned">Assigned</button>
+                <button class="filter-btn" data-status="reassign_requested">Reassign Requested</button>
                 <button class="filter-btn" data-status="on_delivery">On Delivery</button>
                 <button class="filter-btn" data-status="delivered">Delivered</button>
+                <button class="filter-btn" data-status="cancelled">Cancelled</button>
             </div>
         </div>
     </div>
@@ -95,11 +97,12 @@ require_once __DIR__ . '/../includes/sidebar.php';
                         <th class="sortable-th" data-col="delivery_type">Type <span class="sort-icon material-icons">unfold_more</span></th>
                         <th class="sortable-th" data-col="total_amount">Total <span class="sort-icon material-icons">unfold_more</span></th>
                         <th class="sortable-th" data-col="status">Status <span class="sort-icon material-icons">unfold_more</span></th>
+                        <th>Rider</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody id="orders-tbody">
-                    <tr><td colspan="9" style="text-align: center; padding: 40px;"><div class="spinner"></div></td></tr>
+                    <tr><td colspan="10" style="text-align: center; padding: 40px;"><div class="spinner"></div></td></tr>
                 </tbody>
             </table>
         </div>

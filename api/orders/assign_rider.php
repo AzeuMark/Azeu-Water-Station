@@ -69,7 +69,7 @@ try {
     }
     
     // Check order status
-    if ($order['status'] !== STATUS_CONFIRMED) {
+    if (!in_array($order['status'], [STATUS_CONFIRMED, STATUS_REASSIGN_REQUESTED])) {
         json_response(['success' => false, 'message' => 'Only confirmed orders can be assigned'], 400);
     }
     

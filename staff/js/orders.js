@@ -49,7 +49,7 @@ function renderOrders(orders) {
     const tbody = document.getElementById('orders-tbody');
     
     if (orders.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><p>No orders found</p></div></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state"><p>No orders found</p></div></td></tr>';
         return;
     }
     
@@ -70,6 +70,7 @@ function renderOrders(orders) {
                 <td>${order.delivery_type === 'delivery' ? 'Delivery' : 'Pickup'}</td>
                 <td><strong>${formatCurrency(order.total_amount)}</strong></td>
                 <td><span class="badge badge-${order.status}">${order.status.replace(/_/g, ' ')}</span></td>
+                <td>${order.rider_name || '<span style="color:var(--text-muted)">Nothing</span>'}</td>
                 <td style="white-space: nowrap;">
                     ${actionButtons}
                 </td>
@@ -91,6 +92,8 @@ function getActionButtons(order) {
             <span class="material-icons">visibility</span>
         </button>
     `;
+    
+    const completed = ['delivered', 'accepted', 'picked_up', 'cancelled'];
     
     // Status-specific action buttons
     if (order.status === 'pending') {
@@ -116,10 +119,19 @@ function getActionButtons(order) {
                 </button>
             `;
         }
-    } else if (order.status === 'assigned' && order.delivery_type === 'delivery') {
+    } else if (order.status === 'reassign_requested') {
         buttons += `
-            <button class="btn-icon" onclick="showAssignRider(${order.id})" title="Reassign Rider" style="color: var(--warning);">
+            <button class="btn-icon" onclick="showAssignRider(${order.id})" title="Assign Rider (Reassign)" style="color: var(--warning);">
                 <span class="material-icons">swap_horiz</span>
+            </button>
+        `;
+    }
+    
+    // Cancel button: only for active non-completed statuses
+    if (!completed.includes(order.status) && order.status !== 'pending') {
+        buttons += `
+            <button class="btn-icon" onclick="cancelOrder(${order.id})" title="Cancel Order" style="color: var(--danger);">
+                <span class="material-icons">cancel</span>
             </button>
         `;
     }
@@ -177,6 +189,7 @@ function showOrderModal(order, items) {
             <div><strong>Customer:</strong> ${order.customer_name}</div>
             <div><strong>Phone:</strong> ${order.customer_phone}</div>
             <div><strong>Date:</strong> ${formatDate(order.order_date)}</div>
+            <div><strong>Rider:</strong> ${order.rider_name || '<span style="color:var(--text-muted)">Nothing</span>'}</div>
         </div>
         ${order.delivery_address ? `<div style="margin-bottom: 20px;"><strong>Address:</strong> ${order.delivery_address}</div>` : ''}
         <h4>Items</h4>
@@ -195,9 +208,17 @@ function showOrderModal(order, items) {
         </table>
         <div style="text-align: right;">
             <div>Subtotal: ${formatCurrency(order.subtotal)}</div>
-            <div>Delivery Fee: ${formatCurrency(order.delivery_fee)}</div>
+            ${order.delivery_fee > 0 ? `<div>Delivery Fee: <strong>${formatCurrency(order.delivery_fee)}</strong></div>` : ''}
             <div style="font-size: 1.25rem; font-weight: 700; color: var(--primary);">Total: ${formatCurrency(order.total_amount)}</div>
         </div>
+        ${order.status === 'cancelled' && order.cancellation_reason ? `
+        <div style="margin-top: 16px; padding: 12px 16px; background: rgba(239,83,80,0.08); border: 1px solid rgba(239,83,80,0.3); border-radius: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px; font-weight: 600; color: var(--danger);">
+                <span class="material-icons" style="font-size: 18px;">info</span>
+                Cancellation Reason
+            </div>
+            <div style="color: var(--text-secondary); font-size: 14px;">${order.cancellation_reason}</div>
+        </div>` : ''}
     `;
     
     document.getElementById('order-details').innerHTML = html;
@@ -205,11 +226,15 @@ function showOrderModal(order, items) {
     // Action buttons
     let actions = '<button class="btn btn-outline" onclick="closeModal(\'order-modal\')">Close</button>';
     
+    const completedStatuses = ['delivered', 'accepted', 'picked_up', 'cancelled'];
+    
+    if (!completedStatuses.includes(order.status) && order.status !== 'pending') {
+        actions = `<button class="btn btn-danger" onclick="cancelOrder(${order.id})">Cancel Order</button>` + actions;
+    }
+    
     if (order.status === 'pending') {
-        actions = `
-            <button class="btn btn-success" onclick="confirmOrder(${order.id})">Confirm</button>
-            <button class="btn btn-danger" onclick="cancelOrder(${order.id})">Cancel</button>
-        ` + actions;
+        actions = `<button class="btn btn-success" onclick="confirmOrder(${order.id})">Confirm</button>
+                   <button class="btn btn-danger" onclick="cancelOrder(${order.id})">Cancel</button>` + actions;
     }
     
     if (order.status === 'confirmed' && order.delivery_type === 'delivery') {
@@ -218,6 +243,10 @@ function showOrderModal(order, items) {
     
     if (order.status === 'confirmed' && order.delivery_type === 'pickup') {
         actions = `<button class="btn btn-success" onclick="markReadyForPickup(${order.id})">Ready for Pickup</button>` + actions;
+    }
+    
+    if (order.status === 'reassign_requested') {
+        actions = `<button class="btn btn-warning" onclick="showAssignRider(${order.id})">Reassign Rider</button>` + actions;
     }
     
     document.getElementById('order-actions').innerHTML = actions;
@@ -358,7 +387,7 @@ function showAssignRider(orderId) {
 
 async function loadRiders() {
     try {
-        const response = await fetch('../api/riders/list.php?available_only=true');
+        const response = await fetch('../api/riders/list.php');
         const data = await response.json();
         
         const selectOptions = document.getElementById('rider-options');
@@ -367,10 +396,16 @@ async function loadRiders() {
         
         if (data.success && data.riders.length > 0) {
             let html = '<div class="custom-select-option selected" data-value="">Select a rider...</div>';
-            html += data.riders.map(r => `<div class="custom-select-option" data-value="${r.id}">${r.full_name} (${r.active_deliveries} active)</div>`).join('');
+            html += data.riders.map(r => {
+                const busy = r.active_deliveries > 0;
+                const label = busy
+                    ? `${r.full_name} <span style="color:#E65100;font-size:12px;">(${r.active_deliveries} active — busy)</span>`
+                    : `${r.full_name} <span style="color:#888;font-size:12px;">(available)</span>`;
+                return `<div class="custom-select-option${busy ? ' disabled' : ''}" data-value="${busy ? '' : r.id}" data-rider-id="${r.id}" ${busy ? 'style="opacity:0.5;cursor:not-allowed;" title="This rider has active deliveries"' : ''}>${label}</div>`;
+            }).join('');
             selectOptions.innerHTML = html;
         } else {
-            selectOptions.innerHTML = '<div class="custom-select-option selected" data-value="">No available riders</div>';
+            selectOptions.innerHTML = '<div class="custom-select-option selected" data-value="">No riders found</div>';
         }
         if (hiddenInput) hiddenInput.value = '';
         if (triggerText) triggerText.textContent = 'Select a rider...';
@@ -401,6 +436,9 @@ function initRiderSelect() {
         optionsCont.addEventListener('click', function(e) {
             const opt = e.target.closest('.custom-select-option');
             if (!opt) return;
+            
+            // Block selection of disabled (busy) riders
+            if (opt.classList.contains('disabled')) return;
             
             const value = opt.dataset.value;
             if (value !== undefined) {

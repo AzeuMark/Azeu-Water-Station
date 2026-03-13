@@ -124,7 +124,7 @@ function create_all_tables() {
         rider_id INT(11) NULL,
         payment_type ENUM('cod','pickup','online') NOT NULL,
         delivery_type ENUM('delivery','pickup') NOT NULL,
-        status ENUM('pending','confirmed','assigned','on_delivery','delivered','accepted','ready_for_pickup','picked_up','cancelled') NOT NULL DEFAULT 'pending',
+        status ENUM('pending','confirmed','assigned','reassign_requested','on_delivery','delivered','accepted','ready_for_pickup','picked_up','cancelled') NOT NULL DEFAULT 'pending',
         delivery_address TEXT NULL,
         order_notes TEXT NULL,
         delivery_fee DECIMAL(10,2) NOT NULL DEFAULT 0.00,
@@ -150,6 +150,17 @@ function create_all_tables() {
         CONSTRAINT fk_order_cancelled FOREIGN KEY (cancelled_by) REFERENCES users(id)
     ) ENGINE=InnoDB");
     logger_debug("Table 'orders' checked/created");
+    
+    // Migrate: add 'reassign_requested' to orders.status ENUM if not present
+    try {
+        $col = $pdo->query("SHOW COLUMNS FROM orders LIKE 'status'")->fetch(PDO::FETCH_ASSOC);
+        if ($col && strpos($col['Type'], 'reassign_requested') === false) {
+            $pdo->exec("ALTER TABLE orders MODIFY status ENUM('pending','confirmed','assigned','reassign_requested','on_delivery','delivered','accepted','ready_for_pickup','picked_up','cancelled') NOT NULL DEFAULT 'pending'");
+            logger_debug("Migrated orders.status ENUM to include reassign_requested");
+        }
+    } catch (Exception $e) {
+        logger_warning("Could not migrate orders.status ENUM: " . $e->getMessage());
+    }
     
     // Table 6: order_items
     $pdo->exec("CREATE TABLE IF NOT EXISTS order_items (

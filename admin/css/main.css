@@ -147,6 +147,12 @@
     border: 1px solid rgba(63, 81, 181, 0.3);
 }
 
+.badge-reassign_requested {
+    background: rgba(245, 124, 0, 0.1);
+    color: #E65100;
+    border: 1px solid rgba(245, 124, 0, 0.3);
+}
+
 .badge-on_delivery {
     background: rgba(156, 39, 176, 0.1);
     color: #8E24AA;

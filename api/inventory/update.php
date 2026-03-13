@@ -51,6 +51,7 @@ $item_name = sanitize($input['item_name'] ?? '');
 $price = isset($input['price']) ? floatval($input['price']) : null;
 $status = sanitize($input['status'] ?? '');
 $item_icon = isset($input['item_icon']) ? sanitize($input['item_icon']) : null;
+$stock_count = isset($input['stock_count']) ? intval($input['stock_count']) : null;
 
 if ($item_id <= 0) {
     json_response(['success' => false, 'message' => 'Item ID is required'], 400);
@@ -103,6 +104,29 @@ try {
         $update_params[] = $item_icon;
     }
     
+    // Handle stock_count: set stock and auto-derive status from it
+    if ($stock_count !== null) {
+        if ($stock_count < 0) {
+            json_response(['success' => false, 'message' => 'Stock count cannot be negative'], 400);
+        }
+        // Remove any status field already queued (stock_count overrides manual status)
+        $filtered_fields  = [];
+        $filtered_params  = [];
+        foreach ($update_fields as $i => $f) {
+            if (strpos($f, 'status') === false) {
+                $filtered_fields[] = $f;
+                $filtered_params[] = $update_params[$i];
+            }
+        }
+        $update_fields = $filtered_fields;
+        $update_params = $filtered_params;
+
+        $update_fields[] = "stock_count = ?";
+        $update_params[] = $stock_count;
+        $update_fields[] = "status = ?";
+        $update_params[] = $stock_count > 0 ? INV_ACTIVE : INV_OUT_OF_STOCK;
+    }
+    
     if (empty($update_fields)) {
         json_response(['success' => false, 'message' => 'No fields to update'], 400);
     }
@@ -119,6 +143,43 @@ try {
         'updated_by' => $_SESSION['user_id'],
         'fields' => array_keys($input)
     ]);
+    
+    // Auto-cancel pending orders if item is now out of stock
+    if ($stock_count !== null && $stock_count == 0) {
+        $pending_order_ids = db_fetch_all(
+            "SELECT DISTINCT oi.order_id FROM order_items oi
+             JOIN orders o ON oi.order_id = o.id
+             WHERE oi.inventory_id = ? AND o.status = 'pending'",
+            [$item_id]
+        );
+        
+        foreach ($pending_order_ids as $row) {
+            $oid = $row['order_id'];
+            $cancel_reason = "Item \"{$item['item_name']}\" is out of stock.";
+            
+            db_update(
+                "UPDATE orders SET status = 'cancelled', cancellation_reason = ?, cancelled_by = ? WHERE id = ?",
+                [$cancel_reason, $_SESSION['user_id'], $oid]
+            );
+            
+            // Fetch customer_id to notify
+            $affected_order = db_fetch("SELECT customer_id FROM orders WHERE id = ?", [$oid]);
+            if ($affected_order) {
+                create_notification(
+                    $affected_order['customer_id'],
+                    'Order Cancelled — Out of Stock',
+                    "Your order #$oid was automatically cancelled. Reason: $cancel_reason",
+                    'order_cancelled',
+                    $oid
+                );
+            }
+            
+            logger_warning("Order auto-cancelled due to out of stock", [
+                'order_id' => $oid,
+                'item_id'  => $item_id
+            ]);
+        }
+    }
     
     json_response([
         'success' => true,

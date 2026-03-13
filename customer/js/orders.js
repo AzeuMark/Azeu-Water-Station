@@ -256,6 +256,14 @@ function showOrderDetailsModal(order, items) {
                 <strong>${formatCurrency(order.total_amount)}</strong>
             </div>
         </div>
+        ${order.status === 'cancelled' && order.cancellation_reason ? `
+        <div style="margin-top: 16px; padding: 12px 16px; background: rgba(239,83,80,0.08); border: 1px solid rgba(239,83,80,0.3); border-radius: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px; font-weight: 600; color: #EF5350;">
+                <span class="material-icons" style="font-size: 18px;">info</span>
+                Cancellation Reason
+            </div>
+            <div style="color: var(--text-secondary); font-size: 14px;">${order.cancellation_reason}</div>
+        </div>` : ''}
     `;
     
     content.innerHTML = html;

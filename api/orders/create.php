@@ -171,7 +171,7 @@ try {
         json_response(['success' => false, 'message' => 'Failed to create order'], 500);
     }
     
-    // Insert order items and update stock
+    // Insert order items (stock is deducted only when order is confirmed, not at placement)
     foreach ($order_items_data as $item_data) {
         db_insert(
             "INSERT INTO order_items (order_id, inventory_id, item_name, item_icon, 
@@ -180,10 +180,6 @@ try {
              $item_data['item_icon'], $item_data['item_price'], 
              $item_data['quantity'], $item_data['subtotal']]
         );
-        
-        // Reduce stock
-        db_update("UPDATE inventory SET stock_count = stock_count - ? WHERE id = ?", 
-            [$item_data['quantity'], $item_data['inventory_id']]);
     }
     
     // Notify staff/admins about new order
@@ -210,6 +206,19 @@ try {
     if (get_setting('auto_confirm_orders') == '1') {
         db_update("UPDATE orders SET status = ? WHERE id = ?", [STATUS_CONFIRMED, $order_id]);
         $auto_confirmed = true;
+        
+        // Deduct stock for each item when auto-confirmed
+        foreach ($order_items_data as $item_data) {
+            db_update(
+                "UPDATE inventory SET stock_count = GREATEST(0, stock_count - ?) WHERE id = ?",
+                [$item_data['quantity'], $item_data['inventory_id']]
+            );
+            // Mark out of stock if stock hits 0
+            db_update(
+                "UPDATE inventory SET status = ? WHERE id = ? AND stock_count = 0",
+                [INV_OUT_OF_STOCK, $item_data['inventory_id']]
+            );
+        }
         
         // Notify customer
         create_notification(

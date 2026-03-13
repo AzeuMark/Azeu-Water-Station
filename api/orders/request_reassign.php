@@ -111,10 +111,10 @@ try {
         }
     }
     
-    // Default: set back to confirmed, clear rider, store reason
+    // Default: set to reassign_requested, clear rider, store reason
     db_update(
         "UPDATE orders SET status = ?, rider_id = NULL, staff_comment = ? WHERE id = ?",
-        [STATUS_CONFIRMED, $reassign_comment, $order_id]
+        [STATUS_REASSIGN_REQUESTED, $reassign_comment, $order_id]
     );
     
     // Notify staff/admins

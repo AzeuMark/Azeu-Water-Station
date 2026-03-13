@@ -40,6 +40,7 @@ define('ROLE_SUPER_ADMIN', 'super_admin');
 define('STATUS_PENDING', 'pending');
 define('STATUS_CONFIRMED', 'confirmed');
 define('STATUS_ASSIGNED', 'assigned');
+define('STATUS_REASSIGN_REQUESTED', 'reassign_requested');
 define('STATUS_ON_DELIVERY', 'on_delivery');
 define('STATUS_DELIVERED', 'delivered');
 define('STATUS_ACCEPTED', 'accepted');

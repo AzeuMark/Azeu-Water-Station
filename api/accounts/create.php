@@ -71,7 +71,7 @@ if (!validate_email($email)) {
 }
 
 // Validate role
-$allowed_roles = [ROLE_STAFF, ROLE_RIDER, ROLE_ADMIN];
+$allowed_roles = [ROLE_CUSTOMER, ROLE_STAFF, ROLE_RIDER, ROLE_ADMIN];
 
 // Only super admin can create super admin
 if ($_SESSION['role'] === ROLE_SUPER_ADMIN) {

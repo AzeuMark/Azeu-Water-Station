@@ -57,7 +57,7 @@ if ($order_id <= 0) {
 }
 
 $valid_statuses = [
-    STATUS_PENDING, STATUS_CONFIRMED, STATUS_ASSIGNED, STATUS_ON_DELIVERY,
+    STATUS_PENDING, STATUS_CONFIRMED, STATUS_ASSIGNED, STATUS_REASSIGN_REQUESTED, STATUS_ON_DELIVERY,
     STATUS_DELIVERED, STATUS_READY_FOR_PICKUP, STATUS_PICKED_UP
 ];
 
@@ -80,8 +80,8 @@ try {
     $allowed = false;
     
     if (in_array($role, [ROLE_STAFF, ROLE_ADMIN, ROLE_SUPER_ADMIN])) {
-        // Staff/Admin can change to: confirmed, ready_for_pickup
-        $allowed = in_array($new_status, [STATUS_CONFIRMED, STATUS_READY_FOR_PICKUP]);
+        // Staff/Admin can change to: confirmed, ready_for_pickup, on_delivery, delivered
+        $allowed = in_array($new_status, [STATUS_CONFIRMED, STATUS_READY_FOR_PICKUP, STATUS_ON_DELIVERY, STATUS_DELIVERED, STATUS_PICKED_UP]);
     }
     
     if ($role === ROLE_RIDER) {
@@ -115,6 +115,47 @@ try {
     
     $sql = "UPDATE orders SET " . implode(', ', $update_fields) . " WHERE id = ?";
     db_update($sql, $update_params);
+    
+    // Deduct stock when order is confirmed (stock is reserved only at confirmation)
+    if ($new_status === STATUS_CONFIRMED) {
+        $items = db_fetch_all(
+            "SELECT inventory_id, quantity FROM order_items WHERE order_id = ?",
+            [$order_id]
+        );
+        foreach ($items as $oi) {
+            // Check sufficient stock
+            $inv = db_fetch("SELECT stock_count, item_name FROM inventory WHERE id = ?", [$oi['inventory_id']]);
+            if (!$inv || $inv['stock_count'] < $oi['quantity']) {
+                // Not enough stock — auto-cancel this order instead
+                $item_name = $inv['item_name'] ?? 'Unknown item';
+                $cancel_reason = "Item \"{$item_name}\" has insufficient stock to confirm this order.";
+                db_update(
+                    "UPDATE orders SET status = 'cancelled', cancellation_reason = ?, cancelled_by = ? WHERE id = ?",
+                    [$cancel_reason, $user_id, $order_id]
+                );
+                create_notification(
+                    $order['customer_id'],
+                    'Order Cancelled — Insufficient Stock',
+                    "Your order #$order_id was cancelled. Reason: $cancel_reason",
+                    'order_cancelled',
+                    $order_id
+                );
+                json_response([
+                    'success' => false,
+                    'message'  => "Cannot confirm: $cancel_reason Order has been cancelled."
+                ], 409);
+            }
+            db_update(
+                "UPDATE inventory SET stock_count = stock_count - ? WHERE id = ?",
+                [$oi['quantity'], $oi['inventory_id']]
+            );
+            // Mark out of stock if stock hits 0
+            db_update(
+                "UPDATE inventory SET status = ? WHERE id = ? AND stock_count = 0",
+                [INV_OUT_OF_STOCK, $oi['inventory_id']]
+            );
+        }
+    }
     
     // Create notification for customer
     $status_messages = [
