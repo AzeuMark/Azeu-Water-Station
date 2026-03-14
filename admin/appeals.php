@@ -60,7 +60,8 @@ require_once __DIR__ . '/../includes/sidebar.php';
         </div>
     </div>
     
-    <div class="glass-card">
+    <!-- Desktop Table View -->
+    <div class="glass-card appeals-table-view">
         <div class="data-table-wrapper">
             <table class="data-table">
                 <thead>
@@ -90,6 +91,24 @@ require_once __DIR__ . '/../includes/sidebar.php';
                     <span class="material-icons">chevron_right</span>
                 </button>
             </div>
+        </div>
+    </div>
+
+    <!-- Mobile/Tablet Card View -->
+    <div class="appeals-card-view" id="appeals-cards">
+        <div class="spinner" style="margin: 40px auto;"></div>
+    </div>
+
+    <!-- Mobile Pagination -->
+    <div id="pagination-wrapper-mobile" style="display: none; justify-content: center; align-items: center; padding: 16px 20px; background: var(--surface-card); border: 1px solid var(--border); border-radius: var(--radius); margin-top: 16px;">
+        <div class="pagination-controls">
+            <button class="btn-icon" onclick="previousPage()" id="prev-btn-mobile" title="Previous Page">
+                <span class="material-icons">chevron_left</span>
+            </button>
+            <span class="page-info" id="page-info-mobile">Page 1 of 1</span>
+            <button class="btn-icon" onclick="nextPage()" id="next-btn-mobile" title="Next Page">
+                <span class="material-icons">chevron_right</span>
+            </button>
         </div>
     </div>
 </main>
@@ -158,6 +177,15 @@ require_once __DIR__ . '/../includes/sidebar.php';
     display: none;
     position: relative;
     z-index: 100;
+}
+
+/* Show/hide table vs card view */
+.appeals-table-view {
+    display: block;
+}
+
+.appeals-card-view {
+    display: none;
 }
 
 /* Custom Select Styles */
@@ -238,8 +266,8 @@ require_once __DIR__ . '/../includes/sidebar.php';
     font-weight: 600;
 }
 
-/* Mobile Responsive */
-@media (max-width: 768px) {
+/* Tablet: switch to card view and mobile filter at 1024px */
+@media (max-width: 1024px) {
     .filter-bar-desktop {
         display: none;
     }
@@ -248,6 +276,17 @@ require_once __DIR__ . '/../includes/sidebar.php';
         display: block !important;
     }
     
+    .appeals-table-view {
+        display: none;
+    }
+    
+    .appeals-card-view {
+        display: block;
+    }
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
     .pagination-controls-wrapper {
         padding: 16px;
     }
@@ -362,8 +401,13 @@ async function loadAppeals() {
             sortAppeals();
             renderAppeals();
         } else {
+            allAppeals = [];
             const tbody = document.getElementById('appeals-tbody');
             tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><p>No appeals found</p></div></td></tr>';
+            const cardsContainer = document.getElementById('appeals-cards');
+            if (cardsContainer) {
+                cardsContainer.innerHTML = '<div class="order-cards-empty"><span class="material-icons">gavel</span><p>No appeals found</p></div>';
+            }
             updatePaginationControls(0);
         }
     } catch (error) {
@@ -405,10 +449,14 @@ function updateSortIcons() {
 
 function renderAppeals() {
     const tbody = document.getElementById('appeals-tbody');
+    const cardsContainer = document.getElementById('appeals-cards');
     
     if (allAppeals.length === 0) {
         tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><p>No appeals found</p></div></td></tr>';
         updatePaginationControls(0);
+        if (cardsContainer) {
+            cardsContainer.innerHTML = '<div class="order-cards-empty"><span class="material-icons">gavel</span><p>No appeals found</p></div>';
+        }
         return;
     }
     
@@ -417,6 +465,7 @@ function renderAppeals() {
     const endIndex = startIndex + itemsPerPage;
     const paginatedAppeals = allAppeals.slice(startIndex, endIndex);
     
+    // Table view
     let html = '';
     paginatedAppeals.forEach((appeal, index) => {
         const rowNumber = startIndex + index + 1;
@@ -441,6 +490,55 @@ function renderAppeals() {
     
     tbody.innerHTML = html;
     updatePaginationControls(totalPages);
+    
+    // Card view
+    if (cardsContainer) {
+        renderAppealCards(paginatedAppeals, cardsContainer, startIndex);
+    }
+}
+
+function renderAppealCards(appeals, container, startIndex) {
+    let cardsHtml = '<div class="order-cards-grid">';
+    appeals.forEach((appeal, index) => {
+        const cardNumber = startIndex + index + 1;
+        const actionHtml = appeal.status === 'pending'
+            ? `<button class="btn-icon" onclick="showReview(${appeal.id})" title="Review">
+                   <span class="material-icons">rate_review</span>
+               </button>`
+            : `<span style="color: var(--text-muted); font-size: 13px;">Reviewed</span>`;
+        
+        cardsHtml += `
+            <div class="order-card">
+                <div class="order-card-header">
+                    <div class="order-card-header-left">
+                        <span class="material-icons">tag</span>
+                        <span>${cardNumber}</span>
+                    </div>
+                    <div class="order-card-actions">
+                        ${actionHtml}
+                    </div>
+                </div>
+                <div class="order-card-row">
+                    <div class="order-card-label"><span class="material-icons">person</span> Customer</div>
+                    <div class="order-card-value">${appeal.customer_name}</div>
+                </div>
+                <div class="order-card-row">
+                    <div class="order-card-label"><span class="material-icons">subject</span> Reason</div>
+                    <div class="order-card-value">${truncate(appeal.reason, 80)}</div>
+                </div>
+                <div class="order-card-row">
+                    <div class="order-card-label"><span class="material-icons">calendar_today</span> Date</div>
+                    <div class="order-card-value">${formatDate(appeal.created_at)}</div>
+                </div>
+                <div class="order-card-row">
+                    <div class="order-card-label"><span class="material-icons">info</span> Status</div>
+                    <div class="order-card-value"><span class="badge badge-${appeal.status}">${appeal.status}</span></div>
+                </div>
+            </div>
+        `;
+    });
+    cardsHtml += '</div>';
+    container.innerHTML = cardsHtml;
 }
 
 function updatePaginationControls(totalPages) {
@@ -449,19 +547,31 @@ function updatePaginationControls(totalPages) {
     const nextBtn = document.getElementById('next-btn');
     const paginationWrapper = document.getElementById('pagination-wrapper');
     
+    // Mobile pagination elements
+    const pageInfoMobile = document.getElementById('page-info-mobile');
+    const prevBtnMobile = document.getElementById('prev-btn-mobile');
+    const nextBtnMobile = document.getElementById('next-btn-mobile');
+    const paginationWrapperMobile = document.getElementById('pagination-wrapper-mobile');
+    
     if (!pageInfo) return;
     
     // Hide pagination if only 1 page or no pages
     if (totalPages <= 1) {
         if (paginationWrapper) paginationWrapper.style.display = 'none';
+        if (paginationWrapperMobile) paginationWrapperMobile.style.display = 'none';
         return;
     }
     
     if (paginationWrapper) paginationWrapper.style.display = 'flex';
+    if (paginationWrapperMobile) paginationWrapperMobile.style.display = 'flex';
+    
     pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+    if (pageInfoMobile) pageInfoMobile.textContent = `Page ${currentPage} of ${totalPages}`;
     
     if (prevBtn) prevBtn.disabled = currentPage <= 1;
     if (nextBtn) nextBtn.disabled = currentPage >= totalPages;
+    if (prevBtnMobile) prevBtnMobile.disabled = currentPage <= 1;
+    if (nextBtnMobile) nextBtnMobile.disabled = currentPage >= totalPages;
 }
 
 function previousPage() {

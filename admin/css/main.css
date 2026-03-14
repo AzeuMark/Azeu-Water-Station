@@ -122,6 +122,12 @@
     border: 1px solid rgba(40, 167, 69, 0.4);
 }
 
+.badge-info {
+    background: transparent;
+    color: #17a2b8;
+    border: 1.5px solid #17a2b8;
+}
+
 /* Status Badges */
 .badge-active { background: #28a745 !important; color: #ffffff !important; border: none !important; }
 .badge-inactive { background: #6c757d !important; color: #ffffff !important; border: none !important; }
