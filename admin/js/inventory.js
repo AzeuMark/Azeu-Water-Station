@@ -15,6 +15,18 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('item-form').addEventListener('submit', saveItem);
     document.getElementById('restock-form').addEventListener('submit', restockItem);
 
+    // Responsive items per page on resize
+    window.addEventListener('resize', function() {
+        const newPerPage = getItemsPerPage();
+        if (newPerPage !== itemsPerPage) {
+            itemsPerPage = newPerPage;
+            currentPage = 1;
+        }
+        if (inventoryData.length > 0) {
+            renderInventory(inventoryData);
+        }
+    });
+
     // Sortable column header clicks
     document.querySelectorAll('th.sortable-th[data-sort]').forEach(th => {
         th.addEventListener('click', function() {
@@ -106,8 +118,12 @@ async function loadDefaultItems() {
 
 let inventoryData = []; // Store inventory data for sorting
 let currentPage = 1;
-const itemsPerPage = 20;
+let itemsPerPage = window.innerWidth <= 1024 ? 10 : 20;
 let lowStockThreshold = 10; // Default threshold
+
+function getItemsPerPage() {
+    return window.innerWidth <= 1024 ? 10 : 20;
+}
 
 async function loadInventory() {
     try {
@@ -120,7 +136,13 @@ async function loadInventory() {
             inventoryData = data.items; // Store data
             renderInventory(inventoryData); // Render
         } else {
+            inventoryData = [];
             tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px; color: var(--text-secondary);">No items found</td></tr>';
+            const cardsContainer = document.getElementById('inventory-cards');
+            if (cardsContainer) {
+                cardsContainer.innerHTML = '<div class="inventory-cards-empty"><span class="material-icons">inventory_2</span><p>No items found</p></div>';
+            }
+            updateInventoryPagination(0);
         }
     } catch (error) {
         console.error('Error loading inventory:', error);
@@ -130,42 +152,30 @@ async function loadInventory() {
 
 function renderInventory(items) {
     const tbody = document.getElementById('inventory-tbody');
-    
+    const cardsContainer = document.getElementById('inventory-cards');
+
     // Calculate pagination
     const totalPages = Math.ceil(items.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
     const paginatedItems = items.slice(startIndex, endIndex);
-    
+
     // Update pagination controls
-    const pageInfo = document.getElementById('page-info');
-    const prevBtn = document.getElementById('prev-btn');
-    const nextBtn = document.getElementById('next-btn');
-    const paginationWrapper = document.getElementById('pagination-wrapper');
-    
-    // Hide pagination if only 1 page or no pages
-    if (totalPages <= 1) {
-        if (paginationWrapper) paginationWrapper.style.display = 'none';
-    } else {
-        if (paginationWrapper) paginationWrapper.style.display = 'flex';
-        if (pageInfo) pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
-        if (prevBtn) prevBtn.disabled = currentPage === 1;
-        if (nextBtn) nextBtn.disabled = currentPage >= totalPages;
-    }
-    
+    updateInventoryPagination(totalPages);
+
     if (paginatedItems.length > 0) {
         let html = '';
         paginatedItems.forEach((item, index) => {
             // Calculate row number based on current page and index
             const rowNumber = startIndex + index + 1;
-            
+
             // Determine stock badge class
             const stockClass = item.stock_count === 0 ? 'danger' : (item.stock_count <= lowStockThreshold ? 'warning' : 'success');
-            
+
             // Determine item status with low stock override
             let displayStatus = item.status;
             let statusClass = item.status;
-            
+
             if (item.stock_count === 0) {
                 displayStatus = 'out of stock';
                 statusClass = 'out_of_stock';
@@ -173,7 +183,7 @@ function renderInventory(items) {
                 displayStatus = 'low stock';
                 statusClass = 'low_stock';
             }
-            
+
             html += `
                 <tr>
                     <td style="text-align: center; color: var(--text-secondary); font-weight: 600;">${rowNumber}</td>
@@ -199,6 +209,111 @@ function renderInventory(items) {
     } else {
         tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px; color: var(--text-secondary);">No items found</td></tr>';
     }
+
+    // Card view
+    if (cardsContainer) {
+        if (paginatedItems.length > 0) {
+            renderInventoryCards(paginatedItems, cardsContainer, startIndex);
+        } else {
+            cardsContainer.innerHTML = '<div class="inventory-cards-empty"><span class="material-icons">inventory_2</span><p>No items found</p></div>';
+        }
+    }
+}
+
+function renderInventoryCards(items, container, startIndex = 0) {
+    let cardsHtml = '<div class="inventory-cards-grid">';
+    items.forEach((item, index) => {
+        const cardNumber = startIndex + index + 1;
+        const stockClass = item.stock_count === 0 ? 'danger' : (item.stock_count <= lowStockThreshold ? 'warning' : 'success');
+
+        let displayStatus = item.status;
+        let statusClass = item.status;
+        if (item.stock_count === 0) {
+            displayStatus = 'out of stock';
+            statusClass = 'out_of_stock';
+        } else if (item.stock_count <= lowStockThreshold && item.status === 'active') {
+            displayStatus = 'low stock';
+            statusClass = 'low_stock';
+        }
+
+        cardsHtml += `
+            <div class="inventory-card">
+                <div class="inventory-card-header">
+                    <div class="inventory-card-header-left">
+                        <span class="material-icons">tag</span>
+                        <span>${cardNumber}</span>
+                    </div>
+                    <div class="inventory-card-actions">
+                        <button class="btn-icon" onclick="showRestock(${item.id})" title="Restock">
+                            <span class="material-icons">add_circle</span>
+                        </button>
+                        <button class="btn-icon" onclick="editItem(${item.id})" title="Edit">
+                            <span class="material-icons">edit</span>
+                        </button>
+                        <button class="btn-icon" onclick="confirmDeleteItem(${item.id}, '${item.item_name.replace(/'/g, "\\'")}')" title="Delete">
+                            <span class="material-icons">delete</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="inventory-card-row">
+                    <div class="inventory-card-label"><span class="material-icons">inventory_2</span> Item</div>
+                    <div class="inventory-card-value"><strong>${item.item_name}</strong></div>
+                </div>
+                <div class="inventory-card-row">
+                    <div class="inventory-card-label"><span class="material-icons">payments</span> Price</div>
+                    <div class="inventory-card-value price-highlight">${formatCurrency(item.price)}</div>
+                </div>
+                <div class="inventory-card-row">
+                    <div class="inventory-card-label"><span class="material-icons">warehouse</span> Stock</div>
+                    <div class="inventory-card-value"><span class="badge badge-${stockClass}">${item.stock_count}</span></div>
+                </div>
+                <div class="inventory-card-row">
+                    <div class="inventory-card-label"><span class="material-icons">info</span> Status</div>
+                    <div class="inventory-card-value"><span class="badge badge-${statusClass}">${displayStatus}</span></div>
+                </div>
+            </div>
+        `;
+    });
+    cardsHtml += '</div>';
+    container.innerHTML = cardsHtml;
+}
+
+function updateInventoryPagination(totalPages) {
+    const pageInfo = document.getElementById('page-info');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const paginationWrapper = document.getElementById('pagination-wrapper');
+
+    const pageInfoMobile = document.getElementById('page-info-mobile');
+    const prevBtnMobile = document.getElementById('prev-btn-mobile');
+    const nextBtnMobile = document.getElementById('next-btn-mobile');
+    const paginationWrapperMobile = document.getElementById('pagination-wrapper-mobile');
+
+    if (!pageInfo) return;
+
+    // Hide pagination if only 1 page or no pages
+    if (totalPages <= 1) {
+        if (paginationWrapper) paginationWrapper.style.display = 'none';
+        if (paginationWrapperMobile) paginationWrapperMobile.style.display = 'none';
+        return;
+    }
+
+    // Show only the correct one for current viewport
+    if (window.innerWidth <= 1024) {
+        if (paginationWrapper) paginationWrapper.style.display = 'none';
+        if (paginationWrapperMobile) paginationWrapperMobile.style.display = 'flex';
+    } else {
+        if (paginationWrapper) paginationWrapper.style.display = 'flex';
+        if (paginationWrapperMobile) paginationWrapperMobile.style.display = 'none';
+    }
+
+    pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+    if (pageInfoMobile) pageInfoMobile.textContent = `Page ${currentPage} of ${totalPages}`;
+
+    if (prevBtn) prevBtn.disabled = currentPage <= 1;
+    if (nextBtn) nextBtn.disabled = currentPage >= totalPages;
+    if (prevBtnMobile) prevBtnMobile.disabled = currentPage <= 1;
+    if (nextBtnMobile) nextBtnMobile.disabled = currentPage >= totalPages;
 }
 
 function nextPage() {

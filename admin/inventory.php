@@ -72,7 +72,8 @@ require_once __DIR__ . '/../includes/sidebar.php';
         </div>
     </div>
     
-    <div class="glass-card">
+    <!-- Desktop Table View -->
+    <div class="glass-card inventory-table-view">
         <div class="data-table-wrapper">
             <table class="data-table">
                 <thead>
@@ -90,8 +91,8 @@ require_once __DIR__ . '/../includes/sidebar.php';
                 </tbody>
             </table>
         </div>
-        
-        <!-- Pagination Controls (moved inside table card) -->
+
+        <!-- Pagination Controls -->
         <div class="pagination-controls-wrapper" id="pagination-wrapper" style="display: none;">
             <div class="pagination-controls">
                 <button class="btn-icon" onclick="previousPage()" id="prev-btn" title="Previous Page">
@@ -102,6 +103,24 @@ require_once __DIR__ . '/../includes/sidebar.php';
                     <span class="material-icons">chevron_right</span>
                 </button>
             </div>
+        </div>
+    </div>
+
+    <!-- Mobile/Tablet Card View -->
+    <div class="inventory-card-view" id="inventory-cards">
+        <div class="spinner" style="margin: 40px auto;"></div>
+    </div>
+
+    <!-- Mobile Pagination -->
+    <div id="pagination-wrapper-mobile" style="display: none; justify-content: center; align-items: center; padding: 16px 20px; background: var(--surface-card); border: 1px solid var(--border); border-radius: var(--radius); margin-top: 16px;">
+        <div class="pagination-controls">
+            <button class="btn-icon" onclick="previousPage()" id="prev-btn-mobile" title="Previous Page">
+                <span class="material-icons">chevron_left</span>
+            </button>
+            <span class="page-info" id="page-info-mobile">Page 1 of 1</span>
+            <button class="btn-icon" onclick="nextPage()" id="next-btn-mobile" title="Next Page">
+                <span class="material-icons">chevron_right</span>
+            </button>
         </div>
     </div>
 </main>
@@ -216,32 +235,190 @@ require_once __DIR__ . '/../includes/sidebar.php';
     z-index: 100;
 }
 
-/* Mobile Responsive */
-@media (max-width: 768px) {
-    /* Hide desktop filter bar, show mobile dropdown */
+/* ============================================================================
+   RESPONSIVE TABLE/CARD VIEW SWITCHING
+   ============================================================================ */
+
+/* Show/hide logic */
+.inventory-card-view {
+    display: none;
+}
+
+.inventory-table-view {
+    display: block;
+}
+
+@media (max-width: 1024px) {
+    .inventory-card-view {
+        display: block;
+    }
+    .inventory-table-view {
+        display: none;
+    }
     .filter-bar-desktop {
         display: none;
     }
-    
     .filter-bar-mobile {
         display: block !important;
     }
-    
-    /* Adjust pagination for mobile */
+}
+
+/* ============================================================================
+   INVENTORY CARD STYLES — Mobile/Tablet View
+   ============================================================================ */
+
+/* Card grid */
+.inventory-cards-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+}
+
+@media (min-width: 600px) and (max-width: 1024px) {
+    .inventory-cards-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Individual card */
+.inventory-card {
+    background: var(--surface-card);
+    border-radius: 16px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07);
+    overflow: hidden;
+    border: 1px solid var(--border);
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.inventory-card:hover {
+    box-shadow: 0 8px 16px -2px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+}
+
+/* Card header */
+.inventory-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+}
+
+.inventory-card-header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--text-primary);
+}
+
+.inventory-card-header-left .material-icons {
+    font-size: 20px;
+    color: var(--primary);
+}
+
+.inventory-card-actions {
+    display: flex;
+    gap: 4px;
+}
+
+.inventory-card-actions .btn-icon {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    border-radius: 8px;
+}
+
+.inventory-card-actions .btn-icon .material-icons {
+    font-size: 18px;
+}
+
+/* Card data rows */
+.inventory-card-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+}
+
+.inventory-card-row:last-child {
+    border-bottom: none;
+}
+
+.inventory-card-label {
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 500;
+    flex-shrink: 0;
+}
+
+.inventory-card-label .material-icons {
+    font-size: 16px;
+}
+
+.inventory-card-value {
+    font-weight: 600;
+    color: var(--text-primary);
+    text-align: right;
+    max-width: 60%;
+    word-break: break-word;
+}
+
+.inventory-card-value.price-highlight {
+    color: var(--primary);
+    font-size: 15px;
+    font-weight: 700;
+}
+
+/* Badge in card */
+.inventory-card-value .badge {
+    font-size: 12px;
+    padding: 3px 10px;
+}
+
+/* Empty state for cards */
+.inventory-cards-empty {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--text-muted);
+    background: var(--surface-card);
+    border-radius: 16px;
+    border: 1px solid var(--border);
+}
+
+.inventory-cards-empty .material-icons {
+    font-size: 48px;
+    margin-bottom: 12px;
+    opacity: 0.4;
+}
+
+.inventory-cards-empty p {
+    font-size: 15px;
+    font-weight: 500;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
     .pagination-controls-wrapper {
         padding: 16px;
     }
-    
+
     .page-info {
         font-size: 13px;
         min-width: 90px;
     }
-    
+
     .btn-icon {
         width: 32px;
         height: 32px;
     }
-    
+
     .btn-icon .material-icons {
         font-size: 20px;
     }
