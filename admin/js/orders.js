@@ -405,41 +405,118 @@ async function viewOrder(orderId) {
 function showOrderModal(order, items) {
     currentOrderId = order.id;
     
+    const statusLabel = order.status.replace(/_/g, ' ');
+    const typeIcon = order.delivery_type === 'delivery' ? 'local_shipping' : 'storefront';
+    const typeLabel = order.delivery_type === 'delivery' ? 'Delivery' : 'Pickup';
+    
     let html = `
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
-            <div><strong>Order ID:</strong> #${order.id}</div>
-            <div><strong>Customer:</strong> ${order.customer_name}</div>
-            <div><strong>Phone:</strong> ${order.customer_phone}</div>
-            <div><strong>Date:</strong> ${formatDate(order.order_date)}</div>
-            <div><strong>Rider:</strong> ${order.rider_name || '<span style="color:var(--text-muted)">Nothing</span>'}</div>
+        <!-- Order Header Banner -->
+        <div class="odm-header-banner">
+            <div class="odm-order-id">
+                <span class="material-icons">receipt</span>
+                Order #${order.id}
+            </div>
+            <span class="badge badge-${order.status}">${statusLabel}</span>
         </div>
-        ${order.delivery_address ? `<div style="margin-bottom: 20px;"><strong>Address:</strong> ${order.delivery_address}</div>` : ''}
-        <h4>Items</h4>
-        <table class="data-table" style="margin-bottom: 20px;">
-            <thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Subtotal</th></tr></thead>
-            <tbody>
+        
+        <!-- Info Cards Grid -->
+        <div class="odm-info-grid">
+            <div class="odm-info-card">
+                <div class="odm-info-icon" style="background: rgba(21,101,192,0.1); color: var(--primary);">
+                    <span class="material-icons">person</span>
+                </div>
+                <div class="odm-info-content">
+                    <span class="odm-info-label">Customer</span>
+                    <span class="odm-info-value">${order.customer_name}</span>
+                </div>
+            </div>
+            <div class="odm-info-card">
+                <div class="odm-info-icon" style="background: rgba(102,187,106,0.1); color: #66BB6A;">
+                    <span class="material-icons">phone</span>
+                </div>
+                <div class="odm-info-content">
+                    <span class="odm-info-label">Phone</span>
+                    <span class="odm-info-value">${order.customer_phone || '—'}</span>
+                </div>
+            </div>
+            <div class="odm-info-card">
+                <div class="odm-info-icon" style="background: rgba(255,152,0,0.1); color: #FF9800;">
+                    <span class="material-icons">calendar_today</span>
+                </div>
+                <div class="odm-info-content">
+                    <span class="odm-info-label">Date</span>
+                    <span class="odm-info-value">${formatDate(order.order_date)}</span>
+                </div>
+            </div>
+            <div class="odm-info-card">
+                <div class="odm-info-icon" style="background: rgba(171,71,188,0.1); color: #AB47BC;">
+                    <span class="material-icons">${typeIcon}</span>
+                </div>
+                <div class="odm-info-content">
+                    <span class="odm-info-label">Type</span>
+                    <span class="odm-info-value">${typeLabel}</span>
+                </div>
+            </div>
+        </div>
+        
+        ${order.delivery_type === 'delivery' ? `
+        <!-- Rider & Address -->
+        <div class="odm-detail-rows">
+            <div class="odm-detail-row">
+                <span class="material-icons" style="color: var(--primary); font-size: 18px;">two_wheeler</span>
+                <span class="odm-detail-label">Rider</span>
+                <span class="odm-detail-value">${order.rider_name || '<span style="color:var(--text-muted);font-style:italic;">Not assigned</span>'}</span>
+            </div>
+            ${order.delivery_address ? `
+            <div class="odm-detail-row">
+                <span class="material-icons" style="color: var(--danger); font-size: 18px;">location_on</span>
+                <span class="odm-detail-label">Address</span>
+                <span class="odm-detail-value">${order.delivery_address}</span>
+            </div>` : ''}
+        </div>` : ''}
+        
+        <!-- Items Section -->
+        <div class="odm-section">
+            <div class="odm-section-title">
+                <span class="material-icons">shopping_bag</span>
+                Order Items
+            </div>
+            <div class="odm-items-list">
                 ${items.map(item => `
-                    <tr>
-                        <td>${item.item_name}</td>
-                        <td>${item.quantity}</td>
-                        <td>${formatCurrency(item.item_price)}</td>
-                        <td>${formatCurrency(item.subtotal)}</td>
-                    </tr>
-                `).join('')}
-            </tbody>
-        </table>
-        <div style="text-align: right;">
-            <div>Subtotal: ${formatCurrency(order.subtotal)}</div>
-            ${order.delivery_fee > 0 ? `<div>Delivery Fee: <strong>${formatCurrency(order.delivery_fee)}</strong></div>` : ''}
-            <div style="font-size: 1.25rem; font-weight: 700; color: var(--primary);">Total: ${formatCurrency(order.total_amount)}</div>
+                <div class="odm-item">
+                    <div class="odm-item-info">
+                        <span class="odm-item-name">${item.item_name}</span>
+                        <span class="odm-item-meta">${item.quantity} × ${formatCurrency(item.item_price)}</span>
+                    </div>
+                    <span class="odm-item-amount">${formatCurrency(item.subtotal)}</span>
+                </div>`).join('')}
+            </div>
         </div>
+        
+        <!-- Totals -->
+        <div class="odm-totals">
+            <div class="odm-total-row">
+                <span>Subtotal</span>
+                <span>${formatCurrency(order.subtotal)}</span>
+            </div>
+            ${order.delivery_fee > 0 ? `
+            <div class="odm-total-row">
+                <span>Delivery Fee</span>
+                <span>${formatCurrency(order.delivery_fee)}</span>
+            </div>` : ''}
+            <div class="odm-total-row odm-grand-total">
+                <span>Total</span>
+                <span>${formatCurrency(order.total_amount)}</span>
+            </div>
+        </div>
+        
         ${order.status === 'cancelled' && order.cancellation_reason ? `
-        <div style="margin-top: 16px; padding: 12px 16px; background: rgba(239,83,80,0.08); border: 1px solid rgba(239,83,80,0.3); border-radius: 8px;">
-            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px; font-weight: 600; color: var(--danger);">
-                <span class="material-icons" style="font-size: 18px;">info</span>
+        <div class="odm-cancel-reason">
+            <div class="odm-cancel-title">
+                <span class="material-icons">info</span>
                 Cancellation Reason
             </div>
-            <div style="color: var(--text-secondary); font-size: 14px;">${order.cancellation_reason}</div>
+            <p>${order.cancellation_reason}</p>
         </div>` : ''}
     `;
     

@@ -28,8 +28,7 @@ require_once __DIR__ . '/../includes/sidebar.php';
         <h1 class="content-title">Session Logs</h1>
     </div>
     
-    <!-- Desktop Table View -->
-    <div class="glass-card session-logs-table-view">
+    <div class="glass-card">
         <div class="data-table-wrapper sticky-table-wrapper">
             <table class="data-table sticky-cols-table">
                 <thead>
@@ -50,7 +49,7 @@ require_once __DIR__ . '/../includes/sidebar.php';
                                 <td class="sticky-col sticky-col-2"><strong><?php echo htmlspecialchars($log['username']); ?></strong></td>
                                 <td><span class="badge badge-<?php echo $log['role']; ?>"><?php echo $log['role']; ?></span></td>
                                 <td>
-                                    <span class="badge <?php echo $log['action'] === 'login' ? 'badge-login' : ($log['action'] === 'logout' ? 'badge-info' : 'badge-danger'); ?>">
+                                    <span class="badge <?php echo $log['action'] === 'login' ? 'badge-success' : ($log['action'] === 'logout' ? 'badge-info' : 'badge-danger'); ?>">
                                         <?php echo $log['action']; ?>
                                     </span>
                                 </td>
@@ -78,34 +77,9 @@ require_once __DIR__ . '/../includes/sidebar.php';
             </div>
         </div>
     </div>
-
-    <!-- Mobile/Tablet Card View -->
-    <div class="session-logs-card-view" id="logs-cards">
-        <div class="spinner" style="margin: 40px auto;"></div>
-    </div>
-
-    <!-- Mobile Pagination -->
-    <div id="pagination-wrapper-mobile" style="display: none; justify-content: center; align-items: center; padding: 16px 20px; background: var(--surface-card); border: 1px solid var(--border); border-radius: var(--radius); margin-top: 16px;">
-        <div class="pagination-controls">
-            <button class="btn-icon" onclick="previousPage()" id="prev-btn-mobile" title="Previous Page">
-                <span class="material-icons">chevron_left</span>
-            </button>
-            <span class="page-info" id="page-info-mobile">Page 1 of 1</span>
-            <button class="btn-icon" onclick="nextPage()" id="next-btn-mobile" title="Next Page">
-                <span class="material-icons">chevron_right</span>
-            </button>
-        </div>
-    </div>
 </main>
 
 <style>
-/* Login/Logout action badges — outlined stroke style */
-.badge-login {
-    background: transparent;
-    color: #28a745;
-    border: 1.5px solid #28a745;
-}
-
 /* Sticky Columns - Responsive Table */
 .sticky-table-wrapper {
     overflow-x: auto;
@@ -120,12 +94,12 @@ require_once __DIR__ . '/../includes/sidebar.php';
 .sticky-col {
     position: sticky;
     z-index: 2;
-    background: var(--surface-card);
+    background: var(--bg, #fff);
 }
 
 .sticky-cols-table thead .sticky-col {
     z-index: 3;
-    background: var(--surface);
+    background: var(--surface, #f8f9fa);
 }
 
 .sticky-col-1 {
@@ -151,7 +125,7 @@ require_once __DIR__ . '/../includes/sidebar.php';
 }
 
 .sticky-cols-table tbody tr:hover .sticky-col {
-    background: var(--hover, var(--surface));
+    background: var(--surface, #f0f0f0);
 }
 
 /* Pagination Controls - Bottom Center */
@@ -179,26 +153,6 @@ require_once __DIR__ . '/../includes/sidebar.php';
     padding: 0 8px;
     min-width: 100px;
     text-align: center;
-}
-
-/* Show/hide table vs card view */
-.session-logs-table-view {
-    display: block;
-}
-
-.session-logs-card-view {
-    display: none;
-}
-
-/* Tablet: switch to card view at 1024px */
-@media (max-width: 1024px) {
-    .session-logs-table-view {
-        display: none;
-    }
-    
-    .session-logs-card-view {
-        display: block;
-    }
 }
 
 /* Mobile Responsive */
@@ -230,14 +184,10 @@ let itemsPerPage = 20;
 
 function renderLogs() {
     const tbody = document.getElementById('logs-tbody');
-    const cardsContainer = document.getElementById('logs-cards');
     
     if (allLogs.length === 0) {
         tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><p>No session logs</p></div></td></tr>';
         updatePaginationControls(0);
-        if (cardsContainer) {
-            cardsContainer.innerHTML = '<div class="order-cards-empty"><span class="material-icons">history</span><p>No session logs</p></div>';
-        }
         return;
     }
     
@@ -246,11 +196,10 @@ function renderLogs() {
     const endIndex = startIndex + itemsPerPage;
     const paginatedLogs = allLogs.slice(startIndex, endIndex);
     
-    // Table view
     let html = '';
     paginatedLogs.forEach((log, index) => {
         const rowNumber = startIndex + index + 1;
-        const actionBadgeClass = log.action === 'login' ? 'badge-login' : (log.action === 'logout' ? 'badge-info' : 'badge-danger');
+        const actionBadgeClass = log.action === 'login' ? 'badge-success' : (log.action === 'logout' ? 'badge-info' : 'badge-danger');
         
         html += `
             <tr>
@@ -266,84 +215,19 @@ function renderLogs() {
     
     tbody.innerHTML = html;
     updatePaginationControls(totalPages);
-    
-    // Card view
-    if (cardsContainer) {
-        renderLogCards(paginatedLogs, cardsContainer, startIndex);
-    }
-}
-
-function renderLogCards(logs, container, startIndex) {
-    let cardsHtml = '<div class="order-cards-grid">';
-    logs.forEach((log, index) => {
-        const cardNumber = startIndex + index + 1;
-        const actionBadgeClass = log.action === 'login' ? 'badge-login' : (log.action === 'logout' ? 'badge-info' : 'badge-danger');
-        
-        cardsHtml += `
-            <div class="order-card">
-                <div class="order-card-header">
-                    <div class="order-card-header-left">
-                        <span class="material-icons">tag</span>
-                        <span>${cardNumber}</span>
-                    </div>
-                    <div class="order-card-actions">
-                        <span class="badge ${actionBadgeClass}">${log.action}</span>
-                    </div>
-                </div>
-                <div class="order-card-row">
-                    <div class="order-card-label"><span class="material-icons">person</span> Username</div>
-                    <div class="order-card-value">${log.username}</div>
-                </div>
-                <div class="order-card-row">
-                    <div class="order-card-label"><span class="material-icons">shield</span> Role</div>
-                    <div class="order-card-value"><span class="badge badge-${log.role}">${log.role}</span></div>
-                </div>
-                <div class="order-card-row">
-                    <div class="order-card-label"><span class="material-icons">language</span> IP Address</div>
-                    <div class="order-card-value">${log.ip_address}</div>
-                </div>
-                <div class="order-card-row">
-                    <div class="order-card-label"><span class="material-icons">schedule</span> Timestamp</div>
-                    <div class="order-card-value">${formatDate(log.created_at)}</div>
-                </div>
-            </div>
-        `;
-    });
-    cardsHtml += '</div>';
-    container.innerHTML = cardsHtml;
 }
 
 function updatePaginationControls(totalPages) {
     const pageInfo = document.getElementById('page-info');
     const prevBtn = document.getElementById('prev-btn');
     const nextBtn = document.getElementById('next-btn');
-    const paginationWrapper = document.getElementById('pagination-wrapper');
-    
-    // Mobile pagination elements
-    const pageInfoMobile = document.getElementById('page-info-mobile');
-    const prevBtnMobile = document.getElementById('prev-btn-mobile');
-    const nextBtnMobile = document.getElementById('next-btn-mobile');
-    const paginationWrapperMobile = document.getElementById('pagination-wrapper-mobile');
     
     if (!pageInfo) return;
     
-    // Hide pagination if only 1 page or no pages
-    if (totalPages <= 1) {
-        if (paginationWrapper) paginationWrapper.style.display = 'none';
-        if (paginationWrapperMobile) paginationWrapperMobile.style.display = 'none';
-        return;
-    }
-    
-    if (paginationWrapper) paginationWrapper.style.display = 'flex';
-    if (paginationWrapperMobile) paginationWrapperMobile.style.display = 'flex';
-    
-    pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
-    if (pageInfoMobile) pageInfoMobile.textContent = `Page ${currentPage} of ${totalPages}`;
+    pageInfo.textContent = `Page ${currentPage} of ${totalPages || 1}`;
     
     if (prevBtn) prevBtn.disabled = currentPage <= 1;
     if (nextBtn) nextBtn.disabled = currentPage >= totalPages;
-    if (prevBtnMobile) prevBtnMobile.disabled = currentPage <= 1;
-    if (nextBtnMobile) nextBtnMobile.disabled = currentPage >= totalPages;
 }
 
 function previousPage() {

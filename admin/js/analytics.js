@@ -147,29 +147,32 @@ function renderStatusChart(breakdown) {
     });
 }
 
+function getRankLimit() {
+    return window.innerWidth <= 1024 ? 5 : 10;
+}
+
 function renderTopProducts(items) {
     const container = document.getElementById('top-products');
     
     if (!items || items.length === 0) {
-        container.innerHTML = '<div class="empty-state"><p>No data</p></div>';
+        container.innerHTML = '<div class="empty-state" style="padding: 32px;"><p>No data</p></div>';
         return;
     }
     
-    let html = '<div style="display: grid; gap: 12px;">';
-    
-    items.forEach((item, index) => {
+    const limited = items.slice(0, getRankLimit());
+    let html = '';
+    limited.forEach((item, index) => {
         html += `
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--surface); border-radius: var(--radius-sm);">
-                <div>
-                    <div style="font-weight: 600;">${index + 1}. ${item.item_name}</div>
-                    <div style="font-size: 0.85rem; color: var(--text-muted);">Qty: ${item.total_quantity}</div>
+            <div class="analytics-rank-item">
+                <div class="analytics-rank-number">${index + 1}</div>
+                <div class="analytics-rank-info">
+                    <div class="analytics-rank-name">${item.item_name}</div>
+                    <div class="analytics-rank-sub">Qty sold: ${item.total_quantity}</div>
                 </div>
-                <div style="font-weight: 700; color: var(--primary);">${formatCurrency(item.total_revenue)}</div>
+                <div class="analytics-rank-value revenue">${formatCurrency(item.total_revenue)}</div>
             </div>
         `;
     });
-    
-    html += '</div>';
     container.innerHTML = html;
 }
 
@@ -177,24 +180,23 @@ function renderTopCustomers(customers) {
     const container = document.getElementById('top-customers');
     
     if (!customers || customers.length === 0) {
-        container.innerHTML = '<div class="empty-state"><p>No data</p></div>';
+        container.innerHTML = '<div class="empty-state" style="padding: 32px;"><p>No data</p></div>';
         return;
     }
     
-    let html = '<div style="display: grid; gap: 12px;">';
-    
-    customers.forEach((customer, index) => {
+    const limited = customers.slice(0, getRankLimit());
+    let html = '';
+    limited.forEach((customer, index) => {
         html += `
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--surface); border-radius: var(--radius-sm);">
-                <div>
-                    <div style="font-weight: 600;">${index + 1}. ${customer.full_name}</div>
-                    <div style="font-size: 0.85rem; color: var(--text-muted);">Orders: ${customer.order_count}</div>
+            <div class="analytics-rank-item">
+                <div class="analytics-rank-number">${index + 1}</div>
+                <div class="analytics-rank-info">
+                    <div class="analytics-rank-name">${customer.full_name}</div>
+                    <div class="analytics-rank-sub">Orders: ${customer.order_count}</div>
                 </div>
-                <div style="font-weight: 700; color: var(--success);">${formatCurrency(customer.total_spent)}</div>
+                <div class="analytics-rank-value spent">${formatCurrency(customer.total_spent)}</div>
             </div>
         `;
     });
-    
-    html += '</div>';
     container.innerHTML = html;
 }

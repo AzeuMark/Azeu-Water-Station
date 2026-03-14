@@ -72,15 +72,29 @@ require_once __DIR__ . '/../includes/sidebar.php';
             <div class="spinner"></div>
         </div>
     </div>
+    
+    <!-- Pagination -->
+    <div id="riders-pagination" style="display: none; justify-content: center; align-items: center; gap: 8px; margin-top: 20px; flex-wrap: wrap;"></div>
 </main>
 
 <script>
 let allRiders = [];
+let sortedRiders = [];
 let currentSort = 'name';
+let currentPage = 1;
+
+function getPageSize() {
+    return window.innerWidth <= 1024 ? 5 : 10;
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     loadRiders();
     initFilterButtons();
+    window.addEventListener('resize', () => {
+        const oldSize = getPageSize();
+        // Re-render on breakpoint cross
+        renderPage();
+    });
 });
 
 function initFilterButtons() {
@@ -90,6 +104,7 @@ function initFilterButtons() {
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
             currentSort = this.dataset.sort;
+            currentPage = 1;
             sortRiders();
             
             // Sync mobile dropdown text
@@ -137,6 +152,7 @@ function initFilterButtons() {
             mobileOptions.classList.remove('active');
             
             currentSort = sortType;
+            currentPage = 1;
             sortRiders();
             
             // Sync desktop active state
@@ -155,6 +171,7 @@ async function loadRiders() {
         
         if (data.success && data.riders.length > 0) {
             allRiders = data.riders;
+            currentPage = 1;
             sortRiders();
         } else {
             document.getElementById('riders-container').innerHTML = '<div class="glass-card"><div class="empty-state"><span class="material-icons empty-icon">directions_bike</span><p class="empty-title">No riders found</p></div></div>';
@@ -165,43 +182,61 @@ async function loadRiders() {
 }
 
 function sortRiders() {
-    let sorted = [...allRiders];
+    sortedRiders = [...allRiders];
     
     switch (currentSort) {
         case 'name':
-            sorted.sort((a, b) => a.full_name.localeCompare(b.full_name));
+            sortedRiders.sort((a, b) => a.full_name.localeCompare(b.full_name));
             break;
         case 'total_desc':
-            sorted.sort((a, b) => b.total_deliveries - a.total_deliveries);
+            sortedRiders.sort((a, b) => (b.total_deliveries || 0) - (a.total_deliveries || 0));
             break;
         case 'total_asc':
-            sorted.sort((a, b) => a.total_deliveries - b.total_deliveries);
+            sortedRiders.sort((a, b) => (a.total_deliveries || 0) - (b.total_deliveries || 0));
             break;
         case 'completion_desc':
-            sorted.sort((a, b) => getCompletionRate(b) - getCompletionRate(a));
+            sortedRiders.sort((a, b) => getCompletionRate(b) - getCompletionRate(a));
             break;
         case 'completion_asc':
-            sorted.sort((a, b) => getCompletionRate(a) - getCompletionRate(b));
+            sortedRiders.sort((a, b) => getCompletionRate(a) - getCompletionRate(b));
             break;
         case 'available':
-            sorted.sort((a, b) => (b.is_available ? 1 : 0) - (a.is_available ? 1 : 0));
+            sortedRiders.sort((a, b) => (b.is_available ? 1 : 0) - (a.is_available ? 1 : 0));
             break;
     }
     
-    renderRiders(sorted);
+    renderPage();
 }
 
 function getCompletionRate(rider) {
-    return rider.total_deliveries > 0 
-        ? Math.round((rider.completed_deliveries / rider.total_deliveries) * 100) 
-        : 0;
+    const total = rider.total_deliveries || 0;
+    const completed = rider.completed_deliveries || 0;
+    return total > 0 ? Math.round((completed / total) * 100) : 0;
+}
+
+function renderPage() {
+    const pageSize = getPageSize();
+    const totalPages = Math.ceil(sortedRiders.length / pageSize);
+    
+    // Clamp current page
+    if (currentPage > totalPages) currentPage = totalPages;
+    if (currentPage < 1) currentPage = 1;
+    
+    const start = (currentPage - 1) * pageSize;
+    const pageRiders = sortedRiders.slice(start, start + pageSize);
+    
+    renderRiders(pageRiders);
+    renderPagination(totalPages, pageSize);
 }
 
 function renderRiders(riders) {
     const container = document.getElementById('riders-container');
     
     let html = '';
-    riders.forEach((rider, index) => {
+    riders.forEach((rider) => {
+        const totalDeliveries = rider.total_deliveries || 0;
+        const activeDeliveries = rider.active_deliveries || 0;
+        const completedDeliveries = rider.completed_deliveries || 0;
         const completionRate = getCompletionRate(rider);
         const barColor = completionRate >= 80 ? 'var(--success)' : completionRate >= 50 ? 'var(--warning)' : 'var(--danger)';
         
@@ -214,7 +249,7 @@ function renderRiders(riders) {
                         </div>
                         <div>
                             <h4 style="margin: 0; font-size: 16px;">${rider.full_name}</h4>
-                            <p style="color: var(--text-muted); margin: 2px 0 0 0; font-size: 13px;">${rider.phone}</p>
+                            <p style="color: var(--text-muted); margin: 2px 0 0 0; font-size: 13px;">${rider.phone || '—'}</p>
                         </div>
                     </div>
                     <span class="badge ${rider.is_available ? 'badge-success' : 'badge-danger'}">
@@ -224,15 +259,15 @@ function renderRiders(riders) {
                 
                 <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px;">
                     <div style="text-align: center; padding: 12px; background: var(--surface); border-radius: 8px;">
-                        <div style="font-size: 1.5rem; font-weight: 700; color: var(--primary);">${rider.total_deliveries}</div>
+                        <div style="font-size: 1.5rem; font-weight: 700; color: var(--primary);">${totalDeliveries}</div>
                         <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">Total</div>
                     </div>
                     <div style="text-align: center; padding: 12px; background: var(--surface); border-radius: 8px;">
-                        <div style="font-size: 1.5rem; font-weight: 700; color: var(--warning);">${rider.assigned_deliveries}</div>
+                        <div style="font-size: 1.5rem; font-weight: 700; color: var(--warning);">${activeDeliveries}</div>
                         <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">Assigned</div>
                     </div>
                     <div style="text-align: center; padding: 12px; background: var(--surface); border-radius: 8px;">
-                        <div style="font-size: 1.5rem; font-weight: 700; color: var(--success);">${rider.completed_deliveries}</div>
+                        <div style="font-size: 1.5rem; font-weight: 700; color: var(--success);">${completedDeliveries}</div>
                         <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">Completed</div>
                     </div>
                     <div style="text-align: center; padding: 12px; background: var(--surface); border-radius: 8px;">
@@ -250,6 +285,64 @@ function renderRiders(riders) {
     });
     
     container.innerHTML = html;
+}
+
+function renderPagination(totalPages, pageSize) {
+    const paginationEl = document.getElementById('riders-pagination');
+    
+    // Hide pagination if all items fit on one page
+    if (totalPages <= 1) {
+        paginationEl.style.display = 'none';
+        return;
+    }
+    
+    paginationEl.style.display = 'flex';
+    
+    let html = '';
+    
+    // Prev button
+    html += `<button class="pagination-btn ${currentPage === 1 ? 'disabled' : ''}" ${currentPage === 1 ? 'disabled' : ''} onclick="goToPage(${currentPage - 1})">
+        <span class="material-icons" style="font-size: 18px;">chevron_left</span>
+    </button>`;
+    
+    // Page numbers
+    const maxVisible = window.innerWidth <= 480 ? 3 : 5;
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+    if (endPage - startPage + 1 < maxVisible) {
+        startPage = Math.max(1, endPage - maxVisible + 1);
+    }
+    
+    if (startPage > 1) {
+        html += `<button class="pagination-btn" onclick="goToPage(1)">1</button>`;
+        if (startPage > 2) html += `<span style="color: var(--text-muted); padding: 0 4px;">…</span>`;
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+        html += `<button class="pagination-btn ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+    }
+    
+    if (endPage < totalPages) {
+        if (endPage < totalPages - 1) html += `<span style="color: var(--text-muted); padding: 0 4px;">…</span>`;
+        html += `<button class="pagination-btn" onclick="goToPage(${totalPages})">${totalPages}</button>`;
+    }
+    
+    // Next button
+    html += `<button class="pagination-btn ${currentPage === totalPages ? 'disabled' : ''}" ${currentPage === totalPages ? 'disabled' : ''} onclick="goToPage(${currentPage + 1})">
+        <span class="material-icons" style="font-size: 18px;">chevron_right</span>
+    </button>`;
+    
+    paginationEl.innerHTML = html;
+}
+
+function goToPage(page) {
+    const pageSize = getPageSize();
+    const totalPages = Math.ceil(sortedRiders.length / pageSize);
+    if (page < 1 || page > totalPages) return;
+    currentPage = page;
+    renderPage();
+    // Scroll to top of container
+    document.getElementById('riders-container').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 </script>
 

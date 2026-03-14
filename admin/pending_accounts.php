@@ -24,12 +24,10 @@ require_once __DIR__ . '/../includes/sidebar.php';
     <div class="content-header">
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
             <h1 class="content-title">Pending Accounts</h1>
-            <div class="bulk-actions">
-                <button class="btn-bulk btn-bulk-success" onclick="approveAll()">
-                    <span class="material-icons">done_all</span>
-                    Approve All Pending
-                </button>
-            </div>
+            <button class="btn btn-primary" onclick="approveAll()">
+                <span class="material-icons">done_all</span>
+                Approve All Pending
+            </button>
         </div>
     </div>
     

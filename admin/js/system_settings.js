@@ -45,6 +45,9 @@ async function loadSettings() {
             
             // Inventory Settings
             document.getElementById('default_item_names').value = settings.default_item_names || '';
+            
+            // Sync range sliders with loaded values
+            if (typeof updateRangesFromInputs === 'function') updateRangesFromInputs();
         }
     } catch (error) {
         console.error('Error loading settings:', error);
