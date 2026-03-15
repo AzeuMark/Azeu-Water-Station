@@ -1,1 +1,0 @@
-$src=(Get-Location).Path;$name=Split-Path $src -Leaf;$dest="C:\xampp\htdocs\projects\$name";if(Test-Path $dest){Remove-Item $dest -Recurse -Force};Copy-Item $src $dest -Recurse -Force;Write-Host "[$(Get-Date -Format 'yyyy-MM-dd-HH:mm:ss')] Copied to $dest"

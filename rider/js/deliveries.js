@@ -466,18 +466,25 @@ async function saveDeliveryPriority() {
  * Works across pagination pages by operating on the full sortedDeliveryOrders array.
  */
 function moveDeliveryCard(orderId, direction) {
-    // Find the global index of this order in the full sorted array
     const globalIdx = sortedDeliveryOrders.findIndex(o => o.id == orderId);
     if (globalIdx === -1) return;
 
     const swapIdx = globalIdx + direction;
     if (swapIdx < 0 || swapIdx >= sortedDeliveryOrders.length) return;
 
+    const otherOrderId = sortedDeliveryOrders[swapIdx].id;
+
+    // FLIP — First: record positions of both cards before re-render
+    const cardA = document.querySelector(`.delivery-card[data-order-id="${orderId}"]`);
+    const cardB = document.querySelector(`.delivery-card[data-order-id="${otherOrderId}"]`);
+    const rectA = cardA ? cardA.getBoundingClientRect() : null;
+    const rectB = cardB ? cardB.getBoundingClientRect() : null;
+
     // Swap in the full array
     [sortedDeliveryOrders[globalIdx], sortedDeliveryOrders[swapIdx]] =
         [sortedDeliveryOrders[swapIdx], sortedDeliveryOrders[globalIdx]];
 
-    // If moving down pushed item off current page, follow it to next page
+    // If moving off current page, follow the card
     const startIdx = (deliveriesPage - 1) * deliveriesPerPage;
     const endIdx = startIdx + deliveriesPerPage;
     if (swapIdx < startIdx) deliveriesPage--;
@@ -489,13 +496,28 @@ function moveDeliveryCard(orderId, direction) {
     renderDeliveries(sortedDeliveryOrders);
     savePriorityFromArray();
 
-    // Animate the moved card
-    const movedCard = document.querySelector(`.delivery-card[data-order-id="${orderId}"]`);
-    if (movedCard) {
-        const cls = direction === -1 ? 'dcard-moved-up' : 'dcard-moved-down';
-        movedCard.classList.add(cls);
-        movedCard.addEventListener('animationend', () => movedCard.classList.remove(cls), { once: true });
-    }
+    // FLIP — Last + Invert + Play: animate both cards sliding to their new positions
+    const flipAnimate = (el, fromRect) => {
+        if (!el || !fromRect) return;
+        const toRect = el.getBoundingClientRect();
+        const deltaY = fromRect.top - toRect.top;
+        if (Math.abs(deltaY) < 1) return;
+        el.style.transition = 'none';
+        el.style.transform = `translateY(${deltaY}px)`;
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                el.style.transition = 'transform 0.32s cubic-bezier(0.22, 1, 0.36, 1)';
+                el.style.transform = 'translateY(0)';
+                el.addEventListener('transitionend', () => {
+                    el.style.transition = '';
+                    el.style.transform = '';
+                }, { once: true });
+            });
+        });
+    };
+
+    flipAnimate(document.querySelector(`.delivery-card[data-order-id="${orderId}"]`), rectA);
+    flipAnimate(document.querySelector(`.delivery-card[data-order-id="${otherOrderId}"]`), rectB);
 }
 
 /**
