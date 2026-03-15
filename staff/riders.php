@@ -74,7 +74,17 @@ require_once __DIR__ . '/../includes/sidebar.php';
     </div>
 
     <!-- Pagination -->
-    <div id="riders-pagination" style="display: none; justify-content: center; align-items: center; gap: 8px; margin-top: 20px; flex-wrap: wrap;"></div>
+    <div id="riders-pagination" class="pagination-controls-wrapper" style="display: none; margin-top: 20px; border-top: none; border: 1px solid var(--border); border-radius: var(--radius);">
+        <div class="pagination-controls">
+            <button class="btn-icon" id="riders-prev-btn" title="Previous Page">
+                <span class="material-icons">chevron_left</span>
+            </button>
+            <span class="page-info" id="riders-page-info">Page 1 of 1</span>
+            <button class="btn-icon" id="riders-next-btn" title="Next Page">
+                <span class="material-icons">chevron_right</span>
+            </button>
+        </div>
+    </div>
 </main>
 
 <style>
@@ -176,40 +186,29 @@ require_once __DIR__ . '/../includes/sidebar.php';
     font-weight: 600;
 }
 
-/* Pagination buttons */
-.pagination-btn {
-    display: inline-flex;
-    align-items: center;
+/* Pagination Controls */
+.pagination-controls-wrapper {
+    display: flex;
     justify-content: center;
-    min-width: 36px;
-    height: 36px;
-    padding: 0 8px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
+    align-items: center;
+    padding: 16px 20px;
     background: var(--surface-card);
-    color: var(--text-primary);
+}
+
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    white-space: nowrap;
+}
+
+.page-info {
     font-size: 14px;
     font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.pagination-btn:hover:not(.disabled):not(.active) {
-    background: var(--hover);
-    border-color: var(--primary);
-    color: var(--primary);
-}
-
-.pagination-btn.active {
-    background: var(--primary);
-    border-color: var(--primary);
-    color: white;
-    font-weight: 700;
-}
-
-.pagination-btn.disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
+    color: var(--text-primary);
+    padding: 0 8px;
+    min-width: 100px;
+    text-align: center;
 }
 </style>
 
@@ -422,6 +421,9 @@ function renderRiders(riders) {
 
 function renderPagination(totalPages, pageSize) {
     const paginationEl = document.getElementById('riders-pagination');
+    const pageInfo = document.getElementById('riders-page-info');
+    const prevBtn = document.getElementById('riders-prev-btn');
+    const nextBtn = document.getElementById('riders-next-btn');
 
     if (totalPages <= 1) {
         paginationEl.style.display = 'none';
@@ -429,42 +431,12 @@ function renderPagination(totalPages, pageSize) {
     }
 
     paginationEl.style.display = 'flex';
+    pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
 
-    let html = '';
-
-    // Prev button
-    html += `<button class="pagination-btn ${currentPage === 1 ? 'disabled' : ''}" ${currentPage === 1 ? 'disabled' : ''} onclick="goToPage(${currentPage - 1})">
-        <span class="material-icons" style="font-size: 18px;">chevron_left</span>
-    </button>`;
-
-    // Page numbers
-    const maxVisible = window.innerWidth <= 480 ? 3 : 5;
-    let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
-    let endPage = Math.min(totalPages, startPage + maxVisible - 1);
-    if (endPage - startPage + 1 < maxVisible) {
-        startPage = Math.max(1, endPage - maxVisible + 1);
-    }
-
-    if (startPage > 1) {
-        html += `<button class="pagination-btn" onclick="goToPage(1)">1</button>`;
-        if (startPage > 2) html += `<span style="color: var(--text-muted); padding: 0 4px;">…</span>`;
-    }
-
-    for (let i = startPage; i <= endPage; i++) {
-        html += `<button class="pagination-btn ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
-    }
-
-    if (endPage < totalPages) {
-        if (endPage < totalPages - 1) html += `<span style="color: var(--text-muted); padding: 0 4px;">…</span>`;
-        html += `<button class="pagination-btn" onclick="goToPage(${totalPages})">${totalPages}</button>`;
-    }
-
-    // Next button
-    html += `<button class="pagination-btn ${currentPage === totalPages ? 'disabled' : ''}" ${currentPage === totalPages ? 'disabled' : ''} onclick="goToPage(${currentPage + 1})">
-        <span class="material-icons" style="font-size: 18px;">chevron_right</span>
-    </button>`;
-
-    paginationEl.innerHTML = html;
+    prevBtn.disabled = currentPage === 1;
+    nextBtn.disabled = currentPage === totalPages;
+    prevBtn.onclick = () => goToPage(currentPage - 1);
+    nextBtn.onclick = () => goToPage(currentPage + 1);
 }
 
 function goToPage(page) {
