@@ -467,3 +467,105 @@
     .dcard-content { padding: 14px; gap: 9px; }
     .dcard-actions { justify-content: flex-end; }
 }
+
+/* ══════════════════════════════════════════════════════
+   ORDER ITEMS — Inline expandable section on card
+   ══════════════════════════════════════════════════════ */
+
+.dcard-items-wrapper {
+    border-top: 1px dashed var(--border);
+    padding-top: 10px;
+}
+
+.dcard-items-box {
+    max-height: 150px;
+    overflow-y: auto;
+    padding: 8px 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.82rem;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.dcard-items-box::-webkit-scrollbar { width: 4px; }
+.dcard-items-box::-webkit-scrollbar-track { background: transparent; }
+.dcard-items-box::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.18); border-radius: 10px; }
+.dcard-items-box::-webkit-scrollbar-thumb:hover { background: rgba(0, 0, 0, 0.28); }
+
+.dcard-item-entry {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 0;
+    border-bottom: 1px solid var(--border);
+}
+.dcard-item-entry:last-child { border-bottom: none; padding-bottom: 0; }
+.dcard-item-entry:first-child { padding-top: 0; }
+
+.dcard-item-num {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    min-width: 20px;
+}
+
+.dcard-item-info {
+    font-size: 0.82rem;
+    color: var(--text-primary);
+    flex: 1;
+    white-space: nowrap;
+}
+
+.dcard-item-amount {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--primary);
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-left: 8px;
+}
+
+/* View Items button outline style */
+.dcard-actions .btn-outline,
+.dcard-view-items-btn {
+    background: transparent;
+    border: 1.5px solid var(--border);
+    color: var(--text-secondary);
+    transition: all 0.2s ease;
+}
+.dcard-actions .btn-outline:hover,
+.dcard-view-items-btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: rgba(21, 101, 192, 0.06);
+}
+.dcard-actions .btn-outline.active,
+.dcard-view-items-btn.active {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: rgba(21, 101, 192, 0.08);
+}
+
+.dcard-view-items-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+@media (max-width: 768px) {
+    .dcard-items-box { max-height: 120px; }
+}
+
+@media (max-width: 400px) {
+    .dcard-items-box { max-height: 100px; font-size: 0.75rem; padding: 6px 8px; }
+    .dcard-item-num { font-size: 0.688rem; min-width: 16px; }
+    .dcard-item-info { font-size: 0.75rem; }
+    .dcard-item-amount { font-size: 0.75rem; }
+}

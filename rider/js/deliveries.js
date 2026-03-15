@@ -316,6 +316,8 @@ function buildDeliveryCardHtml(order, priority = null, draggable = false, idxInP
                <span>${order.notes}</span>
            </div>` : '';
 
+    const itemCountLabel = order.item_count ? `${order.item_count} item${order.item_count > 1 ? 's' : ''}` : 'Items';
+
     const actionsHtml = isActive
         ? `<div class="dcard-actions">
                <button class="btn btn-success" onclick="markAsDelivered(${order.id})">
@@ -344,7 +346,10 @@ function buildDeliveryCardHtml(order, priority = null, draggable = false, idxInP
                     <span class="dcard-order-num">Order #${order.id}</span>
                     <span class="dcard-order-date">${formatDate(order.order_date)}</span>
                 </div>
-                <span class="badge badge-${order.status}" style="flex-shrink:0;">${getStatusLabel(order.status)}</span>
+                <button class="btn btn-outline dcard-view-items-btn" onclick="toggleOrderItems(${order.id}, this)" style="flex-shrink:0;">
+                    <span class="material-icons">receipt_long</span>
+                    <span class="btn-label">${itemCountLabel}</span>
+                </button>
             </div>
 
             <!-- Body wrapper: content left, actions right (desktop) -->
@@ -376,6 +381,13 @@ function buildDeliveryCardHtml(order, priority = null, draggable = false, idxInP
                     </div>
 
                     ${notesHtml}
+
+                    <!-- Order Items (toggled via View Items button) -->
+                    <div class="dcard-items-wrapper" id="dcard-items-${order.id}" style="display:none;">
+                        <div class="dcard-items-box">
+                            <div class="items-loading">Loading items...</div>
+                        </div>
+                    </div>
                 </div>
 
                 ${actionsHtml}
@@ -715,4 +727,58 @@ function updateDeliveryCountBadge() {
     const badge = document.getElementById('delivery-count-badge');
     if (count) count.textContent = allDeliveryOrders.length;
     if (badge) badge.style.display = allDeliveryOrders.length > 0 ? 'inline-flex' : 'none';
+}
+
+/**
+ * Toggle order items visibility on a delivery card.
+ * Fetches items on first open, then toggles display.
+ */
+const _loadedItems = {};
+async function toggleOrderItems(orderId, btnEl) {
+    const wrapper = document.getElementById(`dcard-items-${orderId}`);
+    if (!wrapper) return;
+
+    const isVisible = wrapper.style.display !== 'none';
+    const label = btnEl ? btnEl.querySelector('.btn-label') : null;
+    const order = allDeliveryOrders.find(o => o.id == orderId);
+    const itemCountLabel = order && order.item_count ? `${order.item_count} item${order.item_count > 1 ? 's' : ''}` : 'Items';
+
+    if (isVisible) {
+        wrapper.style.display = 'none';
+        if (btnEl) btnEl.classList.remove('active');
+        if (label) label.textContent = itemCountLabel;
+        return;
+    }
+
+    wrapper.style.display = 'block';
+    if (btnEl) btnEl.classList.add('active');
+    if (label) label.textContent = 'Collapse';
+
+    // Only fetch once
+    if (_loadedItems[orderId]) return;
+
+    try {
+        const response = await fetch(`../api/orders/get.php?id=${orderId}`);
+        const data = await response.json();
+        const box = wrapper.querySelector('.dcard-items-box');
+        if (!box) return;
+
+        if (data.success && data.items && data.items.length > 0) {
+            let html = '';
+            data.items.forEach((item, idx) => {
+                html += `<div class="dcard-item-entry">
+                    <span class="dcard-item-num">${idx + 1}.</span>
+                    <span class="dcard-item-info">${item.item_name} × ${item.quantity}</span>
+                    <span class="dcard-item-amount">${formatCurrency(item.subtotal)}</span>
+                </div>`;
+            });
+            box.innerHTML = html;
+            _loadedItems[orderId] = true;
+        } else {
+            box.innerHTML = '<div class="items-loading" style="color:var(--text-muted);">No items found</div>';
+        }
+    } catch (e) {
+        const box = wrapper.querySelector('.dcard-items-box');
+        if (box) box.innerHTML = '<div class="items-loading" style="color:var(--danger);">Failed to load items</div>';
+    }
 }

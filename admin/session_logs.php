@@ -28,7 +28,43 @@ require_once __DIR__ . '/../includes/sidebar.php';
         <h1 class="content-title">Session Logs</h1>
     </div>
     
-    <div class="glass-card">
+    <!-- Mobile Filter Bar -->
+    <div class="glass-card filter-bar-mobile logs-filter-bar-mobile" style="margin-bottom: 24px; display: none;">
+        <div class="filter-bar-mobile-inner">
+            <div class="filter-bar-mobile-filter">
+                <div class="custom-select-wrapper">
+                    <div class="custom-select-trigger" id="mobile-filter-trigger">
+                        <span class="material-icons" style="margin-right: 8px; font-size: 20px;">filter_list</span>
+                        <span class="selected-text">All</span>
+                        <span class="material-icons arrow">expand_more</span>
+                    </div>
+                    <div class="custom-select-options" id="mobile-filter-options">
+                        <div class="custom-select-option selected" data-action="">All</div>
+                        <div class="custom-select-option" data-action="login">Login</div>
+                        <div class="custom-select-option" data-action="logout">Logout</div>
+                        <div class="custom-select-option" data-action="force_logout">Force Logout</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Desktop Table View -->
+    <div class="glass-card logs-table-view">
+        <!-- Filter Bar -->
+        <div class="logs-filter-section">
+            <div class="filter-bar">
+                <div style="display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-weight: 500; font-size: 14px; white-space: nowrap;">
+                    <span class="material-icons" style="font-size: 20px;">filter_list</span>
+                    Filter:
+                </div>
+                <button class="filter-btn active" data-action="">All</button>
+                <button class="filter-btn" data-action="login">Login</button>
+                <button class="filter-btn" data-action="logout">Logout</button>
+                <button class="filter-btn" data-action="force_logout">Force Logout</button>
+            </div>
+        </div>
+
         <div class="data-table-wrapper sticky-table-wrapper">
             <table class="data-table sticky-cols-table">
                 <thead>
@@ -77,9 +113,186 @@ require_once __DIR__ . '/../includes/sidebar.php';
             </div>
         </div>
     </div>
+
+    <!-- Mobile/Tablet Card View -->
+    <div class="logs-card-view" id="logs-cards"></div>
+
+    <!-- Mobile Pagination -->
+    <div id="pagination-wrapper-mobile" style="display: none; justify-content: center; align-items: center; padding: 16px 20px; background: var(--surface-card); border: 1px solid var(--border); border-radius: var(--radius); margin-top: 16px;">
+        <div class="pagination-controls">
+            <button class="btn-icon" onclick="previousPage()" id="prev-btn-mobile" title="Previous Page">
+                <span class="material-icons">chevron_left</span>
+            </button>
+            <span class="page-info" id="page-info-mobile">Page 1 of 1</span>
+            <button class="btn-icon" onclick="nextPage()" id="next-btn-mobile" title="Next Page">
+                <span class="material-icons">chevron_right</span>
+            </button>
+        </div>
+    </div>
 </main>
 
 <style>
+/* Override badge-success for session logs to match badge-info border style */
+.main-content .badge-success {
+    background: transparent !important;
+    color: #28a745 !important;
+    border: 1.5px solid #28a745 !important;
+}
+
+/* Show/hide logic — Table on desktop, Cards on mobile/tablet */
+.logs-card-view {
+    display: none;
+}
+
+.logs-table-view {
+    display: block;
+}
+
+@media (max-width: 1024px) {
+    .logs-card-view {
+        display: block;
+    }
+    .logs-table-view {
+        display: none;
+    }
+    .logs-filter-bar-mobile {
+        display: block !important;
+    }
+}
+
+/* Filter Section inside glass-card */
+.logs-filter-section {
+    margin: -20px -20px 0 -20px;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+}
+
+.logs-filter-section .filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* Card grid */
+.log-cards-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+}
+
+@media (min-width: 600px) and (max-width: 1024px) {
+    .log-cards-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Individual card */
+.log-card {
+    background: var(--surface-card);
+    border-radius: 16px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07);
+    overflow: hidden;
+    border: 1px solid var(--border);
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.log-card:hover {
+    box-shadow: 0 8px 16px -2px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+}
+
+/* Card header */
+.log-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+}
+
+.log-card-header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--text-primary);
+}
+
+.log-card-header-left .material-icons {
+    font-size: 20px;
+    color: var(--primary);
+}
+
+.log-card-action-badge .badge {
+    font-size: 12px;
+    padding: 3px 10px;
+}
+
+/* Card data rows */
+.log-card-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+}
+
+.log-card-row:last-child {
+    border-bottom: none;
+}
+
+.log-card-label {
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 500;
+    flex-shrink: 0;
+}
+
+.log-card-label .material-icons {
+    font-size: 16px;
+}
+
+.log-card-value {
+    font-weight: 600;
+    color: var(--text-primary);
+    text-align: right;
+    max-width: 60%;
+    word-break: break-word;
+}
+
+/* Badge in card */
+.log-card-value .badge {
+    font-size: 12px;
+    padding: 3px 10px;
+}
+
+/* Empty state for cards */
+.log-cards-empty {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--text-muted);
+    background: var(--surface-card);
+    border-radius: 16px;
+    border: 1px solid var(--border);
+}
+
+.log-cards-empty .material-icons {
+    font-size: 48px;
+    margin-bottom: 12px;
+    opacity: 0.4;
+}
+
+.log-cards-empty p {
+    font-size: 15px;
+    font-weight: 500;
+}
+
 /* Sticky Columns - Responsive Table */
 .sticky-table-wrapper {
     overflow-x: auto;
@@ -94,12 +307,12 @@ require_once __DIR__ . '/../includes/sidebar.php';
 .sticky-col {
     position: sticky;
     z-index: 2;
-    background: var(--bg, #fff);
+    background: var(--surface-card);
 }
 
 .sticky-cols-table thead .sticky-col {
     z-index: 3;
-    background: var(--surface, #f8f9fa);
+    background: var(--surface);
 }
 
 .sticky-col-1 {
@@ -125,7 +338,7 @@ require_once __DIR__ . '/../includes/sidebar.php';
 }
 
 .sticky-cols-table tbody tr:hover .sticky-col {
-    background: var(--surface, #f0f0f0);
+    background: var(--surface);
 }
 
 /* Pagination Controls - Bottom Center */
@@ -179,23 +392,51 @@ require_once __DIR__ . '/../includes/sidebar.php';
 
 <script>
 let allLogs = <?php echo json_encode($logs); ?>;
+let filteredLogs = [...allLogs];
+let currentFilter = '';
 let currentPage = 1;
 let itemsPerPage = 20;
 
+function applyFilter() {
+    if (currentFilter) {
+        filteredLogs = allLogs.filter(log => log.action === currentFilter);
+    } else {
+        filteredLogs = [...allLogs];
+    }
+    currentPage = 1;
+    renderLogs();
+}
+
+function initFilterButtons() {
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            currentFilter = this.dataset.action;
+            applyFilter();
+        });
+    });
+}
+
 function renderLogs() {
     const tbody = document.getElementById('logs-tbody');
+    const cardsContainer = document.getElementById('logs-cards');
     
-    if (allLogs.length === 0) {
+    if (filteredLogs.length === 0) {
         tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><p>No session logs</p></div></td></tr>';
+        if (cardsContainer) {
+            cardsContainer.innerHTML = '<div class="log-cards-empty"><span class="material-icons">history</span><p>No session logs</p></div>';
+        }
         updatePaginationControls(0);
         return;
     }
     
-    const totalPages = Math.ceil(allLogs.length / itemsPerPage);
+    const totalPages = Math.ceil(filteredLogs.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
-    const paginatedLogs = allLogs.slice(startIndex, endIndex);
+    const paginatedLogs = filteredLogs.slice(startIndex, endIndex);
     
+    // Render table rows
     let html = '';
     paginatedLogs.forEach((log, index) => {
         const rowNumber = startIndex + index + 1;
@@ -214,6 +455,48 @@ function renderLogs() {
     });
     
     tbody.innerHTML = html;
+    
+    // Render card view
+    if (cardsContainer) {
+        let cardsHtml = '<div class="log-cards-grid">';
+        paginatedLogs.forEach((log, index) => {
+            const cardNumber = startIndex + index + 1;
+            const actionBadgeClass = log.action === 'login' ? 'badge-success' : (log.action === 'logout' ? 'badge-info' : 'badge-danger');
+            
+            cardsHtml += `
+                <div class="log-card">
+                    <div class="log-card-header">
+                        <div class="log-card-header-left">
+                            <span class="material-icons">tag</span>
+                            <span>${cardNumber}</span>
+                        </div>
+                        <div class="log-card-action-badge">
+                            <span class="badge ${actionBadgeClass}">${log.action}</span>
+                        </div>
+                    </div>
+                    <div class="log-card-row">
+                        <div class="log-card-label"><span class="material-icons">person</span> Username</div>
+                        <div class="log-card-value"><strong>${log.username}</strong></div>
+                    </div>
+                    <div class="log-card-row">
+                        <div class="log-card-label"><span class="material-icons">badge</span> Role</div>
+                        <div class="log-card-value"><span class="badge badge-${log.role}">${log.role}</span></div>
+                    </div>
+                    <div class="log-card-row">
+                        <div class="log-card-label"><span class="material-icons">language</span> IP Address</div>
+                        <div class="log-card-value">${log.ip_address}</div>
+                    </div>
+                    <div class="log-card-row">
+                        <div class="log-card-label"><span class="material-icons">schedule</span> Timestamp</div>
+                        <div class="log-card-value">${formatDate(log.created_at)}</div>
+                    </div>
+                </div>
+            `;
+        });
+        cardsHtml += '</div>';
+        cardsContainer.innerHTML = cardsHtml;
+    }
+    
     updatePaginationControls(totalPages);
 }
 
@@ -221,13 +504,24 @@ function updatePaginationControls(totalPages) {
     const pageInfo = document.getElementById('page-info');
     const prevBtn = document.getElementById('prev-btn');
     const nextBtn = document.getElementById('next-btn');
+    const pageInfoMobile = document.getElementById('page-info-mobile');
+    const prevBtnMobile = document.getElementById('prev-btn-mobile');
+    const nextBtnMobile = document.getElementById('next-btn-mobile');
+    const paginationWrapper = document.getElementById('pagination-wrapper');
+    const paginationWrapperMobile = document.getElementById('pagination-wrapper-mobile');
     
-    if (!pageInfo) return;
+    const showPagination = totalPages > 1;
     
-    pageInfo.textContent = `Page ${currentPage} of ${totalPages || 1}`;
+    if (paginationWrapper) paginationWrapper.style.display = showPagination ? 'flex' : 'none';
+    if (paginationWrapperMobile) paginationWrapperMobile.style.display = showPagination ? 'flex' : 'none';
+    
+    if (pageInfo) pageInfo.textContent = `Page ${currentPage} of ${totalPages || 1}`;
+    if (pageInfoMobile) pageInfoMobile.textContent = `Page ${currentPage} of ${totalPages || 1}`;
     
     if (prevBtn) prevBtn.disabled = currentPage <= 1;
     if (nextBtn) nextBtn.disabled = currentPage >= totalPages;
+    if (prevBtnMobile) prevBtnMobile.disabled = currentPage <= 1;
+    if (nextBtnMobile) nextBtnMobile.disabled = currentPage >= totalPages;
 }
 
 function previousPage() {
@@ -238,18 +532,63 @@ function previousPage() {
 }
 
 function nextPage() {
-    const totalPages = Math.ceil(allLogs.length / itemsPerPage);
+    const totalPages = Math.ceil(filteredLogs.length / itemsPerPage);
     if (currentPage < totalPages) {
         currentPage++;
         renderLogs();
     }
 }
 
+// Mobile Filter Dropdown Handler
+function initMobileFilter() {
+    const mobileTrigger = document.getElementById('mobile-filter-trigger');
+    const mobileOptions = document.getElementById('mobile-filter-options');
+    const mobileSelectedText = mobileTrigger?.querySelector('.selected-text');
+    
+    if (!mobileTrigger || !mobileOptions) return;
+    
+    mobileTrigger.addEventListener('click', function(e) {
+        e.stopPropagation();
+        mobileTrigger.classList.toggle('active');
+        mobileOptions.classList.toggle('active');
+    });
+    
+    document.addEventListener('click', function(e) {
+        if (!mobileTrigger.contains(e.target) && !mobileOptions.contains(e.target)) {
+            mobileTrigger.classList.remove('active');
+            mobileOptions.classList.remove('active');
+        }
+    });
+    
+    mobileOptions.addEventListener('click', function(e) {
+        const option = e.target.closest('.custom-select-option');
+        if (!option) return;
+        
+        const actionType = option.dataset.action;
+        const text = option.textContent.trim();
+        
+        mobileOptions.querySelectorAll('.custom-select-option').forEach(opt => {
+            opt.classList.remove('selected');
+        });
+        option.classList.add('selected');
+        mobileSelectedText.textContent = text;
+        
+        mobileTrigger.classList.remove('active');
+        mobileOptions.classList.remove('active');
+        
+        // Sync with desktop filter buttons
+        const desktopButton = document.querySelector(`.filter-btn[data-action="${actionType}"]`);
+        if (desktopButton) {
+            desktopButton.click();
+        }
+    });
+}
+
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
-    if (allLogs.length > 0) {
-        renderLogs();
-    }
+    initFilterButtons();
+    initMobileFilter();
+    renderLogs();
 });
 </script>
 
