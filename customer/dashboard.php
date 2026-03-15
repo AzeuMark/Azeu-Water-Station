@@ -9,10 +9,10 @@
  * Role: CUSTOMER
  * 
  * Features:
- * - Order statistics cards
- * - Recent order list
- * - Quick action buttons (Place Order, View Addresses)
- * - Active order tracking
+ * - Welcome banner with dynamic greeting
+ * - Order statistics cards with animated counters
+ * - Quick action buttons (Place Order, My Orders, Addresses, Settings)
+ * - Recent orders panel with table & mobile card views
  * 
  * Status: ✅ IMPLEMENTED
  * ============================================================================
@@ -39,99 +39,124 @@ require_once __DIR__ . '/../includes/sidebar.php';
         </p>
     </div>
     
+    <!-- Welcome Banner -->
+    <div class="dash-welcome">
+        <div class="dash-welcome-text">
+            <h2 id="greeting-text">Welcome back!</h2>
+            <p>Here's an overview of your orders and account activity.</p>
+        </div>
+        <div class="dash-welcome-icon">
+            <span class="material-icons">water_drop</span>
+        </div>
+    </div>
+    
     <!-- Statistics Cards -->
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 32px;">
-        <div class="stat-card" onclick="window.location.href='orders.php'">
-            <div class="stat-icon primary">
+    <div class="dash-stats-grid">
+        <div class="dash-stat-card dash-stat-primary" onclick="window.location.href='orders.php'">
+            <div class="dash-stat-icon">
                 <span class="material-icons">shopping_cart</span>
             </div>
-            <div class="stat-content">
-                <div class="stat-label">Total Orders</div>
-                <div class="stat-value" id="total-orders">0</div>
+            <div class="dash-stat-info">
+                <span class="dash-stat-value" id="total-orders">0</span>
+                <span class="dash-stat-label">Total Orders</span>
             </div>
+            <span class="material-icons dash-stat-arrow">arrow_forward</span>
         </div>
         
-        <div class="stat-card" onclick="window.location.href='orders.php?status=pending'">
-            <div class="stat-icon warning">
+        <div class="dash-stat-card dash-stat-warning" onclick="window.location.href='orders.php?status=pending'">
+            <div class="dash-stat-icon">
                 <span class="material-icons">schedule</span>
             </div>
-            <div class="stat-content">
-                <div class="stat-label">Pending Orders</div>
-                <div class="stat-value" id="pending-orders">0</div>
+            <div class="dash-stat-info">
+                <span class="dash-stat-value" id="pending-orders">0</span>
+                <span class="dash-stat-label">Pending Orders</span>
             </div>
+            <span class="material-icons dash-stat-arrow">arrow_forward</span>
         </div>
         
-        <div class="stat-card" onclick="window.location.href='orders.php?status=active'">
-            <div class="stat-icon info">
+        <div class="dash-stat-card dash-stat-info" onclick="window.location.href='orders.php?status=active'">
+            <div class="dash-stat-icon">
                 <span class="material-icons">local_shipping</span>
             </div>
-            <div class="stat-content">
-                <div class="stat-label">Active Orders</div>
-                <div class="stat-value" id="active-orders">0</div>
+            <div class="dash-stat-info">
+                <span class="dash-stat-value" id="active-orders">0</span>
+                <span class="dash-stat-label">Active Orders</span>
             </div>
+            <span class="material-icons dash-stat-arrow">arrow_forward</span>
         </div>
         
-        <div class="stat-card">
-            <div class="stat-icon success">
+        <div class="dash-stat-card dash-stat-success" onclick="window.location.href='orders.php?status=accepted'">
+            <div class="dash-stat-icon">
                 <span class="material-icons">check_circle</span>
             </div>
-            <div class="stat-content">
-                <div class="stat-label">Completed Orders</div>
-                <div class="stat-value" id="completed-orders">0</div>
+            <div class="dash-stat-info">
+                <span class="dash-stat-value" id="completed-orders">0</span>
+                <span class="dash-stat-label">Completed Orders</span>
             </div>
+            <span class="material-icons dash-stat-arrow">arrow_forward</span>
         </div>
     </div>
     
     <!-- Quick Actions -->
-    <div class="glass-card" style="margin-bottom: 32px;">
-        <h3 style="margin-bottom: 20px;">Quick Actions</h3>
-        <div class="quick-actions">
-            <a href="place_order.php" class="quick-action-btn">
-                <span class="material-icons">add_shopping_cart</span>
-                <span>Place Order</span>
+    <div class="dash-section">
+        <div class="dash-section-header">
+            <span class="material-icons">bolt</span>
+            <h3>Quick Actions</h3>
+        </div>
+        <div class="dash-actions-grid">
+            <a href="place_order.php" class="dash-action-card">
+                <div class="dash-action-icon primary"><span class="material-icons">add_shopping_cart</span></div>
+                <span class="dash-action-label">Place Order</span>
             </a>
-            <a href="orders.php" class="quick-action-btn">
-                <span class="material-icons">receipt_long</span>
-                <span>My Orders</span>
+            <a href="orders.php" class="dash-action-card">
+                <div class="dash-action-icon info"><span class="material-icons">receipt_long</span></div>
+                <span class="dash-action-label">My Orders</span>
             </a>
-            <a href="addresses.php" class="quick-action-btn">
-                <span class="material-icons">location_on</span>
-                <span>Addresses</span>
+            <a href="addresses.php" class="dash-action-card">
+                <div class="dash-action-icon warning"><span class="material-icons">location_on</span></div>
+                <span class="dash-action-label">Addresses</span>
             </a>
-            <a href="settings.php" class="quick-action-btn">
-                <span class="material-icons">settings</span>
-                <span>Settings</span>
+            <a href="settings.php" class="dash-action-card">
+                <div class="dash-action-icon neutral"><span class="material-icons">settings</span></div>
+                <span class="dash-action-label">Settings</span>
             </a>
         </div>
     </div>
     
-    <!-- Recent Orders -->
-    <div class="glass-card">
-        <div class="preview-header">
-            <h3>Recent Orders</h3>
-            <a href="orders.php">View All →</a>
+    <!-- Recent Orders Panel -->
+    <div class="dash-panel">
+        <div class="dash-panel-header">
+            <div class="dash-panel-title">
+                <span class="material-icons">receipt_long</span>
+                <h3>Recent Orders</h3>
+            </div>
+            <a href="orders.php" class="dash-panel-link">View All <span class="material-icons">arrow_forward</span></a>
         </div>
-        
-        <div class="data-table-wrapper">
-            <table class="data-table" id="recent-orders-table">
-                <thead>
-                    <tr>
-                        <th>Order ID</th>
-                        <th>Date</th>
-                        <th>Items</th>
-                        <th>Total</th>
-                        <th>Status</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody id="recent-orders-tbody">
-                    <tr>
-                        <td colspan="6" style="text-align: center; padding: 40px;">
-                            <div class="spinner"></div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+        <div class="dash-panel-body">
+            <!-- Desktop table -->
+            <div class="dash-panel-table-view">
+                <div class="data-table-wrapper">
+                    <table class="data-table" id="recent-orders-table">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Total</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recent-orders-tbody">
+                            <tr><td colspan="6" style="text-align: center; padding: 20px;"><div class="spinner"></div></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- Mobile/Tablet cards -->
+            <div class="dash-panel-card-view" id="recent-orders-cards">
+                <div class="spinner" style="margin: 20px auto;"></div>
+            </div>
         </div>
     </div>
 </main>
