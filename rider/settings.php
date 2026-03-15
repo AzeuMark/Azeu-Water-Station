@@ -11,13 +11,13 @@
  * - Update profile information
  * - Change password
  * - View delivery statistics
- * - Dark mode toggle
  * 
  * Status: ✅ IMPLEMENTED
  * ============================================================================
  */
 
 $page_title = "Settings";
+$page_css = "settings.css";
 
 require_once __DIR__ . '/../includes/auth_check.php';
 require_role([ROLE_RIDER]);
@@ -38,110 +38,191 @@ require_once __DIR__ . '/../includes/sidebar.php';
             <span>Settings</span>
         </p>
     </div>
-    
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
-        <!-- Profile Information -->
-        <div class="glass-card">
-            <h3 style="margin-bottom: 20px;">Profile Information</h3>
-            <form id="profile-form">
-                <div class="form-group" style="margin-bottom: 20px;">
-                    <label for="full_name" style="display: block; margin-bottom: 8px; font-weight: 600;">Full Name</label>
-                    <input type="text" id="full_name" class="form-select" value="<?php echo htmlspecialchars($user['full_name']); ?>" required>
-                </div>
-                
-                <div class="form-group" style="margin-bottom: 20px;">
-                    <label for="email" style="display: block; margin-bottom: 8px; font-weight: 600;">Email</label>
-                    <input type="email" id="email" class="form-select" value="<?php echo htmlspecialchars($user['email']); ?>" required>
-                </div>
-                
-                <div class="form-group" style="margin-bottom: 20px;">
-                    <label for="phone" style="display: block; margin-bottom: 8px; font-weight: 600;">Phone</label>
-                    <input type="tel" id="phone" class="form-select" value="<?php echo htmlspecialchars($user['phone']); ?>" required>
-                </div>
-                
-                <button type="submit" class="btn btn-primary w-full">
-                    <span class="material-icons">save</span>
-                    Update Profile
-                </button>
-            </form>
-        </div>
-        
-        <!-- Change Password -->
-        <div class="glass-card">
-            <h3 style="margin-bottom: 20px;">Change Password</h3>
-            <form id="password-form">
-                <div class="form-group" style="margin-bottom: 20px;">
-                    <label for="new_password" style="display: block; margin-bottom: 8px; font-weight: 600;">New Password</label>
-                    <input type="password" id="new_password" class="form-select" required>
-                </div>
-                
-                <div class="form-group" style="margin-bottom: 20px;">
-                    <label for="confirm_password" style="display: block; margin-bottom: 8px; font-weight: 600;">Confirm Password</label>
-                    <input type="password" id="confirm_password" class="form-select" required>
-                </div>
-                
-                <button type="submit" class="btn btn-primary w-full">
-                    <span class="material-icons">vpn_key</span>
-                    Change Password
-                </button>
-            </form>
-        </div>
-        
 
-        
+    <!-- Profile Header Card -->
+    <div class="settings-profile-header">
+        <div class="settings-avatar">
+            <?php echo strtoupper(substr($user['full_name'], 0, 1)); ?>
+        </div>
+        <div class="settings-profile-info">
+            <div class="settings-profile-name"><?php echo htmlspecialchars($user['full_name']); ?></div>
+            <div class="settings-profile-meta">
+                <span class="settings-profile-email">
+                    <span class="material-icons">mail</span>
+                    <?php echo htmlspecialchars($user['email']); ?>
+                </span>
+            </div>
+            <div class="settings-profile-joined">
+                <span class="material-icons">calendar_today</span>
+                Member since <?php echo date('F Y', strtotime($user['created_at'])); ?>
+            </div>
+        </div>
+        <div class="settings-profile-role role-<?php echo htmlspecialchars($user['role']); ?>">
+            <span class="material-icons">two_wheeler</span>
+            <?php echo htmlspecialchars(get_role_display_name($user['role'])); ?>
+        </div>
+    </div>
+
+    <!-- Settings Panels Grid -->
+    <div class="settings-grid">
+
+        <!-- Profile Information -->
+        <div class="settings-panel">
+            <div class="settings-panel-header">
+                <div class="settings-panel-icon" style="background: rgba(21, 101, 192, 0.1); color: var(--primary);">
+                    <span class="material-icons">person</span>
+                </div>
+                <div>
+                    <h3 class="settings-panel-title">Profile Information</h3>
+                    <p class="settings-panel-desc">Update your personal details</p>
+                </div>
+            </div>
+            <div class="settings-panel-body">
+                <form id="profile-form">
+                    <div class="settings-form-group">
+                        <label for="full_name">Full Name</label>
+                        <input type="text" id="full_name" class="form-select" value="<?php echo htmlspecialchars($user['full_name']); ?>" required>
+                    </div>
+                    <div class="settings-form-group">
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" class="form-select" value="<?php echo htmlspecialchars($user['email']); ?>" required>
+                    </div>
+                    <div class="settings-form-group">
+                        <label for="phone">Phone Number</label>
+                        <input type="tel" id="phone" class="form-select" value="<?php echo htmlspecialchars($user['phone']); ?>" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-full">
+                        <span class="material-icons">save</span>
+                        Update Profile
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Change Password -->
+        <div class="settings-panel">
+            <div class="settings-panel-header">
+                <div class="settings-panel-icon" style="background: rgba(239, 83, 80, 0.1); color: var(--danger);">
+                    <span class="material-icons">lock</span>
+                </div>
+                <div>
+                    <h3 class="settings-panel-title">Security</h3>
+                    <p class="settings-panel-desc">Change your account password</p>
+                </div>
+            </div>
+            <div class="settings-panel-body">
+                <form id="password-form">
+                    <div class="settings-form-group">
+                        <label for="new_password">New Password</label>
+                        <div class="settings-password-wrapper">
+                            <input type="password" id="new_password" class="form-select" placeholder="Enter new password" required>
+                            <button type="button" class="settings-password-toggle" onclick="togglePassword('new_password')">
+                                <span class="material-icons">visibility</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="settings-form-group">
+                        <label for="confirm_password">Confirm Password</label>
+                        <div class="settings-password-wrapper">
+                            <input type="password" id="confirm_password" class="form-select" placeholder="Confirm new password" required>
+                            <button type="button" class="settings-password-toggle" onclick="togglePassword('confirm_password')">
+                                <span class="material-icons">visibility</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="settings-password-hint">
+                        <span class="material-icons">info</span>
+                        Password must be at least 6 characters long
+                    </div>
+                    <button type="submit" class="btn btn-primary w-full">
+                        <span class="material-icons">vpn_key</span>
+                        Change Password
+                    </button>
+                </form>
+            </div>
+        </div>
+
         <!-- Delivery Statistics -->
-        <div class="glass-card">
-            <h3 style="margin-bottom: 20px;">Delivery Statistics</h3>
-            <div id="stats-container">
-                <div style="text-align: center; padding: 20px;">
-                    <div class="spinner"></div>
+        <div class="settings-panel settings-grid-full">
+            <div class="settings-panel-header">
+                <div class="settings-panel-icon" style="background: rgba(102, 187, 106, 0.1); color: var(--success);">
+                    <span class="material-icons">bar_chart</span>
+                </div>
+                <div>
+                    <h3 class="settings-panel-title">Delivery Statistics</h3>
+                    <p class="settings-panel-desc">Your delivery performance overview</p>
+                </div>
+            </div>
+            <div class="settings-panel-body">
+                <div id="stats-container">
+                    <div style="text-align: center; padding: 20px;">
+                        <div class="spinner"></div>
+                    </div>
                 </div>
             </div>
         </div>
+
     </div>
 </main>
 
 <script>
-// Load statistics
+// Toggle password visibility
+function togglePassword(inputId) {
+    const input = document.getElementById(inputId);
+    const btn = input.parentElement.querySelector('.settings-password-toggle');
+    const icon = btn.querySelector('.material-icons');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.textContent = 'visibility_off';
+    } else {
+        input.type = 'password';
+        icon.textContent = 'visibility';
+    }
+}
+
+// Load delivery statistics
 document.addEventListener('DOMContentLoaded', async function() {
     try {
         const response = await fetch('../api/riders/statistics.php');
         const data = await response.json();
-        
         if (data.success) {
             const stats = data.statistics;
             document.getElementById('stats-container').innerHTML = `
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                    <div style="text-align: center; padding: 16px; background: var(--surface); border-radius: var(--radius-sm);">
-                        <div style="font-size: 2rem; font-weight: 700; color: var(--primary);">${stats.total_deliveries || 0}</div>
-                        <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">Total Deliveries</div>
+                <div class="stats-mini-grid">
+                    <div class="stats-mini-card">
+                        <div class="stats-mini-value" style="color: var(--primary);">${stats.total_deliveries || 0}</div>
+                        <div class="stats-mini-label">Total Deliveries</div>
                     </div>
-                    <div style="text-align: center; padding: 16px; background: var(--surface); border-radius: var(--radius-sm);">
-                        <div style="font-size: 2rem; font-weight: 700; color: var(--success);">${stats.completed || 0}</div>
-                        <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">Completed</div>
+                    <div class="stats-mini-card">
+                        <div class="stats-mini-value" style="color: var(--success);">${stats.completed || 0}</div>
+                        <div class="stats-mini-label">Completed</div>
                     </div>
-                    <div style="text-align: center; padding: 16px; background: var(--surface); border-radius: var(--radius-sm);">
-                        <div style="font-size: 2rem; font-weight: 700; color: var(--warning);">${stats.pending || 0}</div>
-                        <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">Pending</div>
+                    <div class="stats-mini-card">
+                        <div class="stats-mini-value" style="color: var(--warning);">${stats.pending || 0}</div>
+                        <div class="stats-mini-label">Pending</div>
                     </div>
-                    <div style="text-align: center; padding: 16px; background: var(--surface); border-radius: var(--radius-sm);">
-                        <div style="font-size: 2rem; font-weight: 700; color: var(--info);">${stats.today_deliveries || 0}</div>
-                        <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">Today</div>
+                    <div class="stats-mini-card">
+                        <div class="stats-mini-value" style="color: var(--info);">${stats.today_deliveries || 0}</div>
+                        <div class="stats-mini-label">Today</div>
                     </div>
                 </div>
             `;
         }
     } catch (error) {
         console.error('Failed to load stats:', error);
+        document.getElementById('stats-container').innerHTML = `
+            <div style="text-align: center; padding: 20px; color: var(--text-muted);">
+                <span class="material-icons" style="font-size: 36px; margin-bottom: 8px; display: block;">cloud_off</span>
+                Unable to load statistics
+            </div>
+        `;
     }
 });
 
-// Profile form (same as customer)
+// Profile form
 document.getElementById('profile-form').addEventListener('submit', async function(e) {
     e.preventDefault();
-    
     showLoading();
-    
     try {
         const response = await fetch('../api/accounts/update.php', {
             method: 'POST',
@@ -154,10 +235,8 @@ document.getElementById('profile-form').addEventListener('submit', async functio
                 csrf_token: getCSRFToken()
             })
         });
-        
         const data = await response.json();
         hideLoading();
-        
         if (data.success) {
             showToast('Profile updated successfully', 'success');
             setTimeout(() => location.reload(), 1000);
@@ -173,17 +252,17 @@ document.getElementById('profile-form').addEventListener('submit', async functio
 // Password form
 document.getElementById('password-form').addEventListener('submit', async function(e) {
     e.preventDefault();
-    
     const newPassword = document.getElementById('new_password').value;
     const confirmPassword = document.getElementById('confirm_password').value;
-    
     if (newPassword !== confirmPassword) {
         showToast('Passwords do not match', 'error');
         return;
     }
-    
+    if (newPassword.length < 6) {
+        showToast('Password must be at least 6 characters', 'error');
+        return;
+    }
     showLoading();
-    
     try {
         const response = await fetch('../api/accounts/update.php', {
             method: 'POST',
@@ -194,10 +273,8 @@ document.getElementById('password-form').addEventListener('submit', async functi
                 csrf_token: getCSRFToken()
             })
         });
-        
         const data = await response.json();
         hideLoading();
-        
         if (data.success) {
             showToast('Password changed successfully', 'success');
             this.reset();
@@ -209,10 +286,6 @@ document.getElementById('password-form').addEventListener('submit', async functi
         showToast('An error occurred', 'error');
     }
 });
-
-
 </script>
-
-
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>
