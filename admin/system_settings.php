@@ -194,6 +194,59 @@ require_once __DIR__ . '/../includes/sidebar.php';
                 </div>
             </div>
 
+            <!-- Time Region Settings -->
+            <div class="settings-panel">
+                <div class="settings-panel-header">
+                    <div class="settings-panel-icon" style="background: rgba(171, 71, 188, 0.1); color: #AB47BC;">
+                        <span class="material-icons">language</span>
+                    </div>
+                    <div>
+                        <h3 class="settings-panel-title">Time Region</h3>
+                        <p class="settings-panel-desc">Set the timezone displayed in the header clock</p>
+                    </div>
+                </div>
+                <div class="settings-panel-body">
+                    <div class="tz-region-layout">
+                        <div class="tz-select-group">
+                            <label>Timezone Region</label>
+                            <input type="hidden" id="time_region" value="Asia/Manila">
+                            <div class="custom-select-wrapper" id="tz-select-wrapper">
+                                <div class="custom-select-trigger" id="tz-select-trigger">
+                                    <img class="tz-option-flag" id="tz-trigger-flag" src="https://flagcdn.com/w40/ph.png" alt="Flag">
+                                    <span class="selected-text">Philippines (Manila)</span>
+                                    <span class="material-icons arrow">expand_more</span>
+                                </div>
+                                <div class="custom-select-options" id="tz-select-options">
+                                    <div class="custom-select-option selected" data-value="Asia/Manila" data-cc="ph" data-label="Philippines"><img class="tz-option-flag" src="https://flagcdn.com/w40/ph.png" alt="PH"> Philippines (Manila)</div>
+                                    <div class="custom-select-option" data-value="Asia/Tokyo" data-cc="jp" data-label="Japan"><img class="tz-option-flag" src="https://flagcdn.com/w40/jp.png" alt="JP"> Japan (Tokyo)</div>
+                                    <div class="custom-select-option" data-value="Asia/Seoul" data-cc="kr" data-label="South Korea"><img class="tz-option-flag" src="https://flagcdn.com/w40/kr.png" alt="KR"> South Korea (Seoul)</div>
+                                    <div class="custom-select-option" data-value="Asia/Shanghai" data-cc="cn" data-label="China"><img class="tz-option-flag" src="https://flagcdn.com/w40/cn.png" alt="CN"> China (Shanghai)</div>
+                                    <div class="custom-select-option" data-value="Asia/Singapore" data-cc="sg" data-label="Singapore"><img class="tz-option-flag" src="https://flagcdn.com/w40/sg.png" alt="SG"> Singapore</div>
+                                    <div class="custom-select-option" data-value="Asia/Kolkata" data-cc="in" data-label="India"><img class="tz-option-flag" src="https://flagcdn.com/w40/in.png" alt="IN"> India (Kolkata)</div>
+                                    <div class="custom-select-option" data-value="Asia/Dubai" data-cc="ae" data-label="UAE"><img class="tz-option-flag" src="https://flagcdn.com/w40/ae.png" alt="AE"> UAE (Dubai)</div>
+                                    <div class="custom-select-option" data-value="Europe/London" data-cc="gb" data-label="United Kingdom"><img class="tz-option-flag" src="https://flagcdn.com/w40/gb.png" alt="GB"> United Kingdom (London)</div>
+                                    <div class="custom-select-option" data-value="Europe/Paris" data-cc="fr" data-label="France"><img class="tz-option-flag" src="https://flagcdn.com/w40/fr.png" alt="FR"> France (Paris)</div>
+                                    <div class="custom-select-option" data-value="Europe/Berlin" data-cc="de" data-label="Germany"><img class="tz-option-flag" src="https://flagcdn.com/w40/de.png" alt="DE"> Germany (Berlin)</div>
+                                    <div class="custom-select-option" data-value="America/New_York" data-cc="us" data-label="US Eastern"><img class="tz-option-flag" src="https://flagcdn.com/w40/us.png" alt="US"> US Eastern (New York)</div>
+                                    <div class="custom-select-option" data-value="America/Chicago" data-cc="us" data-label="US Central"><img class="tz-option-flag" src="https://flagcdn.com/w40/us.png" alt="US"> US Central (Chicago)</div>
+                                    <div class="custom-select-option" data-value="America/Denver" data-cc="us" data-label="US Mountain"><img class="tz-option-flag" src="https://flagcdn.com/w40/us.png" alt="US"> US Mountain (Denver)</div>
+                                    <div class="custom-select-option" data-value="America/Los_Angeles" data-cc="us" data-label="US Pacific"><img class="tz-option-flag" src="https://flagcdn.com/w40/us.png" alt="US"> US Pacific (Los Angeles)</div>
+                                    <div class="custom-select-option" data-value="Australia/Sydney" data-cc="au" data-label="Australia"><img class="tz-option-flag" src="https://flagcdn.com/w40/au.png" alt="AU"> Australia (Sydney)</div>
+                                    <div class="custom-select-option" data-value="Pacific/Auckland" data-cc="nz" data-label="New Zealand"><img class="tz-option-flag" src="https://flagcdn.com/w40/nz.png" alt="NZ"> New Zealand (Auckland)</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tz-preview-card" id="tz-preview-card">
+                            <img class="tz-preview-flag" id="tz-preview-flag" src="https://flagcdn.com/w80/ph.png" alt="Flag">
+                            <div class="tz-preview-details">
+                                <span class="tz-preview-label" id="tz-preview-label">Philippines</span>
+                                <span class="tz-preview-clock" id="tz-preview-clock">--:--:-- --</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Inventory Settings -->
             <div class="settings-panel">
                 <div class="settings-panel-header">
@@ -324,8 +377,12 @@ require_once __DIR__ . '/../includes/sidebar.php';
         background: var(--surface-card);
         border: 1px solid var(--border);
         border-radius: 16px;
-        overflow: hidden;
+        overflow: visible;
         transition: box-shadow 0.3s ease;
+    }
+
+    .settings-panel-header {
+        border-radius: 16px 16px 0 0;
     }
 
     .settings-panel:hover {
@@ -422,6 +479,117 @@ require_once __DIR__ . '/../includes/sidebar.php';
     .settings-textarea-tip .material-icons {
         font-size: 16px;
         color: #FFA726;
+    }
+
+    /* Time Region */
+    .tz-region-layout {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .tz-select-group {
+        width: 100%;
+    }
+
+    .tz-select-group label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: var(--text-primary);
+        font-size: 0.9rem;
+    }
+
+    /* Custom select overrides for timezone */
+    #tz-select-wrapper .custom-select-trigger {
+        gap: 10px;
+    }
+
+    #tz-select-wrapper .custom-select-trigger .selected-text {
+        flex: 1;
+    }
+
+    #tz-select-wrapper .custom-select-options {
+        max-height: 260px;
+    }
+
+    .tz-option-flag {
+        width: 24px;
+        height: 16px;
+        object-fit: cover;
+        border-radius: 3px;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+        flex-shrink: 0;
+        vertical-align: middle;
+    }
+
+    #tz-select-wrapper .custom-select-option {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .tz-preview-card {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 16px 24px;
+        background: linear-gradient(135deg, var(--surface) 0%, var(--surface-card) 100%);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        transition: box-shadow 0.3s ease;
+    }
+
+    .tz-preview-card:hover {
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+    }
+
+    .tz-preview-flag {
+        width: 48px;
+        height: 33px;
+        object-fit: cover;
+        border-radius: 5px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+        flex-shrink: 0;
+    }
+
+    .tz-preview-details {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .tz-preview-label {
+        font-size: 0.78rem;
+        color: var(--text-muted);
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .tz-preview-clock {
+        font-family: 'Inter', monospace;
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        letter-spacing: 0.5px;
+    }
+
+    @media (max-width: 480px) {
+        .tz-preview-card {
+            padding: 14px 18px;
+            gap: 14px;
+        }
+
+        .tz-preview-flag {
+            width: 40px;
+            height: 28px;
+        }
+
+        .tz-preview-clock {
+            font-size: 1.1rem;
+        }
     }
 
     /* Save Bar */
@@ -582,6 +750,117 @@ require_once __DIR__ . '/../includes/sidebar.php';
         const origLoad = window.loadSettings || null;
         if (origLoad) return; // system_settings.js handles it
         setTimeout(updateRangesFromInputs, 500);
+    });
+
+    // Timezone custom select + preview logic
+    const tzTimezoneData = {};
+    document.querySelectorAll('#tz-select-options .custom-select-option').forEach(opt => {
+        tzTimezoneData[opt.dataset.value] = { cc: opt.dataset.cc, label: opt.dataset.label };
+    });
+
+    // Custom select toggle
+    const tzTrigger = document.getElementById('tz-select-trigger');
+    const tzOptions = document.getElementById('tz-select-options');
+
+    if (tzTrigger && tzOptions) {
+        tzTrigger.addEventListener('click', () => {
+            tzTrigger.classList.toggle('active');
+            tzOptions.classList.toggle('active');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#tz-select-wrapper')) {
+                tzTrigger.classList.remove('active');
+                tzOptions.classList.remove('active');
+            }
+        });
+
+        tzOptions.addEventListener('click', (e) => {
+            const opt = e.target.closest('.custom-select-option');
+            if (!opt) return;
+
+            const value = opt.dataset.value;
+            const cc = opt.dataset.cc;
+            const label = opt.dataset.label;
+
+            // Update hidden input
+            document.getElementById('time_region').value = value;
+
+            // Update trigger display
+            const triggerFlag = document.getElementById('tz-trigger-flag');
+            triggerFlag.src = `https://flagcdn.com/w40/${cc}.png`;
+            tzTrigger.querySelector('.selected-text').textContent = opt.textContent.trim();
+
+            // Mark selected
+            tzOptions.querySelectorAll('.custom-select-option').forEach(o => o.classList.remove('selected'));
+            opt.classList.add('selected');
+
+            // Close dropdown
+            tzTrigger.classList.remove('active');
+            tzOptions.classList.remove('active');
+
+            // Trigger preview update immediately
+            updateTimezonePreview();
+        });
+    }
+
+    function updateTimezonePreview() {
+        const hiddenInput = document.getElementById('time_region');
+        if (!hiddenInput) return;
+
+        const tz = hiddenInput.value;
+        const data = tzTimezoneData[tz] || { cc: 'ph', label: 'Philippines' };
+
+        // Update preview card
+        const previewFlag = document.getElementById('tz-preview-flag');
+        const previewLabel = document.getElementById('tz-preview-label');
+        const previewClock = document.getElementById('tz-preview-clock');
+
+        if (previewFlag) previewFlag.src = `https://flagcdn.com/w80/${data.cc}.png`;
+        if (previewLabel) previewLabel.textContent = data.label;
+
+        if (previewClock) {
+            const now = new Date();
+            previewClock.textContent = now.toLocaleString('en-US', {
+                timeZone: tz,
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: true
+            });
+        }
+
+        // Live-update header clock timezone and flag
+        const headerClock = document.getElementById('manila-time');
+        if (headerClock) headerClock.setAttribute('data-timezone', tz);
+
+        const headerFlag = document.getElementById('header-time-flag');
+        if (headerFlag) {
+            headerFlag.src = `https://flagcdn.com/w40/${data.cc}.png`;
+            headerFlag.alt = data.cc.toUpperCase();
+        }
+    }
+
+    // Programmatic select (called from system_settings.js on load)
+    window.setTimezoneValue = function(value) {
+        const hiddenInput = document.getElementById('time_region');
+        if (!hiddenInput) return;
+        hiddenInput.value = value;
+
+        const opt = document.querySelector(`#tz-select-options .custom-select-option[data-value="${value}"]`);
+        if (opt) {
+            const cc = opt.dataset.cc;
+            document.getElementById('tz-trigger-flag').src = `https://flagcdn.com/w40/${cc}.png`;
+            document.querySelector('#tz-select-trigger .selected-text').textContent = opt.textContent.trim();
+            document.querySelectorAll('#tz-select-options .custom-select-option').forEach(o => o.classList.remove('selected'));
+            opt.classList.add('selected');
+        }
+        updateTimezonePreview();
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+        updateTimezonePreview();
+        setInterval(updateTimezonePreview, 1000);
     });
 </script>
 

@@ -72,14 +72,15 @@ function updateThemePreference(theme) {
     }).catch(err => console.error('Failed to update theme preference:', err));
 }
 
-// Manila Time Clock
+// Header Time Clock
 function updateManilaClock() {
     const clockElement = document.getElementById('manila-time');
     if (!clockElement) return;
     
+    const tz = clockElement.getAttribute('data-timezone') || 'Asia/Manila';
     const now = new Date();
     const options = {
-        timeZone: 'Asia/Manila',
+        timeZone: tz,
         hour: '2-digit',
         minute: '2-digit',
         second: '2-digit',

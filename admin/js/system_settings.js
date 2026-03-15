@@ -46,6 +46,11 @@ async function loadSettings() {
             // Inventory Settings
             document.getElementById('default_item_names').value = settings.default_item_names || '';
             
+            // Time Region
+            if (settings.time_region && typeof setTimezoneValue === 'function') {
+                setTimezoneValue(settings.time_region);
+            }
+            
             // Sync range sliders with loaded values
             if (typeof updateRangesFromInputs === 'function') updateRangesFromInputs();
         }
@@ -80,7 +85,10 @@ async function saveSettings(e) {
         force_dark_mode: document.getElementById('force_dark_mode').checked ? '1' : '0',
         
         // Inventory
-        default_item_names: document.getElementById('default_item_names').value
+        default_item_names: document.getElementById('default_item_names').value,
+        
+        // Time Region
+        time_region: document.getElementById('time_region').value
     };
     
     showLoading();

@@ -10,6 +10,28 @@ if (!isset($_SESSION['user_id'])) {
 
 $current_user = get_logged_in_user();
 $station_name = get_setting('station_name') ?? 'Azeu Water Station';
+$time_region = get_setting('time_region') ?? 'Asia/Manila';
+
+// Timezone → country code mapping for flag images
+$timezone_country_codes = [
+    'Asia/Manila' => 'ph',
+    'Asia/Tokyo' => 'jp',
+    'Asia/Seoul' => 'kr',
+    'Asia/Shanghai' => 'cn',
+    'Asia/Singapore' => 'sg',
+    'Asia/Kolkata' => 'in',
+    'Asia/Dubai' => 'ae',
+    'Europe/London' => 'gb',
+    'Europe/Paris' => 'fr',
+    'Europe/Berlin' => 'de',
+    'America/New_York' => 'us',
+    'America/Chicago' => 'us',
+    'America/Denver' => 'us',
+    'America/Los_Angeles' => 'us',
+    'Australia/Sydney' => 'au',
+    'Pacific/Auckland' => 'nz',
+];
+$time_region_cc = $timezone_country_codes[$time_region] ?? 'ph';
 ?>
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
@@ -56,8 +78,9 @@ $station_name = get_setting('station_name') ?? 'Azeu Water Station';
             </button>
             
             <div class="header-time">
+                <img class="header-time-flag" id="header-time-flag" src="https://flagcdn.com/w40/<?php echo $time_region_cc; ?>.png" alt="<?php echo strtoupper($time_region_cc); ?>" title="<?php echo htmlspecialchars($time_region); ?>">
                 <span class="material-icons">schedule</span>
-                <span id="manila-time">--:--:--</span>
+                <span id="manila-time" data-timezone="<?php echo htmlspecialchars($time_region); ?>">--:--:--</span>
             </div>
         </div>
         
