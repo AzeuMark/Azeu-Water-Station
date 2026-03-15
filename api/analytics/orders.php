@@ -65,6 +65,30 @@ try {
     // Total orders in period
     $total = db_fetch("SELECT COUNT(*) as total FROM orders WHERE $date_condition");
     
+    // Completed orders (delivered + picked_up + accepted)
+    $completed = db_fetch(
+        "SELECT COUNT(*) as total FROM orders 
+         WHERE $date_condition AND status IN ('delivered', 'picked_up', 'accepted')"
+    );
+    
+    // Cancelled orders
+    $cancelled = db_fetch(
+        "SELECT COUNT(*) as total FROM orders 
+         WHERE $date_condition AND status = 'cancelled'"
+    );
+    
+    // Pending orders
+    $pending = db_fetch(
+        "SELECT COUNT(*) as total FROM orders 
+         WHERE $date_condition AND status = 'pending'"
+    );
+    
+    // Active orders (in-progress: confirmed, assigned, on_delivery, ready_for_pickup, reassign_requested)
+    $active = db_fetch(
+        "SELECT COUNT(*) as total FROM orders 
+         WHERE $date_condition AND status IN ('confirmed', 'assigned', 'on_delivery', 'ready_for_pickup', 'reassign_requested')"
+    );
+    
     // Status breakdown
     $status_breakdown = db_fetch_all(
         "SELECT status, COUNT(*) as count FROM orders WHERE $date_condition GROUP BY status"
@@ -108,6 +132,10 @@ try {
         'success' => true,
         'analytics' => [
             'total_orders' => $total['total'],
+            'completed_orders' => intval($completed['total'] ?? 0),
+            'cancelled_orders' => intval($cancelled['total'] ?? 0),
+            'pending_orders' => intval($pending['total'] ?? 0),
+            'active_orders' => intval($active['total'] ?? 0),
             'status_breakdown' => $status_data,
             'order_trends' => $trends,
             'popular_items' => $popular_items,

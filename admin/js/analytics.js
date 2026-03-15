@@ -63,6 +63,10 @@ async function loadOrderAnalytics() {
             const analytics = data.analytics;
             
             document.getElementById('total-orders').textContent = analytics.total_orders;
+            document.getElementById('completed-orders').textContent = analytics.completed_orders;
+            document.getElementById('active-orders').textContent = analytics.active_orders;
+            document.getElementById('pending-orders').textContent = analytics.pending_orders;
+            document.getElementById('cancelled-orders').textContent = analytics.cancelled_orders;
             
             renderStatusChart(analytics.status_breakdown);
         }

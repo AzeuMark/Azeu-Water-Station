@@ -62,7 +62,10 @@ try {
             break;
     }
     
-    // Revenue statistics (only completed orders)
+    // Fulfilled statuses: delivered, picked_up, and customer-confirmed (accepted)
+    $fulfilled_condition = "status IN ('delivered', 'picked_up', 'accepted')";
+    
+    // Revenue statistics (fulfilled orders)
     $revenue_stats = db_fetch(
         "SELECT 
          SUM(total_amount) as total_revenue,
@@ -71,7 +74,7 @@ try {
          AVG(total_amount) as average_order_value,
          COUNT(*) as completed_orders
          FROM orders 
-         WHERE $date_condition AND status = 'accepted'"
+         WHERE $date_condition AND $fulfilled_condition"
     );
     
     // Revenue trends (daily)
@@ -81,7 +84,7 @@ try {
          SUM(total_amount) as revenue,
          COUNT(*) as orders
          FROM orders 
-         WHERE $date_condition AND status = 'accepted'
+         WHERE $date_condition AND $fulfilled_condition
          GROUP BY DATE(order_date) 
          ORDER BY DATE(order_date) ASC"
     );
@@ -94,7 +97,7 @@ try {
          SUM(oi.quantity) as total_quantity
          FROM order_items oi
          JOIN orders o ON oi.order_id = o.id
-         WHERE $date_condition AND o.status = 'accepted'
+         WHERE $date_condition AND o.$fulfilled_condition
          GROUP BY oi.item_name
          ORDER BY total_revenue DESC
          LIMIT 10"
@@ -109,7 +112,7 @@ try {
          COUNT(o.id) as order_count
          FROM orders o
          JOIN users u ON o.customer_id = u.id
-         WHERE $date_condition AND o.status = 'accepted'
+         WHERE $date_condition AND o.$fulfilled_condition
          GROUP BY u.id
          ORDER BY total_spent DESC
          LIMIT 10"
@@ -122,7 +125,7 @@ try {
          SUM(total_amount) as revenue,
          COUNT(*) as orders
          FROM orders 
-         WHERE $date_condition AND status = 'accepted'
+         WHERE $date_condition AND $fulfilled_condition
          GROUP BY payment_type"
     );
     
@@ -133,7 +136,7 @@ try {
          SUM(total_amount) as revenue,
          COUNT(*) as orders
          FROM orders 
-         WHERE $date_condition AND status = 'accepted'
+         WHERE $date_condition AND $fulfilled_condition
          GROUP BY delivery_type"
     );
     

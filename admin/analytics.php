@@ -89,6 +89,38 @@ require_once __DIR__ . '/../includes/sidebar.php';
         </div>
     </div>
 
+    <!-- Order Stats -->
+    <div class="analytics-stats-grid">
+        <div class="analytics-stat-card analytics-stat-teal">
+            <div class="analytics-stat-icon"><span class="material-icons">check_circle</span></div>
+            <div class="analytics-stat-body">
+                <span class="analytics-stat-value" id="completed-orders">0</span>
+                <span class="analytics-stat-label">Completed Orders</span>
+            </div>
+        </div>
+        <div class="analytics-stat-card analytics-stat-purple">
+            <div class="analytics-stat-icon"><span class="material-icons">sync</span></div>
+            <div class="analytics-stat-body">
+                <span class="analytics-stat-value" id="active-orders">0</span>
+                <span class="analytics-stat-label">Active Orders</span>
+            </div>
+        </div>
+        <div class="analytics-stat-card analytics-stat-amber">
+            <div class="analytics-stat-icon"><span class="material-icons">hourglass_empty</span></div>
+            <div class="analytics-stat-body">
+                <span class="analytics-stat-value" id="pending-orders">0</span>
+                <span class="analytics-stat-label">Pending Orders</span>
+            </div>
+        </div>
+        <div class="analytics-stat-card analytics-stat-red">
+            <div class="analytics-stat-icon"><span class="material-icons">cancel</span></div>
+            <div class="analytics-stat-body">
+                <span class="analytics-stat-value" id="cancelled-orders">0</span>
+                <span class="analytics-stat-label">Cancelled Orders</span>
+            </div>
+        </div>
+    </div>
+
     <!-- Charts Row -->
     <div class="analytics-charts-grid">
         <div class="analytics-panel">
@@ -221,6 +253,10 @@ require_once __DIR__ . '/../includes/sidebar.php';
 .analytics-stat-blue::before   { background: var(--primary); }
 .analytics-stat-cyan::before   { background: #29B6F6; }
 .analytics-stat-orange::before { background: #FFA726; }
+.analytics-stat-teal::before   { background: #26A69A; }
+.analytics-stat-purple::before { background: #7E57C2; }
+.analytics-stat-amber::before  { background: #FFCA28; }
+.analytics-stat-red::before    { background: #EF5350; }
 
 .analytics-stat-card:hover {
     transform: translateY(-3px);
@@ -241,6 +277,10 @@ require_once __DIR__ . '/../includes/sidebar.php';
 .analytics-stat-blue .analytics-stat-icon   { background: rgba(21, 101, 192, 0.1); color: var(--primary); }
 .analytics-stat-cyan .analytics-stat-icon   { background: rgba(41, 182, 246, 0.1); color: #29B6F6; }
 .analytics-stat-orange .analytics-stat-icon { background: rgba(255, 167, 38, 0.1); color: #FFA726; }
+.analytics-stat-teal .analytics-stat-icon   { background: rgba(38, 166, 154, 0.1); color: #26A69A; }
+.analytics-stat-purple .analytics-stat-icon { background: rgba(126, 87, 194, 0.1); color: #7E57C2; }
+.analytics-stat-amber .analytics-stat-icon  { background: rgba(255, 202, 40, 0.1); color: #FFCA28; }
+.analytics-stat-red .analytics-stat-icon    { background: rgba(239, 83, 80, 0.1); color: #EF5350; }
 
 .analytics-stat-body { flex: 1; min-width: 0; }
 
