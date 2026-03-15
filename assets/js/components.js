@@ -273,22 +273,37 @@ function initNotificationDropdown() {
     const notifDropdown = document.querySelector('.notif-dropdown');
     
     if (!notifBell || !notifDropdown) return;
+
+    // Create mobile overlay if it doesn't exist
+    if (!document.querySelector('.notif-overlay')) {
+        const overlay = document.createElement('div');
+        overlay.className = 'notif-overlay';
+        document.body.appendChild(overlay);
+        overlay.addEventListener('click', closeNotifDropdown);
+    }
     
     // Toggle dropdown
     notifBell.addEventListener('click', function(e) {
         e.stopPropagation();
-        notifDropdown.classList.toggle('show');
-        
         if (notifDropdown.classList.contains('show')) {
+            closeNotifDropdown();
+        } else {
+            notifDropdown.classList.add('show');
+            document.querySelector('.notif-overlay')?.classList.add('show');
             loadNotifications();
         }
     });
     
     // Close dropdown when clicking outside
     document.addEventListener('click', function(e) {
-        if (!notifDropdown.contains(e.target) && e.target !== notifBell) {
-            notifDropdown.classList.remove('show');
+        if (!notifDropdown.contains(e.target) && !notifBell.contains(e.target)) {
+            closeNotifDropdown();
         }
+    });
+
+    // Close on Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeNotifDropdown();
     });
     
     // Mark all as read
@@ -299,83 +314,157 @@ function initNotificationDropdown() {
     
     // Load unread count on page load
     updateNotificationCount();
+
+    // Poll for new notifications every 30 seconds
+    setInterval(updateNotificationCount, 30000);
+}
+
+function closeNotifDropdown() {
+    document.querySelector('.notif-dropdown')?.classList.remove('show');
+    document.querySelector('.notif-overlay')?.classList.remove('show');
 }
 
 async function loadNotifications() {
+    const notifList = document.querySelector('.notif-list');
+    const notifEmpty = document.querySelector('.notif-empty');
+    if (!notifList) return;
+
+    // Show subtle loading state
+    notifList.style.opacity = '0.5';
+
     try {
         const response = await fetch('../api/notifications/get.php');
         const data = await response.json();
         
         if (data.success) {
+            notifList.style.opacity = '1';
             renderNotifications(data.notifications);
         }
     } catch (error) {
+        notifList.style.opacity = '1';
         console.error('Failed to load notifications:', error);
     }
 }
 
 function renderNotifications(notifications) {
-    const dropdown = document.querySelector('.notif-dropdown');
-    if (!dropdown) return;
+    const notifList = document.querySelector('.notif-list');
+    const notifEmpty = document.querySelector('.notif-empty');
+    if (!notifList) return;
     
-    let itemsHTML = '';
+    notifList.innerHTML = '';
     
     if (notifications.length === 0) {
-        itemsHTML = `
-            <div class="empty-state" style="padding: 40px 20px;">
-                <span class="material-icons empty-icon" style="font-size: 48px;">notifications_none</span>
-                <p class="empty-message">No notifications</p>
-            </div>
-        `;
-    } else {
-        notifications.forEach(notif => {
+        notifList.style.display = 'none';
+        if (notifEmpty) notifEmpty.style.display = 'flex';
+        return;
+    }
+
+    notifList.style.display = 'block';
+    if (notifEmpty) notifEmpty.style.display = 'none';
+
+    // Group notifications by date
+    const groups = groupNotificationsByDate(notifications);
+    let itemIndex = 0;
+
+    for (const [label, items] of Object.entries(groups)) {
+        // Add group label
+        const groupLabel = document.createElement('div');
+        groupLabel.className = 'notif-group-label';
+        groupLabel.textContent = label;
+        notifList.appendChild(groupLabel);
+
+        items.forEach(notif => {
             const unreadClass = notif.is_read == 0 ? 'unread' : '';
-            itemsHTML += `
-                <div class="notif-item ${unreadClass}" onclick="handleNotificationClick(${notif.id}, ${notif.reference_id}, '${notif.type}')">
-                    <div class="notif-icon">
-                        <span class="material-icons">${getNotificationIcon(notif.type)}</span>
-                    </div>
-                    <div class="notif-content">
-                        <div class="notif-title">${notif.title}</div>
-                        <div class="notif-message">${notif.message}</div>
-                        <div class="notif-time">${timeAgo(notif.created_at)}</div>
+            const iconInfo = getNotificationIconInfo(notif.type);
+            const delay = Math.min(itemIndex * 0.04, 0.4);
+
+            const item = document.createElement('div');
+            item.className = `notif-item ${unreadClass}`;
+            item.style.animationDelay = `${delay}s`;
+            item.onclick = () => handleNotificationClick(notif.id, notif.reference_id, notif.type);
+
+            item.innerHTML = `
+                ${notif.is_read == 0 ? '<span class="notif-unread-dot"></span>' : ''}
+                <div class="notif-icon ${iconInfo.colorClass}">
+                    <span class="material-icons">${iconInfo.icon}</span>
+                </div>
+                <div class="notif-content">
+                    <div class="notif-title">${escapeHtml(notif.title)}</div>
+                    <div class="notif-message">${escapeHtml(notif.message)}</div>
+                    <div class="notif-time">
+                        <span class="material-icons">schedule</span>
+                        ${timeAgo(notif.created_at)}
                     </div>
                 </div>
             `;
+
+            notifList.appendChild(item);
+            itemIndex++;
         });
     }
-    
-    const existingItems = dropdown.querySelectorAll('.notif-item, .empty-state');
-    existingItems.forEach(el => el.remove());
-    
-    dropdown.insertAdjacentHTML('beforeend', itemsHTML);
 }
 
-function getNotificationIcon(type) {
-    const icons = {
-        'order_placed': 'shopping_cart',
-        'order_confirmed': 'check_circle',
-        'order_assigned': 'assignment',
-        'order_on_delivery': 'local_shipping',
-        'order_delivered': 'done_all',
-        'order_cancelled': 'cancel',
-        'account_approved': 'verified',
-        'account_flagged': 'flag',
-        'appeal_approved': 'thumb_up',
-        'appeal_denied': 'thumb_down',
-        'low_stock': 'warning',
-        'ready_for_pickup': 'store',
-        'rider_reassigned': 'swap_horiz',
-        'system': 'info'
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function groupNotificationsByDate(notifications) {
+    const groups = {};
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    notifications.forEach(notif => {
+        const date = new Date(notif.created_at);
+        const notifDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        
+        let label;
+        if (notifDate.getTime() === today.getTime()) {
+            label = 'Today';
+        } else if (notifDate.getTime() === yesterday.getTime()) {
+            label = 'Yesterday';
+        } else {
+            label = 'Earlier';
+        }
+
+        if (!groups[label]) groups[label] = [];
+        groups[label].push(notif);
+    });
+
+    return groups;
+}
+
+function getNotificationIconInfo(type) {
+    const map = {
+        'order_placed':     { icon: 'shopping_cart',  colorClass: 'notif-icon--order' },
+        'order_confirmed':  { icon: 'check_circle',   colorClass: 'notif-icon--success' },
+        'order_assigned':   { icon: 'assignment_ind',  colorClass: 'notif-icon--info' },
+        'order_on_delivery':{ icon: 'local_shipping',  colorClass: 'notif-icon--delivery' },
+        'order_delivered':  { icon: 'done_all',        colorClass: 'notif-icon--success' },
+        'order_cancelled':  { icon: 'cancel',          colorClass: 'notif-icon--danger' },
+        'account_approved': { icon: 'verified',        colorClass: 'notif-icon--account' },
+        'account_flagged':  { icon: 'flag',            colorClass: 'notif-icon--danger' },
+        'appeal_approved':  { icon: 'thumb_up',        colorClass: 'notif-icon--success' },
+        'appeal_denied':    { icon: 'thumb_down',      colorClass: 'notif-icon--danger' },
+        'low_stock':        { icon: 'warning',         colorClass: 'notif-icon--warning' },
+        'ready_for_pickup': { icon: 'store',           colorClass: 'notif-icon--info' },
+        'rider_reassigned': { icon: 'swap_horiz',      colorClass: 'notif-icon--delivery' },
+        'system':           { icon: 'info',            colorClass: 'notif-icon--system' }
     };
     
-    return icons[type] || 'notifications';
+    return map[type] || { icon: 'notifications', colorClass: 'notif-icon--order' };
 }
 
 async function handleNotificationClick(notifId, referenceId, type) {
     // Mark as read
     await markNotificationRead(notifId);
     
+    closeNotifDropdown();
+
     // Redirect based on notification type
     const redirects = {
         'order_placed': `orders.php?id=${referenceId}`,
@@ -417,6 +506,12 @@ async function markNotificationRead(notifId) {
 
 async function markAllNotificationsRead() {
     try {
+        const btn = document.querySelector('.notif-mark-read');
+        if (btn) {
+            btn.style.opacity = '0.5';
+            btn.style.pointerEvents = 'none';
+        }
+
         await fetch('../api/notifications/mark_read.php', {
             method: 'POST',
             headers: {
@@ -427,11 +522,21 @@ async function markAllNotificationsRead() {
                 csrf_token: getCSRFToken()
             })
         });
+
+        if (btn) {
+            btn.style.opacity = '1';
+            btn.style.pointerEvents = 'auto';
+        }
         
         loadNotifications();
         updateNotificationCount();
     } catch (error) {
         console.error('Failed to mark all notifications as read:', error);
+        const btn = document.querySelector('.notif-mark-read');
+        if (btn) {
+            btn.style.opacity = '1';
+            btn.style.pointerEvents = 'auto';
+        }
     }
 }
 
@@ -442,12 +547,23 @@ async function updateNotificationCount() {
         
         if (data.success) {
             const badge = document.querySelector('.notif-badge');
+            const unreadLabel = document.querySelector('.notif-unread-count');
+
             if (badge) {
                 if (data.count > 0) {
                     badge.textContent = data.count > 99 ? '99+' : data.count;
                     badge.style.display = 'block';
                 } else {
                     badge.style.display = 'none';
+                }
+            }
+
+            if (unreadLabel) {
+                if (data.count > 0) {
+                    unreadLabel.textContent = `${data.count} unread`;
+                    unreadLabel.style.display = 'inline';
+                } else {
+                    unreadLabel.style.display = 'none';
                 }
             }
         }

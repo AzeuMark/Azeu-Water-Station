@@ -91,18 +91,33 @@ $time_region_cc = $timezone_country_codes[$time_region] ?? 'ph';
             </button>
             
             <!-- Notification Bell -->
-            <div style="position: relative;">
-                <button class="notif-bell">
+            <div class="notif-wrapper">
+                <button class="notif-bell" aria-label="Notifications">
                     <span class="material-icons">notifications</span>
                     <span class="notif-badge" style="display: none;">0</span>
                 </button>
                 
                 <div class="notif-dropdown">
                     <div class="notif-header">
-                        <h4>Notifications</h4>
-                        <button class="notif-mark-read">Mark all read</button>
+                        <div class="notif-header-left">
+                            <h4>Notifications</h4>
+                            <span class="notif-unread-count" style="display: none;">0 unread</span>
+                        </div>
+                        <button class="notif-mark-read" title="Mark all as read">
+                            <span class="material-icons">done_all</span>
+                            <span>Mark all read</span>
+                        </button>
                     </div>
-                    <!-- Notifications loaded via JavaScript -->
+                    <div class="notif-list">
+                        <!-- Notifications loaded via JavaScript -->
+                    </div>
+                    <div class="notif-empty" style="display: none;">
+                        <div class="notif-empty-icon">
+                            <span class="material-icons">notifications_none</span>
+                        </div>
+                        <p class="notif-empty-title">All caught up!</p>
+                        <p class="notif-empty-desc">No notifications right now.</p>
+                    </div>
                 </div>
             </div>
             
