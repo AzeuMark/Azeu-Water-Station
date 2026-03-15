@@ -722,7 +722,7 @@ async function loadRiders() {
                 } else {
                     label = `${r.full_name} <span style="color:#888;font-size:12px;">(${r.active_deliveries > 0 ? r.active_deliveries + ' assigned' : 'available'})</span>`;
                 }
-                return `<div class="custom-select-option${disabled ? ' disabled' : ''}" data-value="${disabled ? '' : r.id}" data-rider-id="${r.id}" ${disabled ? 'style="opacity:0.5;cursor:not-allowed;" title="' + (unavailable ? 'This rider is currently unavailable' : 'This rider is currently on delivery') + '"' : ''}>${label}</div>`;
+                return `<div class="custom-select-option${disabled ? ' disabled' : ''}" data-value="${disabled ? '' : r.id}" data-rider-id="${r.id}" ${disabled ? 'title="' + (unavailable ? 'This rider is currently unavailable' : 'This rider is currently on delivery') + '"' : ''}>${label}</div>`;
             }).join('');
             if (selectOptions) selectOptions.innerHTML = html;
             

@@ -1218,11 +1218,40 @@ body.dark-mode .custom-select-trigger {
 body.dark-mode .custom-select-options {
     background: var(--surface);
     border-color: #374151;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35), 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 [data-theme="dark"] .custom-select-option:hover,
 body.dark-mode .custom-select-option:hover {
     background: linear-gradient(90deg, rgba(66, 153, 225, 0.15) 0%, rgba(66, 153, 225, 0.08) 100%);
+}
+
+/* Dark mode scrollbar */
+[data-theme="dark"] .custom-select-options::-webkit-scrollbar-track,
+body.dark-mode .custom-select-options::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .custom-select-options::-webkit-scrollbar-thumb,
+body.dark-mode .custom-select-options::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+[data-theme="dark"] .custom-select-options::-webkit-scrollbar-thumb:hover,
+body.dark-mode .custom-select-options::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+/* Disabled option (unavailable/busy riders) */
+.custom-select-option.disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.custom-select-option.disabled:hover {
+    background: none;
+    padding-left: 16px;
 }
 
 /* ============================================================================
@@ -1787,8 +1816,21 @@ body.dark-mode .custom-select-trigger {
 body.dark-mode .custom-select-options {
     background: var(--surface);
     border-color: #374151;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35), 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 body.dark-mode .custom-select-option:hover {
     background: linear-gradient(90deg, rgba(66, 153, 225, 0.15) 0%, rgba(66, 153, 225, 0.08) 100%);
+}
+
+body.dark-mode .custom-select-options::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+body.dark-mode .custom-select-options::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+body.dark-mode .custom-select-options::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.25);
 }

@@ -858,13 +858,6 @@ require_once __DIR__ . '/../includes/sidebar.php';
             align-items: center;
         }
     }
-        }
-
-        .logo-upload-controls {
-            flex-direction: column;
-            align-items: center;
-        }
-    }
 </style>
 
 <script>
