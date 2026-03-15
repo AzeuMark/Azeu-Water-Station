@@ -1,17 +1,18 @@
 <?php
 /**
  * ============================================================================
- * AZEU WATER STATION - STAFF INVENTORY VIEW (READ-ONLY)
+ * AZEU WATER STATION - STAFF INVENTORY VIEW
  * ============================================================================
  * 
  * Purpose: View-only inventory for staff users
- * Role: STAFF
+ * Role: STAFF, ADMIN
  * Status: ✅ IMPLEMENTED
  * ============================================================================
  */
 
 $page_title = "Inventory";
 $page_css = "main.css";
+$page_js = "inventory.js";
 
 require_once __DIR__ . '/../includes/auth_check.php';
 require_role([ROLE_STAFF, ROLE_ADMIN, ROLE_SUPER_ADMIN]);
@@ -38,25 +39,99 @@ $isStaff = ($_SESSION['role'] === ROLE_STAFF);
             <?php endif; ?>
         </div>
     </div>
-    
-    <div class="glass-card">
+
+    <!-- Desktop Filter Bar -->
+    <div class="glass-card filter-bar-desktop" style="margin-bottom: 24px;">
+        <div class="filter-bar">
+            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; flex: 1;">
+                <div style="display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-weight: 500; font-size: 14px; white-space: nowrap;">
+                    <span class="material-icons" style="font-size: 20px;">filter_list</span>
+                    Filter:
+                </div>
+                <button class="filter-btn active" data-sort="name" onclick="applySortFilter(this, 'name')">Name (A-Z)</button>
+                <button class="filter-btn" data-sort="name-desc" onclick="applySortFilter(this, 'name-desc')">Name (Z-A)</button>
+                <button class="filter-btn" data-sort="stock-asc" onclick="applySortFilter(this, 'stock-asc')">Stock ↑</button>
+                <button class="filter-btn" data-sort="stock-desc" onclick="applySortFilter(this, 'stock-desc')">Stock ↓</button>
+                <button class="filter-btn" data-sort="price-asc" onclick="applySortFilter(this, 'price-asc')">Price ↑</button>
+                <button class="filter-btn" data-sort="price-desc" onclick="applySortFilter(this, 'price-desc')">Price ↓</button>
+                <button class="filter-btn" data-sort="status" onclick="applySortFilter(this, 'status')">Status</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Filter Dropdown -->
+    <div class="glass-card filter-bar-mobile" style="margin-bottom: 24px; display: none;">
+        <div style="padding: 16px;">
+            <div class="custom-select-wrapper">
+                <div class="custom-select-trigger" id="mobile-filter-trigger">
+                    <span class="material-icons" style="margin-right: 8px; font-size: 20px;">filter_list</span>
+                    <span class="selected-text">Name (A-Z)</span>
+                    <span class="material-icons arrow">expand_more</span>
+                </div>
+                <div class="custom-select-options" id="mobile-filter-options">
+                    <div class="custom-select-option selected" data-sort="name">Name (A-Z)</div>
+                    <div class="custom-select-option" data-sort="name-desc">Name (Z-A)</div>
+                    <div class="custom-select-option" data-sort="stock-asc">Stock (Low to High)</div>
+                    <div class="custom-select-option" data-sort="stock-desc">Stock (High to Low)</div>
+                    <div class="custom-select-option" data-sort="price-asc">Price (Low to High)</div>
+                    <div class="custom-select-option" data-sort="price-desc">Price (High to Low)</div>
+                    <div class="custom-select-option" data-sort="status">Status</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Desktop Table View -->
+    <div class="glass-card inventory-table-view">
         <div class="data-table-wrapper">
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>Item</th>
-                        <th>Price</th>
-                        <th>Stock</th>
-                        <th>Status</th>
+                        <th style="width: 60px; text-align: center;">No</th>
+                        <th class="sortable-th th-sorted th-asc" data-sort="name" data-sort-desc="name-desc">Item <span class="sort-icon material-icons">arrow_upward</span></th>
+                        <th class="sortable-th" data-sort="price-asc" data-sort-desc="price-desc">Price <span class="sort-icon material-icons">unfold_more</span></th>
+                        <th class="sortable-th" data-sort="stock-asc" data-sort-desc="stock-desc">Stock <span class="sort-icon material-icons">unfold_more</span></th>
+                        <th class="sortable-th" data-sort="status" data-sort-desc="status">Status <span class="sort-icon material-icons">unfold_more</span></th>
                         <?php if (!$isStaff): ?>
                         <th>Actions</th>
                         <?php endif; ?>
                     </tr>
                 </thead>
                 <tbody id="inventory-tbody">
-                    <tr><td colspan="<?php echo $isStaff ? '4' : '5'; ?>" style="text-align: center; padding: 40px;"><div class="spinner"></div></td></tr>
+                    <tr><td colspan="<?php echo $isStaff ? '5' : '6'; ?>" style="text-align: center; padding: 40px;"><div class="spinner"></div></td></tr>
                 </tbody>
             </table>
+        </div>
+
+        <!-- Pagination Controls -->
+        <div class="pagination-controls-wrapper" id="pagination-wrapper" style="display: none;">
+            <div class="pagination-controls">
+                <button class="btn-icon" onclick="previousPage()" id="prev-btn" title="Previous Page">
+                    <span class="material-icons">chevron_left</span>
+                </button>
+                <span class="page-info" id="page-info">Page 1 of 1</span>
+                <button class="btn-icon" onclick="nextPage()" id="next-btn" title="Next Page">
+                    <span class="material-icons">chevron_right</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile/Tablet Card View -->
+    <div class="inventory-card-view" id="inventory-cards">
+        <div class="spinner" style="margin: 40px auto;"></div>
+    </div>
+
+    <!-- Mobile Pagination -->
+    <div id="pagination-wrapper-mobile" style="display: none; justify-content: center; align-items: center; padding: 16px 20px; background: var(--surface-card); border: 1px solid var(--border); border-radius: var(--radius); margin-top: 16px;">
+        <div class="pagination-controls">
+            <button class="btn-icon" onclick="previousPage()" id="prev-btn-mobile" title="Previous Page">
+                <span class="material-icons">chevron_left</span>
+            </button>
+            <span class="page-info" id="page-info-mobile">Page 1 of 1</span>
+            <button class="btn-icon" onclick="nextPage()" id="next-btn-mobile" title="Next Page">
+                <span class="material-icons">chevron_right</span>
+            </button>
         </div>
     </div>
 </main>
@@ -75,16 +150,29 @@ $isStaff = ($_SESSION['role'] === ROLE_STAFF);
             <div class="modal-body">
                 <input type="hidden" id="item-id">
                 <div class="form-group" style="margin-bottom: 16px;">
-                    <label>Item Name</label>
-                    <input type="text" id="item-name" class="form-select" required>
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">Item Name</label>
+                    <div class="custom-select-wrapper">
+                        <div class="custom-select-trigger" id="item-select-trigger">
+                            <span class="selected-text">Select an item...</span>
+                            <span class="material-icons arrow">expand_more</span>
+                        </div>
+                        <div class="custom-select-options" id="item-select-options">
+                            <!-- Dynamic options loaded from default_items -->
+                        </div>
+                    </div>
+                    <input type="hidden" id="item-name-select" name="item-name" required>
+                </div>
+                <div class="form-group" id="custom-item-name-group" style="margin-bottom: 16px; display: none;">
+                    <label>Custom Item Name</label>
+                    <input type="text" id="item-name-custom" class="form-select" placeholder="Enter custom item name">
                 </div>
                 <div class="form-group" style="margin-bottom: 16px;">
                     <label>Price</label>
-                    <input type="number" id="item-price" class="form-select" step="0.01" required>
+                    <input type="number" id="item-price" class="form-select" step="0.01" min="0" required>
                 </div>
                 <div class="form-group">
                     <label>Stock</label>
-                    <input type="number" id="item-stock" class="form-select" required>
+                    <input type="number" id="item-stock" class="form-select" min="0" step="1" onkeypress="return event.charCode >= 48 && event.charCode <= 57" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required>
                 </div>
             </div>
             <div class="modal-footer">
@@ -109,7 +197,7 @@ $isStaff = ($_SESSION['role'] === ROLE_STAFF);
                 <input type="hidden" id="restock-item-id">
                 <div class="form-group" style="margin-bottom: 16px;">
                     <label>Quantity to Add</label>
-                    <input type="number" id="restock-qty" class="form-select" required>
+                    <input type="number" id="restock-qty" class="form-select" min="1" step="1" onkeypress="return event.charCode >= 48 && event.charCode <= 57" oninput="this.value = this.value.replace(/[^0-9]/g, '') || ''" required>
                 </div>
             </div>
             <div class="modal-footer">
@@ -121,186 +209,490 @@ $isStaff = ($_SESSION['role'] === ROLE_STAFF);
 </div>
 <?php endif; ?>
 
+<style>
+/* Pagination Controls - Now at bottom center */
+.pagination-controls-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: 0 0 var(--radius) var(--radius);
+}
+
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    white-space: nowrap;
+}
+
+.page-info {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    padding: 0 8px;
+    min-width: 100px;
+    text-align: center;
+}
+
+/* Filter Bar Responsive */
+.filter-bar-desktop {
+    display: block;
+}
+
+.filter-bar-mobile {
+    display: none;
+    position: relative;
+    z-index: 100;
+}
+
+/* ============================================================================
+   RESPONSIVE TABLE/CARD VIEW SWITCHING
+   ============================================================================ */
+
+.inventory-card-view {
+    display: none;
+}
+
+.inventory-table-view {
+    display: block;
+}
+
+@media (max-width: 1024px) {
+    .inventory-card-view {
+        display: block;
+    }
+    .inventory-table-view {
+        display: none;
+    }
+    .filter-bar-desktop {
+        display: none;
+    }
+    .filter-bar-mobile {
+        display: block !important;
+    }
+}
+
+/* ============================================================================
+   INVENTORY CARD STYLES — Mobile/Tablet View
+   ============================================================================ */
+
+.inventory-cards-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+}
+
+@media (min-width: 600px) and (max-width: 1024px) {
+    .inventory-cards-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.inventory-card {
+    background: var(--surface-card);
+    border-radius: 16px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07);
+    overflow: hidden;
+    border: 1px solid var(--border);
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.inventory-card:hover {
+    box-shadow: 0 8px 16px -2px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+}
+
+.inventory-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+}
+
+.inventory-card-header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--text-primary);
+}
+
+.inventory-card-header-left .material-icons {
+    font-size: 20px;
+    color: var(--primary);
+}
+
+.inventory-card-actions {
+    display: flex;
+    gap: 4px;
+}
+
+.inventory-card-actions .btn-icon {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    border-radius: 8px;
+}
+
+.inventory-card-actions .btn-icon .material-icons {
+    font-size: 18px;
+}
+
+.inventory-card-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+}
+
+.inventory-card-row:last-child {
+    border-bottom: none;
+}
+
+.inventory-card-label {
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 500;
+    flex-shrink: 0;
+}
+
+.inventory-card-label .material-icons {
+    font-size: 16px;
+}
+
+.inventory-card-value {
+    font-weight: 600;
+    color: var(--text-primary);
+    text-align: right;
+    max-width: 60%;
+    word-break: break-word;
+}
+
+.inventory-card-value.price-highlight {
+    color: var(--primary);
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.inventory-card-value .badge {
+    font-size: 12px;
+    padding: 3px 10px;
+}
+
+.inventory-cards-empty {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--text-muted);
+    background: var(--surface-card);
+    border-radius: 16px;
+    border: 1px solid var(--border);
+}
+
+.inventory-cards-empty .material-icons {
+    font-size: 48px;
+    margin-bottom: 12px;
+    opacity: 0.4;
+}
+
+.inventory-cards-empty p {
+    font-size: 15px;
+    font-weight: 500;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .pagination-controls-wrapper {
+        padding: 16px;
+    }
+
+    .page-info {
+        font-size: 13px;
+        min-width: 90px;
+    }
+
+    .btn-icon {
+        width: 32px;
+        height: 32px;
+    }
+
+    .btn-icon .material-icons {
+        font-size: 20px;
+    }
+}
+
+/* Beautiful Custom Select Box */
+.custom-select-wrapper {
+    position: relative;
+    width: 100%;
+    user-select: none;
+}
+
+.custom-select-trigger {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-primary);
+    background: var(--surface-card);
+    border: 2px solid #e0e6ed;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.custom-select-trigger:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 12px rgba(21, 101, 192, 0.15);
+    transform: translateY(-1px);
+}
+
+.custom-select-trigger.active {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(21, 101, 192, 0.1);
+}
+
+.custom-select-trigger .selected-text {
+    flex: 1;
+    color: var(--text-primary);
+}
+
+.custom-select-trigger .selected-text.placeholder {
+    color: #9ca3af;
+}
+
+.custom-select-trigger .arrow {
+    font-size: 24px;
+    color: #6b7280;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.custom-select-trigger.active .arrow {
+    transform: rotate(180deg);
+    color: var(--primary-color);
+}
+
+.custom-select-options {
+    position: absolute;
+    top: calc(100% + 1px);
+    left: 0;
+    right: 0;
+    background: var(--surface);
+    border: 1px solid #e0e6ed;
+    border-radius: 10px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.05);
+    max-height: 190px;
+    overflow-y: auto;
+    z-index: 1001;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.custom-select-options.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.custom-select-option {
+    padding: 12px 16px;
+    font-size: 15px;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.custom-select-option:first-child {
+    border-radius: 10px 10px 0 0;
+}
+
+.custom-select-option:last-child {
+    border-radius: 0 0 10px 10px;
+}
+
+.custom-select-option:hover {
+    background: linear-gradient(90deg, rgba(21, 101, 192, 0.08) 0%, rgba(21, 101, 192, 0.04) 100%);
+    padding-left: 20px;
+}
+
+.custom-select-option.selected {
+    background: linear-gradient(90deg, rgba(21, 101, 192, 0.12) 0%, rgba(21, 101, 192, 0.06) 100%);
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.custom-select-option.custom-option {
+    border-top: 1px solid #e0e6ed;
+    margin-top: 4px;
+    font-style: italic;
+    color: var(--primary-color);
+}
+
+.custom-select-option.custom-option::before {
+    content: '✏️';
+    margin-right: 8px;
+}
+
+/* Custom Scrollbar */
+.custom-select-options::-webkit-scrollbar {
+    width: 6px;
+}
+
+.custom-select-options::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 10px;
+}
+
+.custom-select-options::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+
+.custom-select-options::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Dark Mode */
+body.dark-mode .custom-select-trigger {
+    background: var(--surface);
+    border-color: #374151;
+}
+
+body.dark-mode .custom-select-options {
+    background: var(--surface);
+    border-color: #374151;
+}
+
+body.dark-mode .custom-select-option:hover {
+    background: linear-gradient(90deg, rgba(66, 153, 225, 0.15) 0%, rgba(66, 153, 225, 0.08) 100%);
+}
+</style>
+
 <script>
 const isStaffReadOnly = <?php echo $isStaff ? 'true' : 'false'; ?>;
 
+<?php if (!$isStaff): ?>
+// Custom Select Box JavaScript (modal item name picker)
 document.addEventListener('DOMContentLoaded', function() {
-    loadInventory();
-    
-    if (!isStaffReadOnly) {
-        // Only init form handlers for admin/super_admin
-        if (document.getElementById('item-form')) {
-            document.getElementById('item-form').addEventListener('submit', saveItem);
+    const trigger = document.getElementById('item-select-trigger');
+    const optionsContainer = document.getElementById('item-select-options');
+    const hiddenInput = document.getElementById('item-name-select');
+    const selectedText = trigger.querySelector('.selected-text');
+
+    trigger.addEventListener('click', function(e) {
+        e.stopPropagation();
+        trigger.classList.toggle('active');
+        optionsContainer.classList.toggle('active');
+    });
+
+    document.addEventListener('click', function(e) {
+        if (!trigger.contains(e.target) && !optionsContainer.contains(e.target)) {
+            trigger.classList.remove('active');
+            optionsContainer.classList.remove('active');
         }
-        if (document.getElementById('restock-form')) {
-            document.getElementById('restock-form').addEventListener('submit', submitRestock);
-        }
-    }
+    });
+
+    optionsContainer.addEventListener('click', function(e) {
+        const option = e.target.closest('.custom-select-option');
+        if (!option) return;
+
+        const value = option.dataset.value;
+        const text = option.textContent.trim();
+
+        optionsContainer.querySelectorAll('.custom-select-option').forEach(opt => {
+            opt.classList.remove('selected');
+        });
+
+        option.classList.add('selected');
+        selectedText.textContent = text;
+        selectedText.classList.remove('placeholder');
+        hiddenInput.value = value;
+
+        trigger.classList.remove('active');
+        optionsContainer.classList.remove('active');
+
+        toggleCustomItemName();
+    });
 });
 
-async function loadInventory() {
-    try {
-        const response = await fetch('../api/inventory/list.php');
-        const data = await response.json();
-        
-        const tbody = document.getElementById('inventory-tbody');
-        
-        if (data.success && data.items.length > 0) {
-            let html = '';
-            data.items.forEach(item => {
-                const statusClass = item.stock <= 0 ? 'out_of_stock' : item.stock <= (item.low_stock_threshold || 10) ? 'low_stock' : 'in_stock';
-                const statusLabel = item.stock <= 0 ? 'Out of Stock' : item.stock <= (item.low_stock_threshold || 10) ? 'Low Stock' : 'In Stock';
-                
-                html += `
-                    <tr>
-                        <td><strong>${item.item_name}</strong></td>
-                        <td>${formatCurrency(item.price)}</td>
-                        <td>${item.stock}</td>
-                        <td><span class="badge badge-${statusClass}">${statusLabel}</span></td>
-                        ${!isStaffReadOnly ? `
-                        <td style="white-space: nowrap;">
-                            <button class="btn-icon" onclick="editItem(${item.id})" title="Edit">
-                                <span class="material-icons">edit</span>
-                            </button>
-                            <button class="btn-icon" onclick="restockItem(${item.id})" title="Restock" style="color: var(--success);">
-                                <span class="material-icons">add_circle</span>
-                            </button>
-                            <button class="btn-icon" onclick="deleteItem(${item.id})" title="Delete" style="color: var(--danger);">
-                                <span class="material-icons">delete</span>
-                            </button>
-                        </td>` : ''}
-                    </tr>
-                `;
-            });
-            tbody.innerHTML = html;
-        } else {
-            const colspan = isStaffReadOnly ? 4 : 5;
-            tbody.innerHTML = `<tr><td colspan="${colspan}"><div class="empty-state"><p>No inventory items</p></div></td></tr>`;
-        }
-    } catch (error) {
-        console.error('Error:', error);
-    }
-}
+function toggleCustomItemName() {
+    const hiddenInput = document.getElementById('item-name-select');
+    const customGroup = document.getElementById('custom-item-name-group');
+    const customInput = document.getElementById('item-name-custom');
 
-<?php if (!$isStaff): ?>
-// Admin-only functions
-function showAddItem() {
-    document.getElementById('item-modal-title').textContent = 'Add Item';
-    document.getElementById('item-form').reset();
-    document.getElementById('item-id').value = '';
-    openModal('item-modal');
-}
-
-async function editItem(id) {
-    try {
-        const response = await fetch(`../api/inventory/get.php?id=${id}`);
-        const data = await response.json();
-        
-        if (data.success) {
-            document.getElementById('item-modal-title').textContent = 'Edit Item';
-            document.getElementById('item-id').value = data.item.id;
-            document.getElementById('item-name').value = data.item.item_name;
-            document.getElementById('item-price').value = data.item.price;
-            document.getElementById('item-stock').value = data.item.stock;
-            openModal('item-modal');
-        }
-    } catch (error) {
-        showToast('Error loading item', 'error');
-    }
-}
-
-async function saveItem(e) {
-    e.preventDefault();
-    
-    const id = document.getElementById('item-id').value;
-    const payload = {
-        item_name: document.getElementById('item-name').value,
-        price: parseFloat(document.getElementById('item-price').value),
-        stock: parseInt(document.getElementById('item-stock').value),
-        csrf_token: getCSRFToken()
-    };
-    
-    if (id) payload.id = parseInt(id);
-    
-    try {
-        const url = id ? '../api/inventory/update.php' : '../api/inventory/create.php';
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(payload)
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            showToast(id ? 'Item updated' : 'Item added', 'success');
-            closeModal('item-modal');
-            loadInventory();
-        } else {
-            showToast(data.message || 'Failed', 'error');
-        }
-    } catch (error) {
-        showToast('An error occurred', 'error');
-    }
-}
-
-function restockItem(id) {
-    document.getElementById('restock-item-id').value = id;
-    document.getElementById('restock-qty').value = '';
-    openModal('restock-modal');
-}
-
-async function submitRestock(e) {
-    e.preventDefault();
-    
-    try {
-        const response = await fetch('../api/inventory/restock.php', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                id: parseInt(document.getElementById('restock-item-id').value),
-                quantity: parseInt(document.getElementById('restock-qty').value),
-                csrf_token: getCSRFToken()
-            })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            showToast('Restocked successfully', 'success');
-            closeModal('restock-modal');
-            loadInventory();
-        } else {
-            showToast(data.message || 'Failed', 'error');
-        }
-    } catch (error) {
-        showToast('An error occurred', 'error');
-    }
-}
-
-async function deleteItem(id) {
-    if (!confirm('Delete this item permanently?')) return;
-    
-    try {
-        const response = await fetch('../api/inventory/delete.php', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ id, csrf_token: getCSRFToken() })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            showToast('Item deleted', 'success');
-            loadInventory();
-        } else {
-            showToast(data.message || 'Failed', 'error');
-        }
-    } catch (error) {
-        showToast('An error occurred', 'error');
+    if (hiddenInput.value === '__custom__') {
+        customGroup.style.display = 'block';
+        customInput.required = true;
+        hiddenInput.required = false;
+    } else {
+        customGroup.style.display = 'none';
+        customInput.required = false;
+        customInput.value = '';
+        hiddenInput.required = true;
     }
 }
 <?php endif; ?>
+
+// Mobile Filter Dropdown
+document.addEventListener('DOMContentLoaded', function() {
+    const mobileTrigger = document.getElementById('mobile-filter-trigger');
+    const mobileOptions = document.getElementById('mobile-filter-options');
+    const mobileSelectedText = mobileTrigger.querySelector('.selected-text');
+
+    mobileTrigger.addEventListener('click', function(e) {
+        e.stopPropagation();
+        mobileTrigger.classList.toggle('active');
+        mobileOptions.classList.toggle('active');
+    });
+
+    document.addEventListener('click', function(e) {
+        if (!mobileTrigger.contains(e.target) && !mobileOptions.contains(e.target)) {
+            mobileTrigger.classList.remove('active');
+            mobileOptions.classList.remove('active');
+        }
+    });
+
+    mobileOptions.addEventListener('click', function(e) {
+        const option = e.target.closest('.custom-select-option');
+        if (!option) return;
+
+        const sortType = option.dataset.sort;
+        const text = option.textContent.trim();
+
+        mobileOptions.querySelectorAll('.custom-select-option').forEach(opt => {
+            opt.classList.remove('selected');
+        });
+
+        option.classList.add('selected');
+        mobileSelectedText.textContent = text;
+
+        mobileTrigger.classList.remove('active');
+        mobileOptions.classList.remove('active');
+
+        const desktopButton = document.querySelector(`.filter-btn[data-sort="${sortType}"]`);
+        if (desktopButton) {
+            applySortFilter(desktopButton, sortType);
+        }
+    });
+});
 </script>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

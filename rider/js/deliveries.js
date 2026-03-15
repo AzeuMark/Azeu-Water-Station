@@ -13,12 +13,39 @@
 let allDeliveryOrders = [];
 let sortedDeliveryOrders = [];
 let deliveriesPage = 1;
-const deliveriesPerPage = 10;
+let deliveriesPerPage = getDeliveriesPerPage();
 let currentSort = 'priority';
+
+function getDeliveriesPerPage() {
+    return window.innerWidth <= 1024 ? 5 : 10;
+}
 
 document.addEventListener('DOMContentLoaded', function() {
     loadDeliveries();
     initSortButtons();
+
+    // Delegated listener for UP/DOWN reorder buttons (avoids Sortable.js touch capture)
+    const container = document.getElementById('deliveries-container');
+    if (container) {
+        container.addEventListener('click', function(e) {
+            const btn = e.target.closest('.dcard-reorder-btn');
+            if (!btn || btn.disabled) return;
+            e.stopPropagation();
+            const action = btn.dataset.action;
+            const orderId = parseInt(btn.dataset.orderId, 10);
+            if (action === 'reorder-up')   moveDeliveryCard(orderId, -1);
+            else if (action === 'reorder-down') moveDeliveryCard(orderId, 1);
+        });
+    }
+
+    window.addEventListener('resize', function() {
+        const newPerPage = getDeliveriesPerPage();
+        if (newPerPage !== deliveriesPerPage) {
+            deliveriesPerPage = newPerPage;
+            deliveriesPage = 1;
+            if (sortedDeliveryOrders.length > 0) applySortAndRender();
+        }
+    });
 });
 
 /**
@@ -39,13 +66,18 @@ function initSortButtons() {
     const trigger = document.getElementById('mobile-sort-trigger');
     const optionsList = document.getElementById('mobile-sort-options');
     if (trigger && optionsList) {
-        trigger.addEventListener('click', () => optionsList.classList.toggle('open'));
+        trigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            trigger.classList.toggle('active');
+            optionsList.classList.toggle('active');
+        });
         optionsList.querySelectorAll('.custom-select-option').forEach(opt => {
             opt.addEventListener('click', function() {
                 optionsList.querySelectorAll('.custom-select-option').forEach(o => o.classList.remove('selected'));
                 this.classList.add('selected');
                 trigger.querySelector('.selected-text').textContent = this.textContent;
-                optionsList.classList.remove('open');
+                trigger.classList.remove('active');
+                optionsList.classList.remove('active');
                 currentSort = this.dataset.sort;
                 sortBtns.forEach(b => b.classList.toggle('active', b.dataset.sort === currentSort));
                 deliveriesPage = 1;
@@ -54,7 +86,8 @@ function initSortButtons() {
         });
         document.addEventListener('click', e => {
             if (!trigger.contains(e.target) && !optionsList.contains(e.target)) {
-                optionsList.classList.remove('open');
+                trigger.classList.remove('active');
+                optionsList.classList.remove('active');
             }
         });
     }
@@ -226,6 +259,8 @@ async function loadDeliveries() {
             deliveriesPage = 1;
             const count = document.getElementById('delivery-count');
             if (count) count.textContent = allDeliveryOrders.length;
+            const badge = document.getElementById('delivery-count-badge');
+            if (badge) badge.style.display = 'inline-flex';
             applySortAndRender();
         } else {
             allDeliveryOrders = [];
@@ -240,95 +275,117 @@ async function loadDeliveries() {
 /**
  * Build HTML for a single delivery card.
  * @param {object} order
- * @param {number|null} priority  - Pass a number to show priority label, null to hide it
- * @param {boolean} draggable     - Whether to include drag handle
+ * @param {number|null} priority    - Sequential number to show, null to hide
+ * @param {boolean} draggable       - Whether to include drag handle + reorder buttons
+ * @param {number} idxInPage        - 0-based index within current page (for disabling UP/DOWN)
+ * @param {number} totalInPage      - Total cards on current page (for disabling UP/DOWN)
  */
-function buildDeliveryCardHtml(order, priority = null, draggable = false) {
+function buildDeliveryCardHtml(order, priority = null, draggable = false, idxInPage = 0, totalInPage = 1) {
     const isActive = order.status === 'on_delivery';
-    const priorityLabel = priority !== null
-        ? `<span style="color: var(--primary); margin-right: 6px;">#${priority}</span>` : '';
-    const dragHandle = draggable
-        ? `<div class="drag-handle" title="Drag to reorder"><span class="material-icons">drag_indicator</span></div>` : '';
+
+    const dragHandleHtml = draggable
+        ? `<div class="dcard-drag-handle" title="Drag to reorder">
+               <span class="material-icons">drag_indicator</span>
+           </div>` : '';
+
+    const reorderBtnsHtml = draggable
+        ? `<div class="dcard-reorder-btns">
+               <button type="button" class="dcard-reorder-btn" data-action="reorder-up" data-order-id="${order.id}" title="Move up"${idxInPage === 0 ? ' disabled' : ''}>
+                   <span class="material-icons">keyboard_arrow_up</span>
+               </button>
+               <button type="button" class="dcard-reorder-btn" data-action="reorder-down" data-order-id="${order.id}" title="Move down"${idxInPage === totalInPage - 1 ? ' disabled' : ''}>
+                   <span class="material-icons">keyboard_arrow_down</span>
+               </button>
+           </div>` : '';
+
+    const priorityHtml = priority !== null
+        ? `<span class="dcard-priority">#${priority}</span>` : '';
+
+    const phoneHtml = order.customer_phone
+        ? `<a href="tel:${order.customer_phone}" class="dcard-phone-link">
+               <span class="material-icons">phone</span>
+               ${order.customer_phone}
+           </a>`
+        : `<span style="color:var(--text-muted); font-size:0.85rem;">No phone</span>`;
+
+    const paymentText = (order.payment_type || '').replace(/_/g, ' ') || '—';
+
+    const notesHtml = order.notes
+        ? `<div class="dcard-notes">
+               <span class="material-icons">notes</span>
+               <span>${order.notes}</span>
+           </div>` : '';
+
+    const actionsHtml = isActive
+        ? `<div class="dcard-actions">
+               <button class="btn btn-success" onclick="markAsDelivered(${order.id})">
+                   <span class="material-icons">check_circle</span>
+                   <span class="btn-label">Mark Delivered</span>
+               </button>
+               <button class="btn btn-warning" onclick="requestReassign(${order.id})">
+                   <span class="material-icons">swap_horiz</span>
+                   <span class="btn-label">Reassign</span>
+               </button>
+               <button class="btn btn-danger" onclick="cancelOrder(${order.id})">
+                   <span class="material-icons">cancel</span>
+                   <span class="btn-label">Cancel</span>
+               </button>
+           </div>` : '';
+
     return `
         <div class="delivery-card${draggable ? ' sortable-item' : ''}" data-order-id="${order.id}">
-            ${dragHandle}
-            <div class="delivery-card-inner">
-                <div class="delivery-card-header">
-                    <div>
-                        <div style="font-size: 1.05rem; font-weight: 700; color: var(--text-primary);">
-                            ${priorityLabel}Order #${order.id}
-                        </div>
-                        <div style="font-size: 0.82rem; color: var(--text-muted); margin-top: 2px;">${formatDate(order.order_date)}</div>
-                    </div>
-                    <span class="badge badge-${order.status}">${getStatusLabel(order.status)}</span>
+
+            <!-- Header: drag handle (desktop) | up/down (mobile) + priority + order # + date + status -->
+            <div class="dcard-header">
+                ${dragHandleHtml}
+                ${reorderBtnsHtml}
+                ${priorityHtml}
+                <div class="dcard-header-info">
+                    <span class="dcard-order-num">Order #${order.id}</span>
+                    <span class="dcard-order-date">${formatDate(order.order_date)}</span>
                 </div>
-                <div class="delivery-card-body">
-                    <div class="delivery-info-item">
-                        <span class="material-icons">person</span>
-                        <div>
-                            <div class="delivery-info-label">Customer</div>
-                            <div class="delivery-info-value">${order.customer_name || '—'}</div>
+                <span class="badge badge-${order.status}" style="flex-shrink:0;">${getStatusLabel(order.status)}</span>
+            </div>
+
+            <!-- Body wrapper: content left, actions right (desktop) -->
+            <div class="dcard-body-wrapper">
+                <div class="dcard-content">
+
+                    <!-- Customer name + tappable phone -->
+                    <div class="dcard-customer-row">
+                        <div class="dcard-customer-name">
+                            <span class="material-icons">person</span>
+                            <span>${order.customer_name || '—'}</span>
                         </div>
+                        ${phoneHtml}
                     </div>
-                    <div class="delivery-info-item">
-                        <span class="material-icons">phone</span>
-                        <div>
-                            <div class="delivery-info-label">Phone</div>
-                            <div class="delivery-info-value">${order.customer_phone || '—'}</div>
-                        </div>
-                    </div>
-                    <div class="delivery-info-item">
+
+                    <!-- Delivery address -->
+                    <div class="dcard-address">
                         <span class="material-icons">location_on</span>
-                        <div>
-                            <div class="delivery-info-label">Address</div>
-                            <div class="delivery-info-value">${order.delivery_address || '—'}</div>
-                        </div>
+                        <span>${order.delivery_address || 'No address provided'}</span>
                     </div>
-                    <div class="delivery-info-item">
-                        <span class="material-icons">payments</span>
-                        <div>
-                            <div class="delivery-info-label">Amount</div>
-                            <div class="delivery-info-value" style="color: var(--primary);">${formatCurrency(order.total_amount)}</div>
+
+                    <!-- Payment type + amount -->
+                    <div class="dcard-meta">
+                        <div class="dcard-payment">
+                            <span class="material-icons">payment</span>
+                            <span>${paymentText}</span>
                         </div>
+                        <div class="dcard-amount">${formatCurrency(order.total_amount)}</div>
                     </div>
-                    <div class="delivery-info-item">
-                        <span class="material-icons">payment</span>
-                        <div>
-                            <div class="delivery-info-label">Payment</div>
-                            <div class="delivery-info-value">${(order.payment_type || '').toUpperCase()}</div>
-                        </div>
-                    </div>
-                    ${order.notes ? `
-                    <div class="delivery-info-item">
-                        <span class="material-icons">notes</span>
-                        <div>
-                            <div class="delivery-info-label">Notes</div>
-                            <div class="delivery-info-value">${order.notes}</div>
-                        </div>
-                    </div>` : ''}
+
+                    ${notesHtml}
                 </div>
-                ${isActive ? `
-                <div class="delivery-card-footer">
-                    <button class="btn btn-success" onclick="markAsDelivered(${order.id})">
-                        <span class="material-icons">check_circle</span>
-                        Mark as Delivered
-                    </button>
-                    <button class="btn btn-warning" onclick="requestReassign(${order.id})">
-                        <span class="material-icons">swap_horiz</span>
-                        Request Reassign
-                    </button>
-                    <button class="btn btn-danger" onclick="cancelOrder(${order.id})">
-                        <span class="material-icons">cancel</span>
-                        Cancel Order
-                    </button>
-                </div>` : ''}
+
+                ${actionsHtml}
             </div>
         </div>
     `;
 }
 
 /**
- * Render deliveries as draggable cards with pagination
+ * Render deliveries as cards with pagination
  */
 function renderDeliveries(orders) {
     const container = document.getElementById('deliveries-container');
@@ -339,9 +396,13 @@ function renderDeliveries(orders) {
         return;
     }
 
-    // Show drag hint only when showing on_delivery (active)
+    // Show drag hint on desktop priority mode only; hide on mobile (UP/DOWN is self-explanatory)
     const dragHint = document.getElementById('drag-hint');
-    if (dragHint) dragHint.style.display = 'block';
+    if (dragHint) {
+        const isMobile = window.innerWidth <= 1024;
+        const isPriority = currentSort === 'priority';
+        dragHint.style.display = (!isMobile && isPriority) ? 'flex' : 'none';
+    }
     
     const totalPages = Math.ceil(orders.length / deliveriesPerPage);
     const startIdx = (deliveriesPage - 1) * deliveriesPerPage;
@@ -349,7 +410,7 @@ function renderDeliveries(orders) {
     
     let html = '<div id="sortable-delivery-list">';
     pageOrders.forEach((order, index) => {
-        html += buildDeliveryCardHtml(order, startIdx + index + 1, true);
+        html += buildDeliveryCardHtml(order, startIdx + index + 1, true, index, pageOrders.length);
     });
     html += '</div>';
     
@@ -359,16 +420,17 @@ function renderDeliveries(orders) {
 }
 
 /**
- * Initialize Sortable.js drag-to-reorder on delivery cards
+ * Initialize Sortable.js drag-to-reorder — desktop only.
+ * On mobile/tablet we use UP/DOWN buttons instead (touch events conflict with Sortable).
  */
 function initDeliveriesSortable() {
     const list = document.getElementById('sortable-delivery-list');
     if (!list || typeof Sortable === 'undefined') return;
-    // Only allow drag when sort is priority mode
     if (currentSort !== 'priority') return;
+    if (window.innerWidth <= 1024) return; // use UP/DOWN buttons on touch screens
     Sortable.create(list, {
         animation: 150,
-        handle: '.drag-handle',
+        handle: '.dcard-drag-handle',
         ghostClass: 'sortable-ghost',
         dragClass: 'sortable-drag',
         onEnd: saveDeliveryPriority
@@ -379,14 +441,68 @@ function initDeliveriesSortable() {
  * Save reordered priority to server
  */
 async function saveDeliveryPriority() {
+    // Sync sortedDeliveryOrders to match the DOM order after drag
     const items = document.querySelectorAll('#sortable-delivery-list .sortable-item');
-    const priorities = [];
+    const startIdx = (deliveriesPage - 1) * deliveriesPerPage;
     items.forEach((item, index) => {
-        // Update priority number label
-        const lbl = item.querySelector('.delivery-card-inner .delivery-card-header div div:first-child span');
-        if (lbl) lbl.textContent = '#' + (index + 1);
-        priorities.push({ order_id: parseInt(item.dataset.orderId), priority: index + 1 });
+        const globalIdx = startIdx + index;
+        const orderId = parseInt(item.dataset.orderId);
+        const arrayIdx = sortedDeliveryOrders.findIndex(o => o.id === orderId);
+        if (arrayIdx !== -1 && arrayIdx !== globalIdx) {
+            const [moved] = sortedDeliveryOrders.splice(arrayIdx, 1);
+            sortedDeliveryOrders.splice(globalIdx, 0, moved);
+        }
+        // Update priority label
+        const lbl = item.querySelector('.dcard-priority');
+        if (lbl) lbl.textContent = '#' + (globalIdx + 1);
     });
+    // Re-render to refresh UP/DOWN disabled states
+    renderDeliveries(sortedDeliveryOrders);
+    savePriorityFromArray();
+}
+
+/**
+ * Move a delivery card UP (-1) or DOWN (+1) in the sorted order.
+ * Works across pagination pages by operating on the full sortedDeliveryOrders array.
+ */
+function moveDeliveryCard(orderId, direction) {
+    // Find the global index of this order in the full sorted array
+    const globalIdx = sortedDeliveryOrders.findIndex(o => o.id == orderId);
+    if (globalIdx === -1) return;
+
+    const swapIdx = globalIdx + direction;
+    if (swapIdx < 0 || swapIdx >= sortedDeliveryOrders.length) return;
+
+    // Swap in the full array
+    [sortedDeliveryOrders[globalIdx], sortedDeliveryOrders[swapIdx]] =
+        [sortedDeliveryOrders[swapIdx], sortedDeliveryOrders[globalIdx]];
+
+    // If moving down pushed item off current page, follow it to next page
+    const startIdx = (deliveriesPage - 1) * deliveriesPerPage;
+    const endIdx = startIdx + deliveriesPerPage;
+    if (swapIdx < startIdx) deliveriesPage--;
+    else if (swapIdx >= endIdx) deliveriesPage++;
+
+    const label = direction === -1 ? 'moved up' : 'moved down';
+    showToast(`Order #${orderId} ${label}`, 'info');
+
+    renderDeliveries(sortedDeliveryOrders);
+    savePriorityFromArray();
+
+    // Animate the moved card
+    const movedCard = document.querySelector(`.delivery-card[data-order-id="${orderId}"]`);
+    if (movedCard) {
+        const cls = direction === -1 ? 'dcard-moved-up' : 'dcard-moved-down';
+        movedCard.classList.add(cls);
+        movedCard.addEventListener('animationend', () => movedCard.classList.remove(cls), { once: true });
+    }
+}
+
+/**
+ * Save priority based on current sortedDeliveryOrders array order.
+ */
+async function savePriorityFromArray() {
+    const priorities = sortedDeliveryOrders.map((o, i) => ({ order_id: o.id, priority: i + 1 }));
     try {
         await fetch('../api/riders/update_priority.php', {
             method: 'POST',
@@ -397,6 +513,7 @@ async function saveDeliveryPriority() {
         console.error('Failed to save priority:', error);
     }
 }
+
 
 function updateDeliveriesPagination(totalPages) {
     const wrapper = document.getElementById('deliveries-pagination');
@@ -429,13 +546,15 @@ function showEmptyState() {
         container.innerHTML = `
             <div class="empty-state">
                 <span class="material-icons empty-icon">local_shipping</span>
-                <p class="empty-title">No deliveries found</p>
+                <p class="empty-title">No active deliveries</p>
                 <p class="empty-message">Your active deliveries will appear here</p>
             </div>
         `;
     }
     const count = document.getElementById('delivery-count');
     if (count) count.textContent = '0';
+    const badge = document.getElementById('delivery-count-badge');
+    if (badge) badge.style.display = 'none';
     const dragHint = document.getElementById('drag-hint');
     if (dragHint) dragHint.style.display = 'none';
     const pagination = document.getElementById('deliveries-pagination');
@@ -479,8 +598,7 @@ async function markAsDelivered(orderId) {
         if (data.success) {
             showToast('Order marked as delivered!', 'success');
             allDeliveryOrders = allDeliveryOrders.filter(o => o.id != orderId);
-            const count = document.getElementById('delivery-count');
-            if (count) count.textContent = allDeliveryOrders.length;
+            updateDeliveryCountBadge();
             applySortAndRender();
         } else {
             showToast(data.message || 'Failed to update status', 'error');
@@ -520,8 +638,7 @@ async function cancelOrder(orderId) {
         if (data.success) {
             showToast('Order cancelled successfully', 'success');
             allDeliveryOrders = allDeliveryOrders.filter(o => o.id != orderId);
-            const count = document.getElementById('delivery-count');
-            if (count) count.textContent = allDeliveryOrders.length;
+            updateDeliveryCountBadge();
             applySortAndRender();
         } else {
             showToast(data.message || 'Failed to cancel order', 'error');
@@ -560,8 +677,7 @@ async function requestReassign(orderId) {
         if (data.success) {
             showToast(data.message || 'Reassignment requested', 'success');
             allDeliveryOrders = allDeliveryOrders.filter(o => o.id != orderId);
-            const count = document.getElementById('delivery-count');
-            if (count) count.textContent = allDeliveryOrders.length;
+            updateDeliveryCountBadge();
             applySortAndRender();
         } else {
             showToast(data.message || 'Failed to request reassignment', 'error');
@@ -572,5 +688,9 @@ async function requestReassign(orderId) {
     }
 }
 
-
-
+function updateDeliveryCountBadge() {
+    const count = document.getElementById('delivery-count');
+    const badge = document.getElementById('delivery-count-badge');
+    if (count) count.textContent = allDeliveryOrders.length;
+    if (badge) badge.style.display = allDeliveryOrders.length > 0 ? 'inline-flex' : 'none';
+}

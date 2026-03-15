@@ -26,7 +26,7 @@ require_once __DIR__ . '/../includes/sidebar.php';
             <h1 class="content-title">Pending Accounts</h1>
             <button class="btn btn-primary" onclick="approveAll()">
                 <span class="material-icons">done_all</span>
-                Approve All Pending
+                Approve All
             </button>
         </div>
     </div>
