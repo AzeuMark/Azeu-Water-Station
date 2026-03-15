@@ -100,9 +100,9 @@ function initFilterButtons() {
  */
 async function loadOrders() {
     try {
-        let url = '../api/orders/list.php';
+        let url = '../api/orders/list.php?limit=100';
         if (currentFilter) {
-            url += `?status=${currentFilter}`;
+            url += `&status=${currentFilter}`;
         }
         
         const response = await fetch(url);
@@ -427,96 +427,120 @@ function showOrderDetailsModal(order, items) {
     const content = document.getElementById('order-details-content');
     const actions = document.getElementById('order-details-actions');
     
+    const statusLabel = getStatusLabel(order.status);
+    const typeIcon = order.delivery_type === 'delivery' ? 'local_shipping' : 'storefront';
+    const typeLabel = order.delivery_type === 'delivery' ? 'Delivery' : 'Pickup';
+    const paymentLabels = { 'cod': 'Cash on Delivery', 'pickup': 'Pay on Pickup', 'online': 'Online Payment' };
+    const paymentLabel = paymentLabels[order.payment_type] || order.payment_type || '—';
+    
     let html = `
-        <div style="margin-bottom: 20px;">
-            <h4 style="margin-bottom: 12px;">Order Information</h4>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                <div>
-                    <div style="color: var(--text-muted); font-size: 0.85rem;">Order ID</div>
-                    <div style="font-weight: 600;">#${order.id}</div>
+        <!-- Order Header Banner -->
+        <div class="odm-header-banner">
+            <div class="odm-order-id">
+                <span class="material-icons">receipt</span>
+                Order #${order.id}
+            </div>
+            <span class="badge badge-${order.status}">${statusLabel}</span>
+        </div>
+        
+        <!-- Info Cards Grid -->
+        <div class="odm-info-grid">
+            <div class="odm-info-card">
+                <div class="odm-info-icon" style="background: rgba(255,152,0,0.1); color: #FF9800;">
+                    <span class="material-icons">calendar_today</span>
                 </div>
-                <div>
-                    <div style="color: var(--text-muted); font-size: 0.85rem;">Status</div>
-                    <span class="badge badge-${order.status}">${getStatusLabel(order.status)}</span>
+                <div class="odm-info-content">
+                    <span class="odm-info-label">Date</span>
+                    <span class="odm-info-value">${formatDate(order.order_date)}</span>
                 </div>
-                <div>
-                    <div style="color: var(--text-muted); font-size: 0.85rem;">Order Date</div>
-                    <div>${formatDate(order.order_date)}</div>
+            </div>
+            <div class="odm-info-card">
+                <div class="odm-info-icon" style="background: rgba(171,71,188,0.1); color: #AB47BC;">
+                    <span class="material-icons">${typeIcon}</span>
                 </div>
-                <div>
-                    <div style="color: var(--text-muted); font-size: 0.85rem;">Type</div>
-                    <div>${order.delivery_type === 'delivery' ? 'Delivery' : 'Pickup'}</div>
+                <div class="odm-info-content">
+                    <span class="odm-info-label">Type</span>
+                    <span class="odm-info-value">${typeLabel}</span>
+                </div>
+            </div>
+            <div class="odm-info-card">
+                <div class="odm-info-icon" style="background: rgba(102,187,106,0.1); color: #66BB6A;">
+                    <span class="material-icons">payments</span>
+                </div>
+                <div class="odm-info-content">
+                    <span class="odm-info-label">Payment</span>
+                    <span class="odm-info-value">${paymentLabel}</span>
+                </div>
+            </div>
+            <div class="odm-info-card">
+                <div class="odm-info-icon" style="background: rgba(21,101,192,0.1); color: var(--primary);">
+                    <span class="material-icons">shopping_bag</span>
+                </div>
+                <div class="odm-info-content">
+                    <span class="odm-info-label">Items</span>
+                    <span class="odm-info-value">${items.length} item${items.length !== 1 ? 's' : ''}</span>
                 </div>
             </div>
         </div>
         
-        ${order.delivery_address ? `
-            <div style="margin-bottom: 20px;">
-                <h4 style="margin-bottom: 8px;">Delivery Address</h4>
-                <p>${order.delivery_address}</p>
+        ${order.delivery_type === 'delivery' ? `
+        <!-- Rider & Address -->
+        <div class="odm-detail-rows">
+            <div class="odm-detail-row">
+                <span class="material-icons" style="color: var(--primary); font-size: 18px;">two_wheeler</span>
+                <span class="odm-detail-label">Rider</span>
+                <span class="odm-detail-value">${order.rider_name ? `${order.rider_name}${order.rider_phone ? ' — ' + order.rider_phone : ''}` : '<span style="color:var(--text-muted);font-style:italic;">Not assigned</span>'}</span>
             </div>
-        ` : ''}
+            ${order.delivery_address ? `
+            <div class="odm-detail-row">
+                <span class="material-icons" style="color: var(--danger); font-size: 18px;">location_on</span>
+                <span class="odm-detail-label">Address</span>
+                <span class="odm-detail-value">${order.delivery_address}</span>
+            </div>` : ''}
+        </div>` : ''}
         
-        ${order.rider_name ? `
-            <div style="margin-bottom: 20px;">
-                <h4 style="margin-bottom: 8px;">Rider</h4>
-                <p>${order.rider_name} - ${order.rider_phone}</p>
+        <!-- Items Section -->
+        <div class="odm-section">
+            <div class="odm-section-title">
+                <span class="material-icons">shopping_bag</span>
+                Order Items
             </div>
-        ` : ''}
-        
-        <div style="margin-bottom: 20px;">
-            <h4 style="margin-bottom: 12px;">Order Items</h4>
-            <table style="width: 100%; border-collapse: collapse;">
-                <thead style="background: var(--surface);">
-                    <tr>
-                        <th style="padding: 8px; text-align: left;">Item</th>
-                        <th style="padding: 8px; text-align: center;">Qty</th>
-                        <th style="padding: 8px; text-align: right;">Price</th>
-                        <th style="padding: 8px; text-align: right;">Subtotal</th>
-                    </tr>
-                </thead>
-                <tbody>
-    `;
-    
-    items.forEach(item => {
-        html += `
-            <tr style="border-bottom: 1px solid var(--border);">
-                <td style="padding: 8px;">${item.item_name}</td>
-                <td style="padding: 8px; text-align: center;">${item.quantity}</td>
-                <td style="padding: 8px; text-align: right;">${formatCurrency(item.item_price)}</td>
-                <td style="padding: 8px; text-align: right;">${formatCurrency(item.subtotal)}</td>
-            </tr>
-        `;
-    });
-    
-    html += `
-                </tbody>
-            </table>
+            <div class="odm-items-list">
+                ${items.map(item => `
+                <div class="odm-item">
+                    <div class="odm-item-info">
+                        <span class="odm-item-name">${item.item_name}</span>
+                        <span class="odm-item-meta">${item.quantity} × ${formatCurrency(item.item_price)}</span>
+                    </div>
+                    <span class="odm-item-amount">${formatCurrency(item.subtotal)}</span>
+                </div>`).join('')}
+            </div>
         </div>
         
-        <div style="border-top: 2px solid var(--border); padding-top: 16px;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                <span>Subtotal:</span>
-                <strong>${formatCurrency(order.subtotal)}</strong>
+        <!-- Totals -->
+        <div class="odm-totals">
+            <div class="odm-total-row">
+                <span>Subtotal</span>
+                <span>${formatCurrency(order.subtotal)}</span>
             </div>
             ${order.delivery_fee > 0 ? `
-                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                    <span>Delivery Fee:</span>
-                    <strong>${formatCurrency(order.delivery_fee)}</strong>
-                </div>
-            ` : ''}
-            <div style="display: flex; justify-content: space-between; font-size: 1.25rem; color: var(--primary); padding-top: 12px; border-top: 1px solid var(--border);">
-                <strong>Total:</strong>
-                <strong>${formatCurrency(order.total_amount)}</strong>
+            <div class="odm-total-row">
+                <span>Delivery Fee</span>
+                <span>${formatCurrency(order.delivery_fee)}</span>
+            </div>` : ''}
+            <div class="odm-total-row odm-grand-total">
+                <span>Total</span>
+                <span>${formatCurrency(order.total_amount)}</span>
             </div>
         </div>
+        
         ${order.status === 'cancelled' && order.cancellation_reason ? `
-        <div style="margin-top: 16px; padding: 12px 16px; background: rgba(239,83,80,0.08); border: 1px solid rgba(239,83,80,0.3); border-radius: 8px;">
-            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px; font-weight: 600; color: #EF5350;">
-                <span class="material-icons" style="font-size: 18px;">info</span>
+        <div class="odm-cancel-reason">
+            <div class="odm-cancel-title">
+                <span class="material-icons">info</span>
                 Cancellation Reason
             </div>
-            <div style="color: var(--text-secondary); font-size: 14px;">${order.cancellation_reason}</div>
+            <p>${order.cancellation_reason}</p>
         </div>` : ''}
     `;
     
