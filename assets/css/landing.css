@@ -774,47 +774,29 @@
   background: var(--surface);
 }
 
-.contact-grid {
+/* 2x2 grid of contact info cards */
+.contact-cards-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 48px;
-  align-items: start;
-}
-
-.contact-info {
-  display: flex;
-  flex-direction: column;
-  gap: 28px;
-}
-
-.contact-info-header h3 {
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin-bottom: 12px;
-}
-
-.contact-info-header p {
-  font-size: 1rem;
-  color: var(--text-secondary);
-  line-height: 1.7;
+  gap: 20px;
+  margin-bottom: 32px;
 }
 
 .contact-card {
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 20px;
+  padding: 24px;
   background: var(--surface-card);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
   transition: var(--transition);
 }
 
 .contact-card:hover {
   border-color: var(--primary);
   box-shadow: var(--shadow);
-  transform: translateX(4px);
+  transform: translateY(-2px);
 }
 
 .contact-card-icon {
@@ -850,12 +832,12 @@
   line-height: 1.5;
 }
 
-/* Business hours card */
+/* Business hours — horizontal grid */
 .hours-card {
   background: var(--surface-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  padding: 28px;
+  padding: 28px 32px;
   transition: var(--transition);
 }
 
@@ -877,36 +859,36 @@
   color: var(--primary);
 }
 
-.hours-list {
+.hours-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0;
+}
+
+.hours-item {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.hours-list li {
-  display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--border);
-  font-size: 0.92rem;
-  margin: 0;
+  text-align: center;
+  padding: 16px 8px;
+  border-right: 1px solid var(--border);
 }
 
-.hours-list li:last-child {
-  border-bottom: none;
+.hours-item:last-child {
+  border-right: none;
 }
 
 .hours-day {
   color: var(--text-primary);
-  font-weight: 500;
+  font-weight: 600;
+  font-size: 0.85rem;
+  margin-bottom: 6px;
 }
 
 .hours-time {
   color: var(--text-secondary);
+  font-size: 0.8rem;
+  line-height: 1.4;
 }
 
 .hours-time.closed {
@@ -1356,9 +1338,28 @@
   .services-grid {
     grid-template-columns: 1fr;
   }
+
+  .hours-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
   
-  .contact-grid {
+  .contact-cards-row {
     grid-template-columns: 1fr;
+  }
+
+  .hours-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .hours-item {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    padding: 12px 8px;
+  }
+
+  .hours-item:last-child,
+  .hours-item:nth-last-child(1) {
+    border-bottom: none;
   }
   
   .about-content {

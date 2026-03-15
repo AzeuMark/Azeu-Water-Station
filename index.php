@@ -24,6 +24,7 @@ if (isset($_SESSION['user_id'])) {
 }
 
 $station_name = get_setting('station_name') ?? 'Azeu Water Station';
+$station_address = get_setting('station_address') ?? '';
 ?>
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
@@ -327,90 +328,83 @@ $station_name = get_setting('station_name') ?? 'Azeu Water Station';
                 </p>
             </div>
             
-            <div class="contact-grid">
-                <div class="contact-info fade-in-up">
-                    <div class="contact-info-header">
-                        <h3>Reach Out Anytime</h3>
-                        <p>Our team is ready to assist you with orders, inquiries, or any concerns about our water refilling services.</p>
+            <!-- Contact Info Cards -->
+            <div class="contact-cards-row fade-in-up">
+                <div class="contact-card">
+                    <div class="contact-card-icon blue">
+                        <span class="material-icons">location_on</span>
                     </div>
-                    
-                    <div class="contact-card">
-                        <div class="contact-card-icon blue">
-                            <span class="material-icons">location_on</span>
-                        </div>
-                        <div class="contact-card-content">
-                            <h4>Station Address</h4>
-                            <p>123 Water Street, Barangay Centro<br>Manila, Philippines 1000</p>
-                        </div>
-                    </div>
-                    
-                    <div class="contact-card">
-                        <div class="contact-card-icon green">
-                            <span class="material-icons">phone</span>
-                        </div>
-                        <div class="contact-card-content">
-                            <h4>Phone Number</h4>
-                            <p>+63 912 345 6789<br>+63 (02) 8123 4567</p>
-                        </div>
-                    </div>
-                    
-                    <div class="contact-card">
-                        <div class="contact-card-icon orange">
-                            <span class="material-icons">email</span>
-                        </div>
-                        <div class="contact-card-content">
-                            <h4>Email Address</h4>
-                            <p>info@azeuwater.com<br>support@azeuwater.com</p>
-                        </div>
-                    </div>
-                    
-                    <div class="contact-card">
-                        <div class="contact-card-icon purple">
-                            <span class="material-icons">chat</span>
-                        </div>
-                        <div class="contact-card-content">
-                            <h4>Social Media</h4>
-                            <p>Follow us on Facebook and Instagram<br>@AzeuWaterStation</p>
-                        </div>
+                    <div class="contact-card-content">
+                        <h4>Station Address</h4>
+                        <p><?php echo $station_address ? nl2br(htmlspecialchars($station_address)) : 'Address not set'; ?></p>
                     </div>
                 </div>
                 
-                <div class="fade-in-up">
-                    <div class="hours-card">
-                        <h3>
-                            <span class="material-icons">schedule</span>
-                            Business Hours
-                        </h3>
-                        <ul class="hours-list">
-                            <li>
-                                <span class="hours-day">Monday</span>
-                                <span class="hours-time">7:00 AM — 7:00 PM</span>
-                            </li>
-                            <li>
-                                <span class="hours-day">Tuesday</span>
-                                <span class="hours-time">7:00 AM — 7:00 PM</span>
-                            </li>
-                            <li>
-                                <span class="hours-day">Wednesday</span>
-                                <span class="hours-time">7:00 AM — 7:00 PM</span>
-                            </li>
-                            <li>
-                                <span class="hours-day">Thursday</span>
-                                <span class="hours-time">7:00 AM — 7:00 PM</span>
-                            </li>
-                            <li>
-                                <span class="hours-day">Friday</span>
-                                <span class="hours-time">7:00 AM — 7:00 PM</span>
-                            </li>
-                            <li>
-                                <span class="hours-day">Saturday</span>
-                                <span class="hours-time">8:00 AM — 5:00 PM</span>
-                            </li>
-                            <li>
-                                <span class="hours-day">Sunday</span>
-                                <span class="hours-time closed">Closed</span>
-                            </li>
-                        </ul>
+                <div class="contact-card">
+                    <div class="contact-card-icon green">
+                        <span class="material-icons">phone</span>
+                    </div>
+                    <div class="contact-card-content">
+                        <h4>Phone Number</h4>
+                        <p>+63 912 345 6789<br>+63 (02) 8123 4567</p>
+                    </div>
+                </div>
+                
+                <div class="contact-card">
+                    <div class="contact-card-icon orange">
+                        <span class="material-icons">email</span>
+                    </div>
+                    <div class="contact-card-content">
+                        <h4>Email Address</h4>
+                        <p>info@azeuwater.com<br>support@azeuwater.com</p>
+                    </div>
+                </div>
+
+                <div class="contact-card">
+                    <div class="contact-card-icon purple">
+                        <span class="material-icons">chat</span>
+                    </div>
+                    <div class="contact-card-content">
+                        <h4>Social Media</h4>
+                        <p>Follow us on Facebook and Instagram<br>@AzeuWaterStation</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Business Hours -->
+            <div class="hours-card fade-in-up">
+                <h3>
+                    <span class="material-icons">schedule</span>
+                    Business Hours
+                </h3>
+                <div class="hours-grid">
+                    <div class="hours-item">
+                        <span class="hours-day">Monday</span>
+                        <span class="hours-time">7:00 AM — 7:00 PM</span>
+                    </div>
+                    <div class="hours-item">
+                        <span class="hours-day">Tuesday</span>
+                        <span class="hours-time">7:00 AM — 7:00 PM</span>
+                    </div>
+                    <div class="hours-item">
+                        <span class="hours-day">Wednesday</span>
+                        <span class="hours-time">7:00 AM — 7:00 PM</span>
+                    </div>
+                    <div class="hours-item">
+                        <span class="hours-day">Thursday</span>
+                        <span class="hours-time">7:00 AM — 7:00 PM</span>
+                    </div>
+                    <div class="hours-item">
+                        <span class="hours-day">Friday</span>
+                        <span class="hours-time">7:00 AM — 7:00 PM</span>
+                    </div>
+                    <div class="hours-item">
+                        <span class="hours-day">Saturday</span>
+                        <span class="hours-time">8:00 AM — 5:00 PM</span>
+                    </div>
+                    <div class="hours-item">
+                        <span class="hours-day">Sunday</span>
+                        <span class="hours-time closed">Closed</span>
                     </div>
                 </div>
             </div>
