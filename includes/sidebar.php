@@ -95,6 +95,9 @@ switch ($role) {
 }
 ?>
 
+<!-- Sidebar Overlay (mobile backdrop) -->
+<div class="sidebar-overlay"></div>
+
 <!-- Sidebar -->
 <aside class="sidebar">
     <div class="sidebar-header">

@@ -65,16 +65,16 @@ $time_region_cc = $timezone_country_codes[$time_region] ?? 'ph';
     <?php endif; ?>
 </head>
 <body>
-    <!-- Hamburger Toggle (Mobile) -->
-    <button class="hamburger-toggle">
-        <span class="material-icons">menu</span>
-    </button>
-    
     <!-- Main Header -->
     <header class="main-header">
         <div class="header-left">
-            <button class="collapse-btn">
-                <span class="material-icons">menu</span>
+            <!-- Sidebar Toggle — animated hamburger, used on all views -->
+            <button class="hamburger-toggle" aria-label="Toggle sidebar">
+                <div class="hamburger-bars">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
             </button>
             
             <div class="header-time">
