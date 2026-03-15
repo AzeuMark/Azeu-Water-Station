@@ -54,7 +54,7 @@ $station_name = get_setting('station_name') ?? 'Azeu Water Station';
             </form>
             
             <div class="auth-links">
-                <a href="index.php" class="auth-link">
+                <a href="login.php" class="auth-link">
                     <span class="material-icons" style="font-size: 18px; vertical-align: middle;">arrow_back</span>
                     Back to Login
                 </a>

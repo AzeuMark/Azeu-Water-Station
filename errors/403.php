@@ -122,7 +122,7 @@ session_start();
                 <span class="material-icons">arrow_back</span>
                 Go Back
             </a>
-            <a href="../index.php" class="btn btn-primary">
+            <a href="../login.php" class="btn btn-primary">
                 <span class="material-icons">home</span>
                 Home
             </a>

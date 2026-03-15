@@ -8,7 +8,7 @@ require_once 'config/functions.php';
 
 // Check if token is provided
 if (!isset($_GET['token']) || empty($_GET['token'])) {
-    header('Location: index.php');
+    header('Location: login.php');
     exit;
 }
 

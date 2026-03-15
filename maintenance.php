@@ -10,7 +10,7 @@ $maintenance_mode = get_setting('maintenance_mode') ?? 0;
 
 // Redirect if maintenance mode is off
 if ($maintenance_mode == 0) {
-    header('Location: index.php');
+    header('Location: login.php');
     exit;
 }
 ?>
@@ -138,7 +138,7 @@ if ($maintenance_mode == 0) {
             <p>We're working as fast as we can. Please check back soon!</p>
         </div>
         
-        <a href="index.php" class="btn-home">
+        <a href="login.php" class="btn-home">
             <span class="material-icons">home</span>
             Back to Home
         </a>

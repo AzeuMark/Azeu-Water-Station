@@ -48,7 +48,7 @@ function get_logged_in_user() {
 function require_login() {
     if (!is_logged_in()) {
         logger_warning("Unauthorized access attempt - not logged in");
-        redirect('../index.php');
+        redirect('../login.php');
     }
 }
 

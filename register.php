@@ -6,7 +6,7 @@ session_start();
 
 // Redirect if already logged in
 if (isset($_SESSION['user_id'])) {
-    header('Location: index.php');
+    header('Location: login.php');
     exit;
 }
 
@@ -103,7 +103,7 @@ $station_name = get_setting('station_name') ?? 'Azeu Water Station';
             </form>
             
             <div class="auth-links">
-                <a href="index.php" class="auth-link">Already have an account? Sign In</a>
+                <a href="login.php" class="auth-link">Already have an account? Sign In</a>
             </div>
         </div>
     </div>

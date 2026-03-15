@@ -46,7 +46,7 @@ function initLoginForm() {
                     'super_admin': 'admin/dashboard.php'
                 };
                 
-                const redirect = redirects[data.role] || 'index.php';
+                const redirect = redirects[data.role] || 'login.php';
                 window.location.href = redirect;
             } else {
                 showError(data.message || 'Login failed. Please try again.');
@@ -109,7 +109,7 @@ function initRegisterForm() {
             if (data.success) {
                 showSuccess('Registration successful! Please wait for account approval.');
                 setTimeout(() => {
-                    window.location.href = 'index.php';
+                    window.location.href = 'login.php';
                 }, 2000);
             } else {
                 showError(data.message || 'Registration failed. Please try again.');
@@ -158,7 +158,7 @@ function initForgotPasswordForm() {
             if (data.success) {
                 showSuccess('Password reset link has been sent to your email!');
                 setTimeout(() => {
-                    window.location.href = 'index.php';
+                    window.location.href = 'login.php';
                 }, 2000);
             } else {
                 showError(data.message || 'Failed to send reset link.');
@@ -221,7 +221,7 @@ function initResetPasswordForm() {
             if (data.success) {
                 showSuccess('Password reset successful! Redirecting to login...');
                 setTimeout(() => {
-                    window.location.href = 'index.php';
+                    window.location.href = 'login.php';
                 }, 2000);
             } else {
                 showError(data.message || 'Failed to reset password.');
