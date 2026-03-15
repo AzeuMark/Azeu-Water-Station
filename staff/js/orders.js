@@ -550,17 +550,24 @@ async function loadRiders() {
             let html = '<div class="custom-select-option selected" data-value="">Select a rider...</div>';
             html += data.riders.map(r => {
                 const busy = r.on_delivery_count > 0;
-                const label = busy
-                    ? `${r.full_name} <span style="color:#E65100;font-size:12px;">(on delivery — busy)</span>`
-                    : `${r.full_name} <span style="color:#888;font-size:12px;">(${r.active_deliveries > 0 ? r.active_deliveries + ' assigned' : 'available'})</span>`;
-                return `<div class="custom-select-option${busy ? ' disabled' : ''}" data-value="${busy ? '' : r.id}" data-rider-id="${r.id}" ${busy ? 'style="opacity:0.5;cursor:not-allowed;" title="This rider is currently on delivery"' : ''}>${label}</div>`;
+                const unavailable = !r.is_available;
+                const disabled = busy || unavailable;
+                let label;
+                if (unavailable) {
+                    label = `${r.full_name} <span style="color:#9e9e9e;font-size:12px;">(unavailable)</span>`;
+                } else if (busy) {
+                    label = `${r.full_name} <span style="color:#E65100;font-size:12px;">(on delivery — busy)</span>`;
+                } else {
+                    label = `${r.full_name} <span style="color:#888;font-size:12px;">(${r.active_deliveries > 0 ? r.active_deliveries + ' assigned' : 'available'})</span>`;
+                }
+                return `<div class="custom-select-option${disabled ? ' disabled' : ''}" data-value="${disabled ? '' : r.id}" data-rider-id="${r.id}" ${disabled ? 'style="opacity:0.5;cursor:not-allowed;" title="' + (unavailable ? 'This rider is currently unavailable' : 'This rider is currently on delivery') + '"' : ''}>${label}</div>`;
             }).join('');
             if (selectOptions) selectOptions.innerHTML = html;
             
-            // Bulk assign — all active riders selectable (show load info only)
+            // Bulk assign — only available riders selectable
             if (bulkSelectOptions) {
                 let bulkHtml = '<div class="custom-select-option selected" data-value="">Select a rider...</div>';
-                bulkHtml += data.riders.map(r => {
+                bulkHtml += data.riders.filter(r => r.is_available).map(r => {
                     const label = r.active_deliveries > 0
                         ? `${r.full_name} <span style="color:#E65100;font-size:12px;">(${r.active_deliveries} active)</span>`
                         : `${r.full_name} <span style="color:#388E3C;font-size:12px;">(available)</span>`;

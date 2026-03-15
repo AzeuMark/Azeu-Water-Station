@@ -23,6 +23,10 @@ $page_css = "main.css";
 require_once __DIR__ . '/../includes/auth_check.php';
 require_role([ROLE_RIDER]);
 
+// Fetch current availability status
+$rider_data = db_fetch("SELECT is_available FROM users WHERE id = ?", [$_SESSION['user_id']]);
+$is_available = $rider_data ? (int)$rider_data['is_available'] : 1;
+
 require_once __DIR__ . '/../includes/header.php';
 require_once __DIR__ . '/../includes/sidebar.php';
 ?>
@@ -626,8 +630,9 @@ async function initAvailabilityToggle() {
     try {
         const response = await fetch('../api/riders/statistics.php');
         const data = await response.json();
-        toggle.checked = true;
-        updateAvailabilityLabel(true);
+        const isAvailable = <?php echo $is_available ? 'true' : 'false'; ?>;
+        toggle.checked = isAvailable;
+        updateAvailabilityLabel(isAvailable);
     } catch (error) {
         console.error('Failed to load availability:', error);
     }
@@ -640,7 +645,7 @@ async function initAvailabilityToggle() {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({
-                    rider_id: 0,
+                    rider_id: <?php echo $_SESSION['user_id']; ?>,
                     is_available: isAvailable ? 1 : 0,
                     csrf_token: getCSRFToken()
                 })

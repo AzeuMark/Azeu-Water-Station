@@ -2,3 +2,5 @@ Add search order id
 Add filter by total order items count
 Use sweet alerts not confirm(),prompt(),alert()
 Add changing of primary and secondary colors in admin settings.
+
+Just a potential bug: If the rider has on delivery orders they cannot set their availability to (OFF)
