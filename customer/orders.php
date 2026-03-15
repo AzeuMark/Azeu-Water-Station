@@ -55,14 +55,235 @@ require_once __DIR__ . '/../includes/sidebar.php';
     background: var(--primary);
     color: #fff;
 }
+
+/* ============================================================================
+   RESPONSIVE ORDER CARDS — Mobile/Tablet View
+   ============================================================================ */
+
+/* Show/hide logic */
+.orders-card-view {
+    display: none;
+}
+
+.orders-table-view {
+    display: block;
+}
+
+@media (max-width: 1024px) {
+    .orders-card-view {
+        display: block;
+    }
+    .orders-table-view {
+        display: none;
+    }
+}
+
 /* Desktop/Mobile filter bar visibility */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
     .filter-bar-desktop { display: none !important; }
     .filter-bar-mobile  { display: block !important; }
 }
-@media (min-width: 769px) {
+@media (min-width: 1025px) {
     .filter-bar-desktop { display: block !important; }
     .filter-bar-mobile  { display: none !important; }
+}
+
+/* Card grid */
+.order-cards-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+}
+
+@media (min-width: 600px) and (max-width: 1024px) {
+    .order-cards-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Individual card */
+.order-card {
+    background: var(--surface-card);
+    border-radius: 16px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07);
+    overflow: hidden;
+    border: 1px solid var(--border);
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.order-card:hover {
+    box-shadow: 0 8px 16px -2px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+}
+
+/* Card header */
+.order-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+}
+
+.order-card-header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--text-primary);
+}
+
+.order-card-header-left .material-icons {
+    font-size: 20px;
+    color: var(--primary);
+}
+
+.order-card-actions {
+    display: flex;
+    gap: 4px;
+}
+
+.order-card-actions .btn-icon {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    border-radius: 8px;
+}
+
+.order-card-actions .btn-icon .material-icons {
+    font-size: 18px;
+}
+
+/* Card data rows */
+.order-card-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+}
+
+.order-card-row:last-child {
+    border-bottom: none;
+}
+
+.order-card-label {
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 500;
+    flex-shrink: 0;
+}
+
+.order-card-label .material-icons {
+    font-size: 16px;
+}
+
+.order-card-value {
+    font-weight: 600;
+    color: var(--text-primary);
+    text-align: right;
+    max-width: 60%;
+    word-break: break-word;
+}
+
+.order-card-value.total-highlight {
+    color: var(--primary);
+    font-size: 15px;
+    font-weight: 700;
+}
+
+/* Badge in card */
+.order-card-value .badge {
+    font-size: 12px;
+    padding: 3px 10px;
+}
+
+/* Empty state for cards */
+.order-cards-empty {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--text-muted);
+    background: var(--surface-card);
+    border-radius: 16px;
+    border: 1px solid var(--border);
+}
+
+.order-cards-empty .material-icons {
+    font-size: 48px;
+    margin-bottom: 12px;
+    opacity: 0.4;
+}
+
+.order-cards-empty p {
+    font-size: 15px;
+    font-weight: 500;
+}
+
+/* Prevent glass-card hover/transition effects on table container */
+.glass-card.orders-table-view {
+    transition: box-shadow 0.3s ease;
+}
+.glass-card.orders-table-view:hover {
+    transform: none;
+}
+
+/* Pagination Controls - Bottom Center */
+.pagination-controls-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: 0 0 var(--radius) var(--radius);
+}
+
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    white-space: nowrap;
+}
+
+.page-info {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    padding: 0 8px;
+    min-width: 100px;
+    text-align: center;
+}
+
+/* Desktop pagination - hidden by default, shown via JS class */
+#pagination-wrapper {
+    display: none;
+}
+#pagination-wrapper.active {
+    display: flex !important;
+}
+
+/* Mobile pagination - hidden by default, shown via JS class */
+#pagination-wrapper-mobile {
+    display: none;
+}
+#pagination-wrapper-mobile.active {
+    display: flex !important;
+}
+
+@media (max-width: 768px) {
+    .pagination-controls-wrapper {
+        padding: 16px;
+    }
+
+    .page-info {
+        font-size: 13px;
+        min-width: 90px;
+    }
 }
 </style>
 
@@ -121,8 +342,8 @@ require_once __DIR__ . '/../includes/sidebar.php';
         </div>
     </div>
     
-    <!-- Orders Table -->
-    <div class="glass-card">
+    <!-- Desktop Table View -->
+    <div class="glass-card orders-table-view">
         <div class="data-table-wrapper">
             <table class="data-table" id="orders-table">
                 <thead>
@@ -145,6 +366,37 @@ require_once __DIR__ . '/../includes/sidebar.php';
                     </tr>
                 </tbody>
             </table>
+        </div>
+        
+        <!-- Pagination Controls -->
+        <div class="pagination-controls-wrapper" id="pagination-wrapper">
+            <div class="pagination-controls">
+                <button class="btn-icon" onclick="previousPage()" id="prev-btn" title="Previous Page">
+                    <span class="material-icons">chevron_left</span>
+                </button>
+                <span class="page-info" id="page-info">Page 1 of 1</span>
+                <button class="btn-icon" onclick="nextPage()" id="next-btn" title="Next Page">
+                    <span class="material-icons">chevron_right</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile/Tablet Card View -->
+    <div class="orders-card-view" id="orders-cards">
+        <div class="spinner" style="margin: 40px auto;"></div>
+    </div>
+
+    <!-- Mobile Pagination -->
+    <div id="pagination-wrapper-mobile" style="justify-content: center; align-items: center; padding: 16px 20px; background: var(--surface-card); border: 1px solid var(--border); border-radius: var(--radius); margin-top: 16px;">
+        <div class="pagination-controls">
+            <button class="btn-icon" onclick="previousPage()" id="prev-btn-mobile" title="Previous Page">
+                <span class="material-icons">chevron_left</span>
+            </button>
+            <span class="page-info" id="page-info-mobile">Page 1 of 1</span>
+            <button class="btn-icon" onclick="nextPage()" id="next-btn-mobile" title="Next Page">
+                <span class="material-icons">chevron_right</span>
+            </button>
         </div>
     </div>
 </main>

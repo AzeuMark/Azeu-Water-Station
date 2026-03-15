@@ -21,6 +21,8 @@ document.addEventListener('DOMContentLoaded', function() {
     initDeliveryTypeToggle();
     initPaymentToggle();
     initPlaceOrderButton();
+    initItemSearch();
+    initAddressSelect();
 });
 
 /**
@@ -42,37 +44,56 @@ async function loadItems() {
 }
 
 /**
- * Render inventory items
+ * Render inventory items (supports filtered subset)
  */
 function renderItems(items) {
     const grid = document.getElementById('items-grid');
+    const searchQuery = document.getElementById('items-search-input')?.value.trim().toLowerCase() || '';
+    const filtered = searchQuery 
+        ? items.filter(i => i.item_name.toLowerCase().includes(searchQuery))
+        : items;
     
     if (items.length === 0) {
-        grid.innerHTML = '<div class="empty-state"><p>No items available</p></div>';
+        grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><p>No items available</p></div>';
+        return;
+    }
+    
+    if (filtered.length === 0) {
+        grid.innerHTML = `
+            <div class="items-no-results">
+                <span class="material-icons">search_off</span>
+                <p>No items match "<strong>${searchQuery}</strong>"</p>
+            </div>`;
         return;
     }
     
     let html = '';
     
-    items.forEach(item => {
+    filtered.forEach(item => {
         const inCart = cart.find(c => c.inventory_id === item.id);
         const quantity = inCart ? inCart.quantity : 0;
+        const isLowStock = item.stock_count > 0 && item.stock_count <= 10;
         
         html += `
             <div class="item-card ${quantity > 0 ? 'selected' : ''}" data-item-id="${item.id}">
                 <div class="item-icon-container">
                     ${item.item_icon ? 
                         `<img src="../${item.item_icon}" alt="${item.item_name}">` : 
-                        '<span class="material-icons" style="font-size: 48px; color: var(--primary);">water_drop</span>'
+                        '<span class="material-icons">water_drop</span>'
                     }
                 </div>
                 <div class="item-name">${item.item_name}</div>
                 <div class="item-price">${formatCurrency(item.price)}</div>
-                <div class="item-stock">Stock: ${item.stock_count}</div>
+                <div class="item-stock">
+                    <span class="stock-dot ${isLowStock ? 'low' : ''}"></span>
+                    ${item.stock_count} available
+                </div>
                 <div class="qty-control">
-                    <button class="qty-btn" onclick="updateQuantity(${item.id}, -1)" ${quantity === 0 ? 'disabled' : ''}>-</button>
-                    <input type="number" class="qty-input" value="${quantity}" min="0" max="${item.stock_count}" 
-                        onchange="setQuantity(${item.id}, this.value)" readonly>
+                    <button class="qty-btn" onclick="updateQuantity(${item.id}, -1)" ${quantity === 0 ? 'disabled' : ''}>−</button>
+                    <input type="number" class="qty-value" value="${quantity}" min="0" max="${item.stock_count}" step="1"
+                        onchange="setQuantity(${item.id}, this.value)"
+                        onkeydown="return !['e','E','.','+','-'].includes(event.key)"
+                        onfocus="this.select()">
                     <button class="qty-btn" onclick="updateQuantity(${item.id}, 1)" ${quantity >= item.stock_count ? 'disabled' : ''}>+</button>
                 </div>
             </div>
@@ -80,6 +101,28 @@ function renderItems(items) {
     });
     
     grid.innerHTML = html;
+}
+
+/**
+ * Initialize item search
+ */
+function initItemSearch() {
+    const input = document.getElementById('items-search-input');
+    const clearBtn = document.getElementById('items-search-clear');
+    let debounceTimer;
+    
+    input.addEventListener('input', function() {
+        clearBtn.style.display = this.value ? 'flex' : 'none';
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => renderItems(availableItems), 200);
+    });
+    
+    clearBtn.addEventListener('click', function() {
+        input.value = '';
+        this.style.display = 'none';
+        input.focus();
+        renderItems(availableItems);
+    });
 }
 
 /**
@@ -135,14 +178,17 @@ function setQuantity(itemId, quantity) {
  */
 function updateCartSummary() {
     const cartItemsDiv = document.getElementById('cart-items');
+    const cartCount = document.getElementById('cart-count');
     
     if (cart.length === 0) {
         cartItemsDiv.innerHTML = `
-            <div class="empty-state" style="padding: 40px 20px;">
-                <span class="material-icons empty-icon" style="font-size: 48px;">shopping_cart</span>
-                <p class="empty-message">No items added</p>
+            <div class="cart-empty">
+                <span class="material-icons cart-empty__icon">shopping_cart</span>
+                <p class="cart-empty__title">Your cart is empty</p>
+                <p class="cart-empty__text">Add items to get started</p>
             </div>
         `;
+        cartCount.textContent = '0 items';
         document.getElementById('subtotal').textContent = '₱0.00';
         document.getElementById('total').textContent = '₱0.00';
         document.getElementById('place-order-btn').disabled = true;
@@ -151,6 +197,7 @@ function updateCartSummary() {
     
     let html = '';
     let subtotal = 0;
+    let totalItems = 0;
     
     cart.forEach(cartItem => {
         const item = availableItems.find(i => i.id === cartItem.inventory_id);
@@ -158,19 +205,26 @@ function updateCartSummary() {
         
         const itemTotal = item.price * cartItem.quantity;
         subtotal += itemTotal;
+        totalItems += cartItem.quantity;
         
         html += `
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border);">
-                <div style="flex: 1;">
-                    <div style="font-weight: 600; color: var(--text-primary);">${item.item_name}</div>
-                    <div style="font-size: 0.85rem; color: var(--text-muted);">${formatCurrency(item.price)} × ${cartItem.quantity}</div>
+            <div class="cart-item">
+                <div class="cart-item__info">
+                    <span class="cart-item__name">${item.item_name}</span>
+                    <span class="cart-item__meta">${formatCurrency(item.price)} × ${cartItem.quantity}</span>
                 </div>
-                <div style="font-weight: 700; color: var(--primary);">${formatCurrency(itemTotal)}</div>
+                <div class="cart-item__actions">
+                    <span class="cart-item__total">${formatCurrency(itemTotal)}</span>
+                    <button class="cart-item__remove" onclick="setQuantity(${cartItem.inventory_id}, 0)" title="Remove item">
+                        <span class="material-icons">close</span>
+                    </button>
+                </div>
             </div>
         `;
     });
     
     cartItemsDiv.innerHTML = html;
+    cartCount.textContent = `${totalItems} item${totalItems !== 1 ? 's' : ''}`;
     
     const deliveryType = document.querySelector('input[name="delivery_type"]:checked').value;
     const finalDeliveryFee = deliveryType === 'delivery' ? deliveryFee : 0;
@@ -192,16 +246,27 @@ async function loadAddresses() {
         const data = await response.json();
         
         if (data.success) {
-            const select = document.getElementById('address-select');
-            let html = '<option value="">Select delivery address...</option>';
+            const hiddenInput = document.getElementById('address-select');
+            const optionsContainer = document.getElementById('address-select-options');
+            const trigger = document.getElementById('address-select-trigger');
+            const selectedText = trigger.querySelector('.selected-text');
+            
+            let html = '';
+            let defaultAddr = null;
             
             data.addresses.forEach(addr => {
-                html += `<option value="${addr.id}" ${addr.is_default ? 'selected' : ''}>
-                    ${addr.label} - ${addr.full_address}
-                </option>`;
+                const label = `${addr.label} - ${addr.full_address}`;
+                if (addr.is_default) defaultAddr = { id: addr.id, label };
+                html += `<div class="custom-select-option${addr.is_default ? ' selected' : ''}" data-value="${addr.id}">${label}</div>`;
             });
             
-            select.innerHTML = html;
+            optionsContainer.innerHTML = html;
+            
+            if (defaultAddr) {
+                hiddenInput.value = defaultAddr.id;
+                selectedText.textContent = defaultAddr.label;
+                selectedText.classList.remove('placeholder');
+            }
         }
     } catch (error) {
         console.error('Failed to load addresses:', error);
@@ -209,10 +274,57 @@ async function loadAddresses() {
 }
 
 /**
+ * Initialize custom address select
+ */
+function initAddressSelect() {
+    const wrapper = document.getElementById('address-select-wrapper');
+    const trigger = document.getElementById('address-select-trigger');
+    const optionsContainer = document.getElementById('address-select-options');
+    const hiddenInput = document.getElementById('address-select');
+    const selectedText = trigger.querySelector('.selected-text');
+    
+    trigger.addEventListener('click', function() {
+        const isOpen = trigger.classList.contains('active');
+        closeAllCustomSelects();
+        if (!isOpen) {
+            trigger.classList.add('active');
+            optionsContainer.classList.add('active');
+        }
+    });
+    
+    optionsContainer.addEventListener('click', function(e) {
+        const option = e.target.closest('.custom-select-option');
+        if (!option) return;
+        
+        optionsContainer.querySelectorAll('.custom-select-option').forEach(o => o.classList.remove('selected'));
+        option.classList.add('selected');
+        
+        hiddenInput.value = option.dataset.value;
+        selectedText.textContent = option.textContent;
+        selectedText.classList.remove('placeholder');
+        
+        trigger.classList.remove('active');
+        optionsContainer.classList.remove('active');
+    });
+    
+    document.addEventListener('click', function(e) {
+        if (!wrapper.contains(e.target)) {
+            trigger.classList.remove('active');
+            optionsContainer.classList.remove('active');
+        }
+    });
+}
+
+function closeAllCustomSelects() {
+    document.querySelectorAll('.custom-select-trigger.active').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.custom-select-options.active').forEach(o => o.classList.remove('active'));
+}
+
+/**
  * Initialize delivery type toggle
  */
 function initDeliveryTypeToggle() {
-    const options = document.querySelectorAll('.delivery-type-option');
+    const options = document.querySelectorAll('.delivery-option');
     const addressSection = document.getElementById('address-section');
     const deliveryFeeRow = document.getElementById('delivery-fee-row');
     
@@ -275,7 +387,7 @@ function initPaymentToggle() {
     
     container.addEventListener('click', function(e) {
         const option = e.target.closest('.payment-option');
-        if (!option || option.classList.contains('disabled')) return;
+        if (!option || option.classList.contains('payment-option--disabled')) return;
         if (option.querySelector('input').disabled) return;
         
         container.querySelectorAll('.payment-option').forEach(o => o.classList.remove('active'));

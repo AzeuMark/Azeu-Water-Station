@@ -12,8 +12,14 @@
 
 let currentFilter = '';
 let allOrders = [];
+let currentPage = 1;
+let itemsPerPage = window.innerWidth <= 1024 ? 10 : 20;
 let sortCol = 'order_date';
 let sortDir = 'desc';
+
+function getItemsPerPage() {
+    return window.innerWidth <= 1024 ? 10 : 20;
+}
 
 document.addEventListener('DOMContentLoaded', function() {
     loadOrders();
@@ -26,6 +32,17 @@ document.addEventListener('DOMContentLoaded', function() {
     if (orderId) {
         viewOrderDetails(parseInt(orderId));
     }
+
+    window.addEventListener('resize', function() {
+        const newPerPage = getItemsPerPage();
+        if (newPerPage !== itemsPerPage) {
+            itemsPerPage = newPerPage;
+            currentPage = 1;
+        }
+        if (allOrders.length > 0) {
+            sortOrders();
+        }
+    });
 });
 
 /**
@@ -39,6 +56,7 @@ function initFilterButtons() {
             filterBtns.forEach(b => b.classList.remove('active'));
             this.classList.add('active');
             currentFilter = this.dataset.status;
+            currentPage = 1;
             loadOrders();
         });
     });
@@ -47,14 +65,20 @@ function initFilterButtons() {
     const trigger = document.getElementById('mobile-filter-trigger');
     const optionsList = document.getElementById('mobile-filter-options');
     if (trigger && optionsList) {
-        trigger.addEventListener('click', () => optionsList.classList.toggle('open'));
+        trigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            trigger.classList.toggle('active');
+            optionsList.classList.toggle('active');
+        });
         optionsList.querySelectorAll('.custom-select-option').forEach(opt => {
             opt.addEventListener('click', function() {
                 optionsList.querySelectorAll('.custom-select-option').forEach(o => o.classList.remove('selected'));
                 this.classList.add('selected');
                 trigger.querySelector('.selected-text').textContent = this.textContent;
-                optionsList.classList.remove('open');
+                trigger.classList.remove('active');
+                optionsList.classList.remove('active');
                 currentFilter = this.dataset.status;
+                currentPage = 1;
                 // Keep desktop filter buttons in sync
                 filterBtns.forEach(b => {
                     b.classList.toggle('active', b.dataset.status === currentFilter);
@@ -64,7 +88,8 @@ function initFilterButtons() {
         });
         document.addEventListener('click', e => {
             if (!trigger.contains(e.target) && !optionsList.contains(e.target)) {
-                optionsList.classList.remove('open');
+                trigger.classList.remove('active');
+                optionsList.classList.remove('active');
             }
         });
     }
@@ -154,47 +179,63 @@ function updateSortIcons() {
 }
 
 /**
+ * Build action buttons for an order
+ */
+function getOrderActions(order) {
+    let actions = `
+        <button class="btn-icon" onclick="viewOrderDetails(${order.id})" title="View Details">
+            <span class="material-icons">visibility</span>
+        </button>
+    `;
+    
+    if (order.status === 'pending') {
+        actions += `
+            <button class="btn-icon" onclick="cancelOrder(${order.id})" title="Cancel Order" style="color: var(--danger);">
+                <span class="material-icons">cancel</span>
+            </button>
+        `;
+    }
+    
+    if ((order.status === 'delivered' || order.status === 'picked_up') && order.customer_confirmed == 0) {
+        actions += `
+            <button class="btn-icon" onclick="confirmDelivery(${order.id})" title="Confirm Receipt" style="color: var(--success);">
+                <span class="material-icons">check_circle</span>
+            </button>
+        `;
+    }
+    
+    return actions;
+}
+
+/**
  * Render orders table
  */
 function renderOrders(orders) {
     const tbody = document.getElementById('orders-tbody');
+    const cardsContainer = document.getElementById('orders-cards');
     
     if (orders.length === 0) {
         showEmptyState();
+        updatePaginationControls(0);
         return;
     }
     
+    // Pagination
+    const totalPages = Math.ceil(orders.length / itemsPerPage);
+    if (currentPage > totalPages) currentPage = totalPages;
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedOrders = orders.slice(startIndex, endIndex);
+    
     let html = '';
     
-    orders.forEach((order, index) => {
-        // Build inline action buttons
-        let actions = `
-            <button class="btn-icon" onclick="viewOrderDetails(${order.id})" title="View Details">
-                <span class="material-icons">visibility</span>
-            </button>
-        `;
-        
-        // Cancel button for pending orders
-        if (order.status === 'pending') {
-            actions += `
-                <button class="btn-icon" onclick="cancelOrder(${order.id})" title="Cancel Order" style="color: var(--danger);">
-                    <span class="material-icons">cancel</span>
-                </button>
-            `;
-        }
-        
-        // Confirm receipt for delivered/picked_up
-        if ((order.status === 'delivered' || order.status === 'picked_up') && order.customer_confirmed == 0) {
-            actions += `
-                <button class="btn-icon" onclick="confirmDelivery(${order.id})" title="Confirm Receipt" style="color: var(--success);">
-                    <span class="material-icons">check_circle</span>
-                </button>
-            `;
-        }
+    paginatedOrders.forEach((order, index) => {
+        const rowNumber = startIndex + index + 1;
+        const actions = getOrderActions(order);
         
         html += `
             <tr>
-                <td style="text-align: center; color: var(--text-muted);">${index + 1}</td>
+                <td style="text-align: center; color: var(--text-muted);">${rowNumber}</td>
                 <td><strong>#${order.id}</strong></td>
                 <td>${formatDate(order.order_date)}</td>
                 <td>${order.delivery_type === 'delivery' ? 'Delivery' : 'Pickup'}</td>
@@ -213,6 +254,62 @@ function renderOrders(orders) {
     });
     
     tbody.innerHTML = html;
+    updatePaginationControls(totalPages);
+
+    // Card view
+    if (cardsContainer) {
+        renderOrderCards(paginatedOrders, cardsContainer, startIndex);
+    }
+}
+
+/**
+ * Render mobile/tablet card view
+ */
+function renderOrderCards(orders, container, startIndex = 0) {
+    let cardsHtml = '<div class="order-cards-grid">';
+    orders.forEach((order, index) => {
+        const cardNumber = startIndex + index + 1;
+        const actions = getOrderActions(order);
+        cardsHtml += `
+            <div class="order-card">
+                <div class="order-card-header">
+                    <div class="order-card-header-left">
+                        <span class="material-icons">tag</span>
+                        <span>${cardNumber}</span>
+                    </div>
+                    <div class="order-card-actions">
+                        ${actions}
+                    </div>
+                </div>
+                <div class="order-card-row">
+                    <div class="order-card-label"><span class="material-icons">receipt</span> Order ID</div>
+                    <div class="order-card-value"><strong>#${order.id}</strong></div>
+                </div>
+                <div class="order-card-row">
+                    <div class="order-card-label"><span class="material-icons">calendar_today</span> Date</div>
+                    <div class="order-card-value">${formatDate(order.order_date)}</div>
+                </div>
+                <div class="order-card-row">
+                    <div class="order-card-label"><span class="material-icons">local_shipping</span> Type</div>
+                    <div class="order-card-value">${order.delivery_type === 'delivery' ? 'Delivery' : 'Pickup'}</div>
+                </div>
+                <div class="order-card-row">
+                    <div class="order-card-label"><span class="material-icons">credit_card</span> Payment</div>
+                    <div class="order-card-value">${order.payment_type.toUpperCase()}</div>
+                </div>
+                <div class="order-card-row">
+                    <div class="order-card-label"><span class="material-icons">payments</span> Total</div>
+                    <div class="order-card-value total-highlight">${formatCurrency(order.total_amount)}</div>
+                </div>
+                <div class="order-card-row">
+                    <div class="order-card-label"><span class="material-icons">info</span> Status</div>
+                    <div class="order-card-value"><span class="badge badge-${order.status}">${getStatusLabel(order.status)}</span></div>
+                </div>
+            </div>
+        `;
+    });
+    cardsHtml += '</div>';
+    container.innerHTML = cardsHtml;
 }
 
 /**
@@ -220,20 +317,88 @@ function renderOrders(orders) {
  */
 function showEmptyState() {
     const tbody = document.getElementById('orders-tbody');
+    const cardsContainer = document.getElementById('orders-cards');
+    const emptyMessage = currentFilter ? 'No orders with this status' : 'You haven\'t placed any orders yet';
+    const placeOrderBtn = !currentFilter ? '<a href="place_order.php" class="btn btn-primary" style="margin-top: 16px;"><span class="material-icons">add_shopping_cart</span> Place Order</a>' : '';
+
     tbody.innerHTML = `
         <tr>
             <td colspan="8">
                 <div class="empty-state">
                     <span class="material-icons empty-icon">inbox</span>
                     <p class="empty-title">No orders found</p>
-                    <p class="empty-message">
-                        ${currentFilter ? 'No orders with this status' : 'You haven\'t placed any orders yet'}
-                    </p>
-                    ${!currentFilter ? '<a href="place_order.php" class="btn btn-primary" style="margin-top: 16px;"><span class="material-icons">add_shopping_cart</span> Place Order</a>' : ''}
+                    <p class="empty-message">${emptyMessage}</p>
+                    ${placeOrderBtn}
                 </div>
             </td>
         </tr>
     `;
+
+    if (cardsContainer) {
+        cardsContainer.innerHTML = `
+            <div class="order-cards-empty">
+                <span class="material-icons">inbox</span>
+                <p>${emptyMessage}</p>
+                ${placeOrderBtn}
+            </div>
+        `;
+    }
+}
+
+/**
+ * Update pagination controls
+ */
+function updatePaginationControls(totalPages) {
+    const pageInfo = document.getElementById('page-info');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const paginationWrapper = document.getElementById('pagination-wrapper');
+
+    const pageInfoMobile = document.getElementById('page-info-mobile');
+    const prevBtnMobile = document.getElementById('prev-btn-mobile');
+    const nextBtnMobile = document.getElementById('next-btn-mobile');
+    const paginationWrapperMobile = document.getElementById('pagination-wrapper-mobile');
+
+    if (!pageInfo) return;
+
+    // Hide pagination if only 1 page or no pages
+    if (totalPages <= 1) {
+        if (paginationWrapper) paginationWrapper.classList.remove('active');
+        if (paginationWrapperMobile) paginationWrapperMobile.classList.remove('active');
+        return;
+    }
+
+    // Show only the correct one for current viewport
+    if (window.innerWidth <= 1024) {
+        if (paginationWrapper) paginationWrapper.classList.remove('active');
+        if (paginationWrapperMobile) paginationWrapperMobile.classList.add('active');
+    } else {
+        if (paginationWrapper) paginationWrapper.classList.add('active');
+        if (paginationWrapperMobile) paginationWrapperMobile.classList.remove('active');
+    }
+
+    pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+    if (pageInfoMobile) pageInfoMobile.textContent = `Page ${currentPage} of ${totalPages}`;
+
+    if (prevBtn) prevBtn.disabled = currentPage <= 1;
+    if (nextBtn) nextBtn.disabled = currentPage >= totalPages;
+    if (prevBtnMobile) prevBtnMobile.disabled = currentPage <= 1;
+    if (nextBtnMobile) nextBtnMobile.disabled = currentPage >= totalPages;
+}
+
+function previousPage() {
+    if (currentPage > 1) {
+        currentPage--;
+        sortOrders();
+    }
+}
+
+function nextPage() {
+    const totalPages = Math.ceil(allOrders.length / itemsPerPage);
+    if (currentPage < totalPages) {
+        currentPage++;
+        sortOrders();
+    }
 }
 
 /**
