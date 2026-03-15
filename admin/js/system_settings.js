@@ -9,6 +9,7 @@
 
 document.addEventListener('DOMContentLoaded', function() {
     loadSettings();
+    initLogoUpload();
     
     document.getElementById('settings-form').addEventListener('submit', saveSettings);
 });
@@ -117,4 +118,89 @@ async function saveSettings(e) {
         console.error('Error saving settings:', error);
         showToast('An error occurred', 'error');
     }
+}
+
+// Logo Upload
+function initLogoUpload() {
+    const fileInput = document.getElementById('logo-file-input');
+    const uploadBtn = document.getElementById('logo-upload-btn');
+    const previewImg = document.getElementById('logo-preview-img');
+    
+    if (!fileInput || !uploadBtn) return;
+    
+    let selectedFile = null;
+
+    fileInput.addEventListener('change', function() {
+        const file = this.files[0];
+        if (!file) return;
+
+        // Validate size (1MB)
+        if (file.size > 1 * 1024 * 1024) {
+            const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+            showToast(`Logo is too large (${sizeMB}MB). Maximum size is 1MB.`, 'error');
+            this.value = '';
+            return;
+        }
+
+        // Validate type
+        const allowedTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];
+        if (!allowedTypes.includes(file.type)) {
+            showToast('Invalid file type. Only PNG, JPG, GIF, and WEBP are allowed.', 'error');
+            this.value = '';
+            return;
+        }
+
+        // Preview
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            previewImg.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+
+        selectedFile = file;
+        uploadBtn.style.display = 'inline-flex';
+    });
+
+    uploadBtn.addEventListener('click', async function() {
+        if (!selectedFile) return;
+
+        const formData = new FormData();
+        formData.append('logo', selectedFile);
+        formData.append('csrf_token', getCSRFToken());
+
+        showLoading();
+
+        try {
+            const response = await fetch('../api/settings/upload_logo.php', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+            hideLoading();
+
+            if (data.success) {
+                showToast('Logo updated successfully', 'success');
+                uploadBtn.style.display = 'none';
+                fileInput.value = '';
+                selectedFile = null;
+
+                // Update sidebar logo
+                const sidebarLogo = document.querySelector('.sidebar-logo img');
+                if (sidebarLogo && data.logo_path) {
+                    sidebarLogo.src = '../' + data.logo_path + '?v=' + Date.now();
+                }
+                // Update preview
+                if (data.logo_path) {
+                    previewImg.src = '../' + data.logo_path + '?v=' + Date.now();
+                }
+            } else {
+                showToast(data.message || 'Failed to upload logo', 'error');
+            }
+        } catch (error) {
+            hideLoading();
+            console.error('Error uploading logo:', error);
+            showToast('An error occurred while uploading', 'error');
+        }
+    });
 }

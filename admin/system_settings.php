@@ -68,6 +68,46 @@ require_once __DIR__ . '/../includes/sidebar.php';
                 </div>
             </div>
 
+            <!-- Station Logo -->
+            <div class="settings-panel">
+                <div class="settings-panel-header">
+                    <div class="settings-panel-icon" style="background: rgba(38, 166, 154, 0.1); color: #26A69A;">
+                        <span class="material-icons">image</span>
+                    </div>
+                    <div>
+                        <h3 class="settings-panel-title">Station Logo</h3>
+                        <p class="settings-panel-desc">Upload a logo displayed in the sidebar (max 1MB)</p>
+                    </div>
+                </div>
+                <div class="settings-panel-body" style="padding: 20px 24px;">
+                    <div class="logo-upload-section">
+                        <div class="logo-preview-area">
+                            <div class="logo-preview" id="logo-preview">
+                                <img id="logo-preview-img" src="../<?php echo htmlspecialchars(get_setting('station_logo') ?? 'images/system/logo-1.png'); ?>" alt="Station Logo">
+                            </div>
+                            <div class="logo-preview-info">
+                                <span class="logo-preview-name">Current Logo</span>
+                                <span class="logo-preview-hint">
+                                    <span class="material-icons">info</span>
+                                    PNG, JPG, GIF, or WEBP — Max 1MB
+                                </span>
+                            </div>
+                        </div>
+                        <div class="logo-upload-controls">
+                            <label class="logo-upload-btn" for="logo-file-input">
+                                <span class="material-icons">upload</span>
+                                Choose Logo
+                            </label>
+                            <input type="file" id="logo-file-input" accept="image/png,image/jpeg,image/gif,image/webp" style="display:none;">
+                            <button type="button" class="btn btn-primary logo-save-btn" id="logo-upload-btn" style="display:none;">
+                                <span class="material-icons">cloud_upload</span>
+                                Upload Logo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Order Settings -->
             <div class="settings-panel">
                 <div class="settings-panel-header">
@@ -683,6 +723,146 @@ require_once __DIR__ . '/../includes/sidebar.php';
 
         .settings-panel-icon .material-icons {
             font-size: 18px;
+        }
+    }
+
+    /* Logo Upload Section */
+    .logo-upload-section {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+    }
+
+    .logo-preview-area {
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .logo-preview {
+        width: 88px;
+        height: 88px;
+        border-radius: 18px;
+        overflow: hidden;
+        border: 2px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--surface);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .logo-preview:hover {
+        border-color: var(--primary);
+        box-shadow: 0 4px 16px rgba(21, 101, 192, 0.15);
+    }
+
+    .logo-preview img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .logo-preview-info {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .logo-preview-name {
+        font-size: 0.92rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .logo-preview-hint {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .logo-preview-hint .material-icons {
+        font-size: 13px;
+        opacity: 0.5;
+    }
+
+    .logo-upload-controls {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 8px;
+        flex-shrink: 0;
+    }
+
+    .logo-upload-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 10px 20px;
+        background: var(--surface);
+        border: 1.5px solid var(--border);
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        transition: all 0.2s ease;
+        white-space: nowrap;
+    }
+
+    .logo-upload-btn:hover {
+        background: var(--primary);
+        color: #fff;
+        border-color: var(--primary);
+        box-shadow: 0 3px 10px rgba(21, 101, 192, 0.25);
+    }
+
+    .logo-upload-btn .material-icons {
+        font-size: 17px;
+    }
+
+    .logo-save-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 10px 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        border-radius: 10px;
+        white-space: nowrap;
+    }
+
+    .logo-save-btn .material-icons {
+        font-size: 17px;
+    }
+
+    @media (max-width: 600px) {
+        .logo-upload-section {
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo-preview-area {
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .logo-upload-controls {
+            align-items: center;
+        }
+    }
+        }
+
+        .logo-upload-controls {
+            flex-direction: column;
+            align-items: center;
         }
     }
 </style>

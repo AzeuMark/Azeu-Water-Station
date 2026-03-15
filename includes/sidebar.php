@@ -11,6 +11,7 @@ if (!isset($_SESSION['user_id'])) {
 $current_user = get_logged_in_user();
 $role = $current_user['role'];
 $station_name = get_setting('station_name') ?? 'Azeu Water Station';
+$station_logo = get_setting('station_logo') ?? 'images/system/logo-1.png';
 
 // Fetch sidebar badge counts for staff/admin roles
 $badge_counts = ['orders' => 0, 'pending_accounts' => 0, 'inventory' => 0,
@@ -98,7 +99,7 @@ switch ($role) {
 <aside class="sidebar">
     <div class="sidebar-header">
         <div class="sidebar-logo">
-            <span class="material-icons">water_drop</span>
+            <img src="../<?php echo htmlspecialchars($station_logo); ?>" alt="Station Logo">
         </div>
         <div class="sidebar-title"><?php echo htmlspecialchars($station_name); ?></div>
     </div>
