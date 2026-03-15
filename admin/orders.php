@@ -96,7 +96,9 @@ require_once __DIR__ . '/../includes/sidebar.php';
                         <div class="custom-select-option" data-status="confirmed">Confirmed</div>
                         <div class="custom-select-option" data-status="assigned">Assigned</div>
                         <div class="custom-select-option" data-status="on_delivery">On Delivery</div>
+                        <div class="custom-select-option" data-status="ready_for_pickup">Ready for Pickup</div>
                         <div class="custom-select-option" data-status="delivered">Delivered</div>
+                        <div class="custom-select-option" data-status="picked_up">Picked Up</div>
                     </div>
                 </div>
             </div>
@@ -172,7 +174,9 @@ require_once __DIR__ . '/../includes/sidebar.php';
                 <button class="filter-btn" data-status="assigned">Assigned</button>
                 <button class="filter-btn" data-status="reassign_requested">Reassign Requested</button>
                 <button class="filter-btn" data-status="on_delivery">On Delivery</button>
+                <button class="filter-btn" data-status="ready_for_pickup">Ready for Pickup</button>
                 <button class="filter-btn" data-status="delivered">Delivered</button>
+                <button class="filter-btn" data-status="picked_up">Picked Up</button>
                 <button class="filter-btn" data-status="cancelled">Cancelled</button>
             </div>
         </div>

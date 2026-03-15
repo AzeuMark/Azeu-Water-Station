@@ -231,22 +231,56 @@ function initDeliveryTypeToggle() {
                 deliveryFeeRow.style.display = 'none';
             }
             
+            updatePaymentOptions(type);
             updateCartSummary();
         });
     });
 }
 
 /**
+ * Update payment options based on delivery type
+ */
+function updatePaymentOptions(deliveryType) {
+    const codOption = document.getElementById('payment-cod');
+    const pickupOption = document.getElementById('payment-pickup');
+    
+    if (deliveryType === 'delivery') {
+        codOption.style.display = '';
+        codOption.querySelector('input').disabled = false;
+        codOption.querySelector('input').checked = true;
+        codOption.classList.add('active');
+        
+        pickupOption.style.display = 'none';
+        pickupOption.querySelector('input').disabled = true;
+        pickupOption.querySelector('input').checked = false;
+        pickupOption.classList.remove('active');
+    } else {
+        pickupOption.style.display = '';
+        pickupOption.querySelector('input').disabled = false;
+        pickupOption.querySelector('input').checked = true;
+        pickupOption.classList.add('active');
+        
+        codOption.style.display = 'none';
+        codOption.querySelector('input').disabled = true;
+        codOption.querySelector('input').checked = false;
+        codOption.classList.remove('active');
+    }
+}
+
+/**
  * Initialize payment toggle
  */
 function initPaymentToggle() {
-    const options = document.querySelectorAll('.payment-option');
+    const container = document.getElementById('payment-options');
     
-    options.forEach(option => {
-        option.addEventListener('click', function() {
-            options.forEach(o => o.classList.remove('active'));
-            this.classList.add('active');
-        });
+    container.addEventListener('click', function(e) {
+        const option = e.target.closest('.payment-option');
+        if (!option || option.classList.contains('disabled')) return;
+        if (option.querySelector('input').disabled) return;
+        
+        container.querySelectorAll('.payment-option').forEach(o => o.classList.remove('active'));
+        option.classList.add('active');
+        option.querySelector('input').checked = true;
     });
 }
 

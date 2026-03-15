@@ -239,6 +239,12 @@ function getActionButtons(order) {
                 </button>
             `;
         }
+    } else if (order.status === 'ready_for_pickup') {
+        buttons += `
+            <button class="btn-icon" onclick="confirmPickup(${order.id})" title="Confirm Pickup" style="color: var(--success);">
+                <span class="material-icons">check_circle</span>
+            </button>
+        `;
     } else if (order.status === 'reassign_requested') {
         buttons += `
             <button class="btn-icon" onclick="showAssignRider(${order.id})" title="Assign Rider (Reassign)" style="color: var(--warning);">
@@ -381,6 +387,13 @@ function showOrderModal(order, items) {
     
     if (order.status === 'confirmed' && order.delivery_type === 'pickup') {
         actions = `<button class="btn btn-success" onclick="markReadyForPickup(${order.id})">Ready for Pickup</button>` + actions;
+    }
+    
+    if (order.status === 'ready_for_pickup') {
+        actions = `<button class="btn btn-success" onclick="confirmPickup(${order.id})">
+                        <span class="material-icons" style="font-size: 18px; vertical-align: middle;">check_circle</span>
+                        Confirm Pickup
+                   </button>` + actions;
     }
     
     if (order.status === 'reassign_requested') {
@@ -652,6 +665,20 @@ async function assignRider(e) {
 
 async function markReadyForPickup(orderId) {
     await updateOrderStatus(orderId, 'ready_for_pickup');
+}
+
+async function confirmPickup(orderId) {
+    const result = await Swal.fire({
+        title: 'Confirm Pickup',
+        text: 'Confirm that the customer has picked up this order?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, Picked Up',
+        confirmButtonColor: '#66BB6A',
+        cancelButtonText: 'Close'
+    });
+    if (!result.isConfirmed) return;
+    await updateOrderStatus(orderId, 'picked_up');
 }
 
 // ============================================================================

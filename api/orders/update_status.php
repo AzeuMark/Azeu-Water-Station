@@ -163,7 +163,8 @@ try {
         STATUS_ASSIGNED => 'A rider has been assigned to your order',
         STATUS_ON_DELIVERY => 'Your order is on the way',
         STATUS_DELIVERED => 'Your order has been delivered',
-        STATUS_READY_FOR_PICKUP => 'Your order is ready for pickup'
+        STATUS_READY_FOR_PICKUP => 'Your order is ready for pickup',
+        STATUS_PICKED_UP => 'Your order has been picked up'
     ];
     
     if (isset($status_messages[$new_status])) {

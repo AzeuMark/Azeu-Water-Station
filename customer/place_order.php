@@ -82,18 +82,29 @@ require_once __DIR__ . '/../includes/sidebar.php';
             <div class="glass-card" style="margin-bottom: 24px;">
                 <h3 style="margin-bottom: 16px;">Payment Method</h3>
                 <div id="payment-options" style="display: flex; gap: 12px;">
-                    <label class="payment-option active">
+                    <!-- Delivery payment options (default) -->
+                    <label class="payment-option active" data-for="delivery" id="payment-cod">
                         <input type="radio" name="payment_type" value="cod" checked>
                         <div class="option-content">
                             <span class="material-icons">payments</span>
                             <span>Cash on Delivery</span>
                         </div>
                     </label>
-                    <label class="payment-option">
-                        <input type="radio" name="payment_type" value="pickup">
+                    <!-- Pickup payment options (hidden by default) -->
+                    <label class="payment-option" data-for="pickup" id="payment-pickup" style="display: none;">
+                        <input type="radio" name="payment_type" value="pickup" disabled>
                         <div class="option-content">
                             <span class="material-icons">point_of_sale</span>
                             <span>Pay at Pickup</span>
+                        </div>
+                    </label>
+                    <!-- Online payment (always shown, disabled) -->
+                    <label class="payment-option disabled" id="payment-online" style="opacity: 0.5; cursor: not-allowed; pointer-events: none;">
+                        <input type="radio" name="payment_type" value="online" disabled>
+                        <div class="option-content">
+                            <span class="material-icons">credit_card</span>
+                            <span>Online</span>
+                            <small style="font-size: 0.7rem; color: var(--text-muted); display: block;">Coming Soon</small>
                         </div>
                     </label>
                 </div>
