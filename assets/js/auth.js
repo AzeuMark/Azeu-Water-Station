@@ -47,6 +47,8 @@ function switchTab(target) {
         if (indicator) indicator.style.transform = 'translateX(0)';
     }
 
+    updateViewportHeight();
+
     // Update URL without reload
     const url = new URL(window.location);
     if (target === 'register') {
@@ -55,6 +57,18 @@ function switchTab(target) {
         url.searchParams.delete('mode');
     }
     history.replaceState(null, '', url);
+}
+
+function updateViewportHeight() {
+    const viewport = document.querySelector('.auth-panels-viewport');
+    const track = document.querySelector('.auth-panels-track');
+    if (!viewport || !track) return;
+
+    const isRegister = track.classList.contains('show-register');
+    const activePanel = document.getElementById(isRegister ? 'register-panel' : 'login-panel');
+    if (activePanel) {
+        viewport.style.height = activePanel.scrollHeight + 'px';
+    }
 }
 
 /* ============================
@@ -406,4 +420,5 @@ document.addEventListener('DOMContentLoaded', function () {
     initResetPasswordForm();
     initPasswordToggle();
     initPasswordStrength();
+    updateViewportHeight();
 });

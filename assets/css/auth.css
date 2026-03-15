@@ -231,11 +231,13 @@
 .auth-panels-viewport {
   overflow: hidden;
   position: relative;
+  transition: height 0.45s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .auth-panels-track {
   display: flex;
   width: 200%;
+  align-items: flex-start;
   transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
