@@ -143,18 +143,50 @@ function initRegisterForm() {
             return;
         }
 
+        // Validate required fields
+        const firstName = document.getElementById('reg_first_name').value.trim();
+        const lastName = document.getElementById('reg_last_name').value.trim();
+        const address = document.getElementById('reg_address').value.trim();
+
+        if (!firstName) {
+            showError('First name is required!', registerForm);
+            return;
+        }
+
+        if (!lastName) {
+            showError('Last name is required!', registerForm);
+            return;
+        }
+
+        if (!address) {
+            showError('Address is required!', registerForm);
+            return;
+        }
+
         const submitBtn = this.querySelector('button[type="submit"]');
         const originalText = submitBtn.innerHTML;
 
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<span class="spinner"></span> Creating account...';
 
+        // Construct full name from first, middle initial, and last name
+        const middleInitial = document.getElementById('reg_middle_initial').value.trim();
+        let fullName = firstName;
+        if (middleInitial) {
+            fullName += ' ' + middleInitial + '.';
+        }
+        fullName += ' ' + lastName;
+
         const formData = {
             username: document.getElementById('reg_username').value.trim(),
             password: password,
-            full_name: document.getElementById('reg_full_name').value.trim(),
+            first_name: firstName,
+            middle_initial: middleInitial,
+            last_name: lastName,
+            full_name: fullName,
             email: document.getElementById('reg_email').value.trim(),
             phone: document.getElementById('reg_phone').value.trim(),
+            address: address,
             csrf_token: getCSRFToken()
         };
 

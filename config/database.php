@@ -221,6 +221,7 @@ function create_all_tables() {
         full_name VARCHAR(100) NOT NULL,
         email VARCHAR(100) NOT NULL,
         phone VARCHAR(20) NOT NULL,
+        address TEXT NULL,
         role ENUM('customer','rider','staff','admin','super_admin') NOT NULL,
         status ENUM('pending','active','flagged','deleted') NOT NULL DEFAULT 'pending',
         is_available TINYINT(1) NOT NULL DEFAULT 1,
@@ -532,6 +533,14 @@ function run_migrations() {
     try {
         $pdo->exec("ALTER TABLE users ADD COLUMN flag_reason TEXT NULL AFTER status");
         logger_info("Migration: added flag_reason column to users");
+    } catch (PDOException $e) {
+        // Column already exists — safe to ignore
+    }
+
+    // Add address column to users if it doesn't exist
+    try {
+        $pdo->exec("ALTER TABLE users ADD COLUMN address TEXT NULL AFTER phone");
+        logger_info("Migration: added address column to users");
     } catch (PDOException $e) {
         // Column already exists — safe to ignore
     }

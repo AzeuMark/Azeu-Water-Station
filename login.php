@@ -121,11 +121,26 @@ $start_mode = isset($_GET['mode']) && $_GET['mode'] === 'register' ? 'register' 
                             </div>
 
                             <form id="register-form" class="auth-form">
-                                <div class="form-group">
-                                    <div class="float-input-group">
-                                        <input type="text" id="reg_full_name" class="float-input" placeholder="Full Name" required>
-                                        <label for="reg_full_name" class="float-label">Full Name</label>
-                                        <span class="material-icons input-icon">person_outline</span>
+                                <div class="form-row form-row-3">
+                                    <div class="form-group">
+                                        <div class="float-input-group">
+                                            <input type="text" id="reg_first_name" class="float-input" placeholder="First Name" required>
+                                            <label for="reg_first_name" class="float-label">First Name</label>
+                                            <span class="material-icons input-icon">person_outline</span>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <div class="float-input-group">
+                                            <input type="text" id="reg_middle_initial" class="float-input" placeholder="M.I." maxlength="2">
+                                            <label for="reg_middle_initial" class="float-label">M.I.</label>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <div class="float-input-group">
+                                            <input type="text" id="reg_last_name" class="float-input" placeholder="Last Name" required>
+                                            <label for="reg_last_name" class="float-label">Last Name</label>
+                                            <span class="material-icons input-icon">person_outline</span>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -140,7 +155,7 @@ $start_mode = isset($_GET['mode']) && $_GET['mode'] === 'register' ? 'register' 
                                 <div class="form-group">
                                     <div class="float-input-group">
                                         <input type="email" id="reg_email" class="float-input" placeholder="Email" required autocomplete="email">
-                                        <label for="reg_email" class="float-label">Email Address</label>
+                                        <label for="reg_email" class="float-label">Email</label>
                                         <span class="material-icons input-icon">mail_outline</span>
                                     </div>
                                 </div>
@@ -150,6 +165,14 @@ $start_mode = isset($_GET['mode']) && $_GET['mode'] === 'register' ? 'register' 
                                         <input type="tel" id="reg_phone" class="float-input" placeholder="Phone Number" required autocomplete="tel">
                                         <label for="reg_phone" class="float-label">Phone Number</label>
                                         <span class="material-icons input-icon">phone_outlined</span>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <div class="float-input-group">
+                                        <input type="text" id="reg_address" class="float-input" placeholder="Address" required autocomplete="street-address">
+                                        <label for="reg_address" class="float-label">Address</label>
+                                        <span class="material-icons input-icon">location_on</span>
                                     </div>
                                 </div>
 
