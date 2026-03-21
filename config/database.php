@@ -33,8 +33,169 @@ try {
     logger_info("Using database: " . DB_NAME);
     
 } catch (PDOException $e) {
-    logger_critical("Database connection failed: " . $e->getMessage());
-    die("Database connection failed. Please check your configuration.");
+    // Try to log if logger is available
+    if (function_exists('logger_critical')) {
+        logger_critical("Database connection failed: " . $e->getMessage());
+    }
+
+    // Show user-friendly error page
+    http_response_code(503);
+    $errorMessage = DEBUG_MODE ? htmlspecialchars($e->getMessage()) : 'Unable to connect to the database server.';
+    ?>
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Database Connection Error</title>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+        <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body {
+                font-family: 'Inter', sans-serif;
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+                color: #fff;
+                padding: 20px;
+            }
+            .error-container {
+                max-width: 500px;
+                text-align: center;
+                background: rgba(255, 255, 255, 0.05);
+                backdrop-filter: blur(10px);
+                border-radius: 20px;
+                padding: 50px 40px;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+            }
+            .error-icon {
+                width: 100px;
+                height: 100px;
+                background: linear-gradient(135deg, #ef5350, #f44336);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 0 auto 30px;
+                box-shadow: 0 10px 30px rgba(244, 67, 54, 0.3);
+            }
+            .error-icon .material-icons {
+                font-size: 50px;
+                color: #fff;
+            }
+            h1 {
+                font-size: 1.75rem;
+                font-weight: 700;
+                margin-bottom: 15px;
+                color: #fff;
+            }
+            .error-subtitle {
+                font-size: 1rem;
+                color: rgba(255, 255, 255, 0.7);
+                margin-bottom: 30px;
+                line-height: 1.6;
+            }
+            .error-details {
+                background: rgba(0, 0, 0, 0.3);
+                border-radius: 10px;
+                padding: 20px;
+                margin-bottom: 30px;
+                text-align: left;
+            }
+            .error-details h3 {
+                font-size: 0.85rem;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                color: #ef5350;
+                margin-bottom: 15px;
+            }
+            .error-details ul {
+                list-style: none;
+                font-size: 0.9rem;
+                color: rgba(255, 255, 255, 0.8);
+            }
+            .error-details li {
+                padding: 8px 0;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+            .error-details li .material-icons {
+                font-size: 18px;
+                color: #ffa726;
+            }
+            .technical-error {
+                background: rgba(239, 83, 80, 0.1);
+                border: 1px solid rgba(239, 83, 80, 0.3);
+                border-radius: 8px;
+                padding: 15px;
+                margin-bottom: 25px;
+                font-family: monospace;
+                font-size: 0.8rem;
+                color: #ef9a9a;
+                word-break: break-word;
+                text-align: left;
+            }
+            .btn-retry {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                background: linear-gradient(135deg, #1565C0, #1E88E5);
+                color: #fff;
+                padding: 14px 30px;
+                border-radius: 10px;
+                text-decoration: none;
+                font-weight: 600;
+                font-size: 0.95rem;
+                transition: all 0.3s ease;
+                box-shadow: 0 5px 20px rgba(21, 101, 192, 0.3);
+            }
+            .btn-retry:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 25px rgba(21, 101, 192, 0.4);
+            }
+        </style>
+    </head>
+    <body>
+        <div class="error-container">
+            <div class="error-icon">
+                <span class="material-icons">storage</span>
+            </div>
+            <h1>Database Connection Failed</h1>
+            <p class="error-subtitle">
+                The website cannot load because it failed to connect to the database server.
+                This is usually a temporary issue.
+            </p>
+
+            <div class="error-details">
+                <h3>Please check the following:</h3>
+                <ul>
+                    <li><span class="material-icons">check_circle</span> MySQL service is running (XAMPP Control Panel)</li>
+                    <li><span class="material-icons">check_circle</span> Database credentials in config/constants.php</li>
+                    <li><span class="material-icons">check_circle</span> MySQL port is not blocked (default: 3306)</li>
+                </ul>
+            </div>
+
+            <?php if (DEBUG_MODE): ?>
+            <div class="technical-error">
+                <strong>Technical Details:</strong><br>
+                <?php echo $errorMessage; ?>
+            </div>
+            <?php endif; ?>
+
+            <a href="javascript:location.reload()" class="btn-retry">
+                <span class="material-icons">refresh</span>
+                Try Again
+            </a>
+        </div>
+    </body>
+    </html>
+    <?php
+    exit;
 }
 
 // Create all tables
